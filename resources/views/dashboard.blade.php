@@ -129,7 +129,7 @@
         <style>
             body {
                 font-family: 'Figtree', sans-serif;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #c28928 0%, #c08025 100%);
                 min-height: 100vh;
             }
             .hero-section {
@@ -151,7 +151,7 @@
                 margin-bottom: 1rem;
             }
             .btn-custom {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #c28928 0%, #c08025 100%);
                 border: none;
                 color: white;
                 padding: 12px 30px;

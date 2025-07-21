@@ -81,7 +81,7 @@
                             <th>Producto</th>
                             <th>SKU</th>
                             <th>Categoría</th>
-                            <th>Color/Material</th>
+                            <th>Colores/Material</th>
                             <th>Precios</th>
                             <th>Estado</th>
                             <th>Acciones</th>
@@ -115,8 +115,16 @@
                                     <br><small class="text-muted">{{ $product->subcategory->name }}</small>
                                 </td>
                                 <td>
-                                    <span class="badge bg-info">{{ $product->color }}</span>
-                                    <br><small class="text-muted">{{ $product->material }}</small>
+                                    @if($product->colors && count($product->colors) > 0)
+                                        <div class="d-flex flex-wrap gap-1">
+                                            @foreach($product->getColorObjects() as $color)
+                                                <span class="badge" style="background-color: {{ $color->hex_code }}; color: {{ $color->hex_code == '#FFFFFF' ? '#000' : '#FFF' }};">
+                                                    {{ $color->name }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                    <small class="text-muted d-block mt-1">{{ $product->material }}</small>
                                 </td>
                                 <td>
                                     @if($product->pricing->count() > 0)

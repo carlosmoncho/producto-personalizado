@@ -1,4 +1,5 @@
 <?php
+// app/Models/Product.php
 
 namespace App\Models;
 
@@ -15,7 +16,7 @@ class Product extends Model
         'slug',
         'description',
         'sku',
-        'color',
+        'colors', // Cambiar 'color' por 'colors'
         'material',
         'sizes',
         'printing_system',
@@ -31,6 +32,7 @@ class Product extends Model
     ];
 
     protected $casts = [
+        'colors' => 'array', // Nuevo cast para colors
         'sizes' => 'array',
         'print_colors' => 'array',
         'images' => 'array',
@@ -119,5 +121,25 @@ class Product extends Model
         if ($this->model_3d_file && Storage::disk('public')->exists($this->model_3d_file)) {
             Storage::disk('public')->delete($this->model_3d_file);
         }
+    }
+
+    /**
+     * Obtener lista de colores como string
+     */
+    public function getColorsListAttribute()
+    {
+        return $this->colors ? implode(', ', $this->colors) : '';
+    }
+
+    /**
+     * Obtener objetos de colores disponibles
+     */
+    public function getColorObjects()
+    {
+        if (!$this->colors) {
+            return collect();
+        }
+
+        return AvailableColor::whereIn('name', $this->colors)->get();
     }
 }

@@ -1,5 +1,5 @@
 <?php
-
+// app/Http/Controllers/Admin/ProductController.php
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -9,6 +9,7 @@ use App\Models\Subcategory;
 use App\Models\CustomField;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -80,7 +81,8 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'sku' => 'required|string|unique:products,sku',
-            'color' => 'required|string|max:255',
+            'colors' => 'required|array|min:1',
+            'colors.*' => 'required|string|exists:available_colors,name',
             'material' => 'required|string|max:255',
             'sizes' => 'required|array',
             'sizes.*' => 'required|string',
@@ -107,7 +109,7 @@ class ProductController extends Controller
             'slug' => Str::slug($request->name),
             'description' => $request->description,
             'sku' => $request->sku,
-            'color' => $request->color,
+            'colors' => $request->colors,
             'material' => $request->material,
             'sizes' => $request->sizes,
             'printing_system' => $request->printing_system,
@@ -144,6 +146,7 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')
                         ->with('success', 'Producto creado exitosamente.');
     }
+
 
     public function show(Product $product)
     {
@@ -186,7 +189,8 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'sku' => 'required|string|unique:products,sku,' . $product->id,
-            'color' => 'required|string|max:255',
+            'colors' => 'required|array|min:1',
+            'colors.*' => 'required|string|exists:available_colors,name',
             'material' => 'required|string|max:255',
             'sizes' => 'required|array',
             'sizes.*' => 'required|string',
@@ -207,13 +211,13 @@ class ProductController extends Controller
             'pricing.*.unit_price' => 'required|numeric|min:0',
             'active' => 'boolean'
         ]);
-
+    
         $productData = [
             'name' => $request->name,
             'slug' => Str::slug($request->name),
             'description' => $request->description,
             'sku' => $request->sku,
-            'color' => $request->color,
+            'colors' => $request->colors,
             'material' => $request->material,
             'sizes' => $request->sizes,
             'printing_system' => $request->printing_system,
@@ -225,7 +229,7 @@ class ProductController extends Controller
             'active' => $request->boolean('active', true),
             'custom_fields' => $request->custom_fields ?? $product->custom_fields
         ];
-
+    
         // Manejar imágenes
         if ($request->hasFile('images')) {
             // Eliminar imágenes anteriores
@@ -237,7 +241,7 @@ class ProductController extends Controller
             }
             $productData['images'] = $imagePaths;
         }
-
+    
         // Manejar modelo 3D
         if ($request->hasFile('model_3d')) {
             // Eliminar modelo 3D anterior
@@ -245,18 +249,19 @@ class ProductController extends Controller
             // Guardar nuevo modelo 3D
             $productData['model_3d_file'] = $request->file('model_3d')->store('3d-models', 'public');
         }
-
+    
         $product->update($productData);
-
+    
         // Actualizar precios
         $product->pricing()->delete();
         foreach ($request->pricing as $priceData) {
             $product->pricing()->create($priceData);
         }
-
+    
         return redirect()->route('admin.products.index')
                         ->with('success', 'Producto actualizado exitosamente.');
     }
+    
 
     public function destroy(Product $product)
     {

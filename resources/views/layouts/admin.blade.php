@@ -21,7 +21,7 @@
     <style>
         .sidebar {
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #c28928 0%, #c08025 100%);
         }
         .sidebar .nav-link {
             color: rgba(255, 255, 255, 0.8);
@@ -48,16 +48,16 @@
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
         }
         .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #c28928 0%, #c08025 100%);
             color: white;
             border-radius: 0.75rem 0.75rem 0 0 !important;
         }
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #c28928 0%, #c08025 100%);
             border: none;
         }
         .btn-primary:hover {
-            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            background: linear-gradient(135deg, #d9a745 0%, #c89330 100%);
         }
         .table th {
             background-color: #f8f9fa;
@@ -65,7 +65,7 @@
             font-weight: 600;
         }
         .stats-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #c28928 0%, #c08025 100%);
             color: white;
             border-radius: 0.75rem;
         }
@@ -82,7 +82,7 @@
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar " id="sidebarMenu">
                 <div class="position-sticky pt-3">
                     <div class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
                         <i class="bi bi-shop fs-4 me-2"></i>
@@ -256,128 +256,6 @@
             });
         });
     </script>
-    <style>
-    .sidebar {
-        min-height: 100vh;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    /* SIDEBAR NAVIGATION LINKS */
-    .sidebar .nav-link {
-        color: rgba(255, 255, 255, 0.9) !important;
-        padding: 0.75rem 1rem;
-        border-radius: 0.375rem;
-        margin-bottom: 0.25rem;
-        transition: all 0.2s ease;
-    }
-    
-    .sidebar .nav-link:hover,
-    .sidebar .nav-link.active {
-        background: rgba(255, 255, 255, 0.2) !important;
-        color: white !important;
-        transform: translateX(5px);
-    }
-    
-    .sidebar .nav-link i {
-        margin-right: 0.5rem;
-        width: 1.2rem;
-        color: rgba(255, 255, 255, 0.9) !important;
-    }
-    
-    /* SIDEBAR HEADINGS */
-    .sidebar small {
-        color: rgba(255, 255, 255, 0.7) !important;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-    }
-    
-    /* SIDEBAR BRAND */
-    .sidebar .fs-5 {
-        color: white !important;
-    }
-    
-    /* SIDEBAR BUTTONS */
-    .sidebar button {
-        color: rgba(255, 255, 255, 0.9) !important;
-        border: none !important;
-        background: transparent !important;
-        text-align: left !important;
-        width: 100% !important;
-        padding: 0.75rem 1rem !important;
-        border-radius: 0.375rem !important;
-        margin-bottom: 0.25rem !important;
-        transition: all 0.2s ease !important;
-    }
-    
-    .sidebar button:hover {
-        background: rgba(255, 255, 255, 0.2) !important;
-        color: white !important;
-        transform: translateX(5px) !important;
-    }
-    
-    .sidebar button i {
-        color: rgba(255, 255, 255, 0.9) !important;
-    }
-    
-    /* SIDEBAR DIVIDERS */
-    .sidebar hr {
-        border-color: rgba(255, 255, 255, 0.3) !important;
-        margin: 1rem 0 !important;
-    }
-    
-    /* RESTO DE ESTILOS */
-    .main-content {
-        background-color: #f8f9fa;
-        min-height: 100vh;
-    }
-    .card {
-        border: none;
-        border-radius: 0.75rem;
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    }
-    .card-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 0.75rem 0.75rem 0 0 !important;
-    }
-    .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-    }
-    .btn-primary:hover {
-        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-    }
-    .table th {
-        background-color: #f8f9fa;
-        border-top: none;
-        font-weight: 600;
-    }
-    .stats-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 0.75rem;
-    }
-    .stats-card .card-body {
-        padding: 1.5rem;
-    }
-    .stats-card i {
-        font-size: 2rem;
-        opacity: 0.8;
-    }
-    .top-navbar {
-        background: white;
-        border-bottom: 1px solid #dee2e6;
-        padding: 0.5rem 0;
-    }
-    .navbar-brand-admin {
-        color: #667eea !important;
-        font-weight: 600;
-        text-decoration: none;
-    }
-    .navbar-brand-admin:hover {
-        color: #5a67d8 !important;
-    }
-</style>
 
     @stack('scripts')
 </body>

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\SubcategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CustomFieldController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\AvailableColorController; 
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -50,6 +51,11 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     // Rutas adicionales para pedidos
     Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
     Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');
+
+    Route::post('available-colors', [AvailableColorController::class, 'store'])->name('available-colors.store');
+    Route::delete('available-colors/{id}', [AvailableColorController::class, 'destroy'])->name('available-colors.destroy');
+    Route::put('available-colors/order', [AvailableColorController::class, 'updateOrder'])->name('available-colors.update-order');
+
     
 });
 

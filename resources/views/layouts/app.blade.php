@@ -20,7 +20,7 @@
 
         <style>
             .navbar-brand-custom {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #c28928 0%, #c08025 100%);
                 color: white !important;
                 padding: 0.5rem 1rem;
                 border-radius: 0.5rem;
@@ -37,11 +37,11 @@
                 background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             }
             .btn-primary {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #c28928 0%, #c08025 100%);
                 border: none;
             }
             .btn-primary:hover {
-                background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+                background: linear-gradient(135deg, #d9a745 0%, #c89330 100%);
             }
         </style>
     </head>
