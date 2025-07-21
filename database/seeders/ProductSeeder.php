@@ -6,11 +6,15 @@ use Illuminate\Database\Seeder;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Subcategory;
+use App\Models\AvailableColor;
 
 class ProductSeeder extends Seeder
 {
     public function run()
     {
+        // Primero, crear algunos colores disponibles si no existen
+        $this->createAvailableColors();
+
         $textil = Category::where('slug', 'textil')->first();
         $camisetas = Subcategory::where('slug', 'camisetas')->first();
         $sudaderas = Subcategory::where('slug', 'sudaderas')->first();
@@ -32,7 +36,7 @@ class ProductSeeder extends Seeder
                 'slug' => 'camiseta-basica-algodon',
                 'description' => 'Camiseta 100% algodón, perfecta para personalización con serigrafía o vinilo',
                 'sku' => 'CAM-001',
-                'color' => 'Blanco',
+                'colors' => ['Blanco', 'Negro', 'Azul', 'Rojo'],
                 'material' => 'Algodón 100%',
                 'sizes' => ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
                 'printing_system' => 'Serigrafía',
@@ -48,7 +52,7 @@ class ProductSeeder extends Seeder
                 'slug' => 'sudadera-con-capucha',
                 'description' => 'Sudadera con capucha de algodón-poliéster, ideal para bordado',
                 'sku' => 'SUD-001',
-                'color' => 'Gris',
+                'colors' => ['Gris', 'Negro', 'Azul Marino'],
                 'material' => 'Algodón-Poliéster',
                 'sizes' => ['S', 'M', 'L', 'XL', 'XXL'],
                 'printing_system' => 'Bordado',
@@ -64,7 +68,7 @@ class ProductSeeder extends Seeder
                 'slug' => 'gorra-snapback',
                 'description' => 'Gorra snapback ajustable con visera plana',
                 'sku' => 'GOR-001',
-                'color' => 'Negro',
+                'colors' => ['Negro', 'Rojo', 'Azul'],
                 'material' => 'Algodón',
                 'sizes' => ['Única'],
                 'printing_system' => 'Bordado',
@@ -80,7 +84,7 @@ class ProductSeeder extends Seeder
                 'slug' => 'boligrafo-metalico',
                 'description' => 'Bolígrafo metálico de alta calidad con grabado láser',
                 'sku' => 'BOL-001',
-                'color' => 'Plateado',
+                'colors' => ['Plateado', 'Dorado', 'Negro'],
                 'material' => 'Metal',
                 'sizes' => ['Única'],
                 'printing_system' => 'Grabado láser',
@@ -96,7 +100,7 @@ class ProductSeeder extends Seeder
                 'slug' => 'llavero-acrilico',
                 'description' => 'Llavero de acrílico transparente con impresión digital',
                 'sku' => 'LLA-001',
-                'color' => 'Transparente',
+                'colors' => ['Transparente'],
                 'material' => 'Acrílico',
                 'sizes' => ['5x5cm', '6x6cm', '7x7cm'],
                 'printing_system' => 'Impresión digital',
@@ -112,7 +116,7 @@ class ProductSeeder extends Seeder
                 'slug' => 'funda-iphone-silicona',
                 'description' => 'Funda de silicona para iPhone con impresión UV',
                 'sku' => 'FUN-001',
-                'color' => 'Transparente',
+                'colors' => ['Transparente', 'Negro', 'Blanco'],
                 'material' => 'Silicona TPU',
                 'sizes' => ['iPhone 12', 'iPhone 13', 'iPhone 14', 'iPhone 15'],
                 'printing_system' => 'Impresión UV',
@@ -128,7 +132,7 @@ class ProductSeeder extends Seeder
                 'slug' => 'taza-ceramica-blanca',
                 'description' => 'Taza de cerámica blanca con sublimación',
                 'sku' => 'TAZ-001',
-                'color' => 'Blanco',
+                'colors' => ['Blanco', 'Negro', 'Rojo'],
                 'material' => 'Cerámica',
                 'sizes' => ['300ml', '350ml', '400ml'],
                 'printing_system' => 'Sublimación',
@@ -168,6 +172,37 @@ class ProductSeeder extends Seeder
                 'price' => $range['price'],
                 'unit_price' => $range['unit_price'],
             ]);
+        }
+    }
+
+    private function createAvailableColors()
+    {
+        $colors = [
+            ['name' => 'Blanco', 'hex_code' => '#FFFFFF', 'sort_order' => 1],
+            ['name' => 'Negro', 'hex_code' => '#000000', 'sort_order' => 2],
+            ['name' => 'Rojo', 'hex_code' => '#FF0000', 'sort_order' => 3],
+            ['name' => 'Azul', 'hex_code' => '#0000FF', 'sort_order' => 4],
+            ['name' => 'Verde', 'hex_code' => '#00FF00', 'sort_order' => 5],
+            ['name' => 'Amarillo', 'hex_code' => '#FFFF00', 'sort_order' => 6],
+            ['name' => 'Naranja', 'hex_code' => '#FFA500', 'sort_order' => 7],
+            ['name' => 'Rosa', 'hex_code' => '#FFC0CB', 'sort_order' => 8],
+            ['name' => 'Morado', 'hex_code' => '#800080', 'sort_order' => 9],
+            ['name' => 'Gris', 'hex_code' => '#808080', 'sort_order' => 10],
+            ['name' => 'Azul Marino', 'hex_code' => '#000080', 'sort_order' => 11],
+            ['name' => 'Plateado', 'hex_code' => '#C0C0C0', 'sort_order' => 12],
+            ['name' => 'Dorado', 'hex_code' => '#FFD700', 'sort_order' => 13],
+            ['name' => 'Transparente', 'hex_code' => '#FFFFFF', 'sort_order' => 14],
+        ];
+
+        foreach ($colors as $color) {
+            AvailableColor::firstOrCreate(
+                ['name' => $color['name']],
+                [
+                    'hex_code' => $color['hex_code'],
+                    'sort_order' => $color['sort_order'],
+                    'active' => true
+                ]
+            );
         }
     }
 }

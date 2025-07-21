@@ -168,65 +168,6 @@
                         @enderror
                     </div>
 
-                    <!-- CSS para los colores -->
-                    <style>
-                        .form-control-color {
-                            width: 50px;
-                            height: 38px;
-                            padding: 0.375rem;
-                            cursor: pointer;
-                        }
-                        
-                        .color-preview {
-                            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-                            cursor: pointer;
-                        }
-                        
-                        .form-check-label:hover .color-preview {
-                            transform: scale(1.1);
-                            transition: transform 0.2s;
-                        }
-                        
-                        .color-item .form-check-label {
-                            width: 100%;
-                            cursor: pointer;
-                            padding: 5px;
-                            border-radius: 4px;
-                        }
-                        
-                        .color-item .form-check-label:hover {
-                            background-color: #f8f9fa;
-                        }
-                        
-                        .selected-color-badge {
-                            display: inline-flex;
-                            align-items: center;
-                            padding: 5px 10px;
-                            background-color: #f8f9fa;
-                            border: 1px solid #dee2e6;
-                            border-radius: 20px;
-                            font-size: 0.875rem;
-                        }
-                        
-                        .selected-color-badge .color-dot {
-                            width: 16px;
-                            height: 16px;
-                            border-radius: 50%;
-                            margin-right: 5px;
-                            border: 1px solid #ddd;
-                        }
-                        
-                        .remove-color {
-                            padding: 0;
-                            margin: 0;
-                            line-height: 1;
-                        }
-                        
-                        .remove-color:hover {
-                            color: #dc3545 !important;
-                        }
-                    </style>
-
                     <!-- Material y sistema de impresión -->
                     <div class="row">
                         <div class="col-md-6">
@@ -447,27 +388,68 @@
         </div>
     </div>
 </div>
+
+<!-- CSS para los colores -->
+<style>
+    .form-control-color {
+        width: 50px;
+        height: 38px;
+        padding: 0.375rem;
+        cursor: pointer;
+    }
+    
+    .color-preview {
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        cursor: pointer;
+    }
+    
+    .form-check-label:hover .color-preview {
+        transform: scale(1.1);
+        transition: transform 0.2s;
+    }
+    
+    .color-item .form-check-label {
+        width: 100%;
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 4px;
+    }
+    
+    .color-item .form-check-label:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .selected-color-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 10px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 20px;
+        font-size: 0.875rem;
+    }
+    
+    .selected-color-badge .color-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        margin-right: 5px;
+        border: 1px solid #ddd;
+    }
+    
+    .remove-color {
+        padding: 0;
+        margin: 0;
+        line-height: 1;
+    }
+    
+    .remove-color:hover {
+        color: #dc3545 !important;
+    }
+</style>
 @endsection
 
 @push('scripts')
-<style>
-.color-preview {
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-
-.form-check-label:hover .color-preview {
-    transform: scale(1.1);
-    transition: transform 0.2s;
-}
-
-#custom-colors-container {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 5px;
-    margin-top: 10px;
-}
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Obtener elementos del DOM con verificación
@@ -743,6 +725,131 @@ document.addEventListener('DOMContentLoaded', function() {
             toast.classList.remove('show');
             setTimeout(() => toast.remove(), 300);
         }, 3000);
+    }
+
+    // Índices para campos dinámicos
+    let sizeIndex = 1;
+    let printColorIndex = 1;
+    let pricingIndex = 1;
+
+    // Gestión de tamaños
+    document.getElementById('add-size').addEventListener('click', function() {
+        const container = document.getElementById('sizes-container');
+        const newRow = document.createElement('div');
+        newRow.className = 'input-group mb-2 size-row';
+        newRow.innerHTML = `
+            <input type="text" class="form-control" name="sizes[]" placeholder="Ej: S, M, L, XL">
+            <button type="button" class="btn btn-outline-danger remove-size">
+                <i class="bi bi-trash"></i>
+            </button>
+        `;
+        container.appendChild(newRow);
+        sizeIndex++;
+    });
+
+    // Gestión de colores de impresión
+    document.getElementById('add-print-color').addEventListener('click', function() {
+        const container = document.getElementById('print-colors-container');
+        const newRow = document.createElement('div');
+        newRow.className = 'input-group mb-2 print-color-row';
+        newRow.innerHTML = `
+            <input type="text" class="form-control" name="print_colors[]" placeholder="Ej: Negro, Azul, Rojo">
+            <button type="button" class="btn btn-outline-danger remove-print-color">
+                <i class="bi bi-trash"></i>
+            </button>
+        `;
+        container.appendChild(newRow);
+        printColorIndex++;
+    });
+
+    // Gestión de precios
+    document.getElementById('add-pricing').addEventListener('click', function() {
+        const container = document.getElementById('pricing-container');
+        const newRow = document.createElement('div');
+        newRow.className = 'row mb-2 pricing-row';
+        newRow.innerHTML = `
+            <div class="col-md-2">
+                <input type="number" class="form-control" name="pricing[${pricingIndex}][quantity_from]" placeholder="Desde" min="1">
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control" name="pricing[${pricingIndex}][quantity_to]" placeholder="Hasta" min="1">
+            </div>
+            <div class="col-md-3">
+                <input type="number" class="form-control" name="pricing[${pricingIndex}][price]" placeholder="Precio Total" step="0.01" min="0">
+            </div>
+            <div class="col-md-3">
+                <input type="number" class="form-control" name="pricing[${pricingIndex}][unit_price]" placeholder="Precio Unitario" step="0.01" min="0">
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-outline-danger remove-pricing">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        `;
+        container.appendChild(newRow);
+        pricingIndex++;
+    });
+
+    // Event delegation para remover elementos
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-size')) {
+            e.target.closest('.size-row').remove();
+        }
+        if (e.target.closest('.remove-print-color')) {
+            e.target.closest('.print-color-row').remove();
+        }
+        if (e.target.closest('.remove-pricing')) {
+            e.target.closest('.pricing-row').remove();
+        }
+    });
+
+    // Filtrar subcategorías por categoría
+    document.getElementById('category_id').addEventListener('change', function() {
+        const categoryId = this.value;
+        const subcategorySelect = document.getElementById('subcategory_id');
+        const options = subcategorySelect.querySelectorAll('option[data-category]');
+        
+        // Mostrar todas las subcategorías de la categoría seleccionada
+        options.forEach(option => {
+            if (option.dataset.category === categoryId || categoryId === '') {
+                option.style.display = 'block';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+        
+        // Resetear selección si no es válida
+        if (categoryId !== '' && subcategorySelect.value !== '') {
+            const selectedOption = subcategorySelect.querySelector(`option[value="${subcategorySelect.value}"]`);
+            if (selectedOption && selectedOption.dataset.category !== categoryId) {
+                subcategorySelect.value = '';
+            }
+        }
+    });
+
+    // Sincronizar número de colores con campos
+    document.getElementById('print_colors_count').addEventListener('change', function() {
+        const count = parseInt(this.value);
+        const container = document.getElementById('print-colors-container');
+        const currentRows = container.querySelectorAll('.print-color-row');
+        
+        if (count > currentRows.length) {
+            // Agregar filas
+            for (let i = currentRows.length; i < count; i++) {
+                document.getElementById('add-print-color').click();
+            }
+        } else if (count < currentRows.length) {
+            // Remover filas extras
+            for (let i = currentRows.length - 1; i >= count; i--) {
+                currentRows[i].remove();
+            }
+        }
+    });
+
+    // Si hay una categoría preseleccionada (por ejemplo, desde URL), ejecutar el filtro
+    const categorySelect = document.getElementById('category_id');
+    if (categorySelect.value) {
+        categorySelect.dispatchEvent(new Event('change'));
     }
 });
 </script>
