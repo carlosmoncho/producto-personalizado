@@ -56,6 +56,10 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::delete('available-colors/{id}', [AvailableColorController::class, 'destroy'])->name('available-colors.destroy');
     Route::put('available-colors/order', [AvailableColorController::class, 'updateOrder'])->name('available-colors.update-order');
 
+    Route::post('available-print-colors', [AvailablePrintColorController::class, 'store'])->name('available-print-colors.store');
+    Route::delete('available-print-colors/{id}', [AvailablePrintColorController::class, 'destroy'])->name('available-print-colors.destroy');
+    Route::put('available-print-colors/order', [AvailablePrintColorController::class, 'updateOrder'])->name('available-print-colors.update-order');
+
     
 });
 
