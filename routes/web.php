@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CustomFieldController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\AvailableColorController; 
+use App\Http\Controllers\Admin\AvailablePrintColorController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
