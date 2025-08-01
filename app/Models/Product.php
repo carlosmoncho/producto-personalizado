@@ -1,5 +1,4 @@
 <?php
-// app/Models/Product.php
 
 namespace App\Models;
 
@@ -16,7 +15,7 @@ class Product extends Model
         'slug',
         'description',
         'sku',
-        'colors', // Cambiar 'color' por 'colors'
+        'colors',
         'material',
         'sizes',
         'printing_system',
@@ -28,15 +27,13 @@ class Product extends Model
         'active',
         'category_id',
         'subcategory_id',
-        'custom_fields'
     ];
 
     protected $casts = [
-        'colors' => 'array', // Nuevo cast para colors
+        'colors' => 'array',
         'sizes' => 'array',
         'print_colors' => 'array',
         'images' => 'array',
-        'custom_fields' => 'array',
         'active' => 'boolean',
     ];
 
@@ -53,13 +50,6 @@ class Product extends Model
     public function pricing()
     {
         return $this->hasMany(ProductPricing::class);
-    }
-
-    public function customFields()
-    {
-        return $this->belongsToMany(CustomField::class, 'product_custom_fields')
-                    ->withPivot('value')
-                    ->withTimestamps();
     }
 
     public function orderItems()
@@ -94,52 +84,13 @@ class Product extends Model
     public function getFirstImageUrl()
     {
         $images = $this->getImagesUrls();
-        return $images ? $images[0] : null;
+        return $images ? $images[0] : asset('images/no-image.png');
     }
 
-    public function getModel3DUrl()
+    public function getModel3dUrl()
     {
-        if ($this->model_3d_file && Storage::disk('public')->exists($this->model_3d_file)) {
-            return Storage::disk('public')->url($this->model_3d_file);
-        }
-        return null;
-    }
-
-    public function deleteImages()
-    {
-        if ($this->images && is_array($this->images)) {
-            foreach ($this->images as $image) {
-                if (Storage::disk('public')->exists($image)) {
-                    Storage::disk('public')->delete($image);
-                }
-            }
-        }
-    }
-
-    public function deleteModel3D()
-    {
-        if ($this->model_3d_file && Storage::disk('public')->exists($this->model_3d_file)) {
-            Storage::disk('public')->delete($this->model_3d_file);
-        }
-    }
-
-    /**
-     * Obtener lista de colores como string
-     */
-    public function getColorsListAttribute()
-    {
-        return $this->colors ? implode(', ', $this->colors) : '';
-    }
-
-    /**
-     * Obtener objetos de colores disponibles
-     */
-    public function getColorObjects()
-    {
-        if (!$this->colors) {
-            return collect();
-        }
-
-        return AvailableColor::whereIn('name', $this->colors)->get();
+        return $this->model_3d_file 
+            ? Storage::disk('public')->url($this->model_3d_file)
+            : null;
     }
 }

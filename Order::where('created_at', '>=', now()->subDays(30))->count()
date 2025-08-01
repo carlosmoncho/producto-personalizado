@@ -1,0 +1,23 @@
+[90m= [39m[34;4mIlluminate\Database\Eloquent\Collection[39;24m {#6290
+    [34mall[39m: [
+      [34;4mApp\Models\Order[39;24m {#6315
+        [34mid[39m: [35m19[39m,
+        [34morder_number[39m: "[32mORD-2024-000019[39m",
+        [34mtotal_amount[39m: "[32m1820.00[39m",
+        [34mcreated_at[39m: "[32m2025-07-29 13:43:27[39m",
+      },
+      [34;4mApp\Models\Order[39;24m {#6316
+        [34mid[39m: [35m20[39m,
+        [34morder_number[39m: "[32mORD-2024-000020[39m",
+        [34mtotal_amount[39m: "[32m1267.50[39m",
+        [34mcreated_at[39m: "[32m2025-07-29 12:43:27[39m",
+      },
+      [34;4mApp\Models\Order[39;24m {#6317
+        [34mid[39m: [35m21[39m,
+        [34morder_number[39m: "[32mORD-2024-000021[39m",
+        [34mtotal_amount[39m: "[32m520.00[39m",
+        [34mcreated_at[39m: "[32m2025-07-29 05:43:27[39m",
+      },
+    ],
+  }
+

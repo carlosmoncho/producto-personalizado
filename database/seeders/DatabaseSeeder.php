@@ -6,7 +6,6 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    
     public function run()
     {
         $this->call([
@@ -14,7 +13,8 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             SubcategorySeeder::class,
             AvailableColorSeeder::class,
-            CustomFieldSeeder::class,
+            AvailablePrintColorSeeder::class,
+            AvailableSizeSeeder::class,
             ProductSeeder::class,
             OrderSeeder::class,
         ]);

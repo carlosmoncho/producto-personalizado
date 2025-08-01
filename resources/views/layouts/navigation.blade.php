@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
     <div class="container">
         <!-- Logo/Brand -->
-        <a class="navbar-brand navbar-brand-custom" href="{{ route('dashboard') }}">
+        <a class="navbar-brand navbar-brand-custom" href="{{ route('admin.dashboard') }}">
             <i class="bi bi-shop me-2"></i>
             {{ config('app.name', 'Laravel') }}
         </a>
@@ -15,21 +15,12 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" 
-                       href="{{ route('dashboard') }}">
+                    <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" 
+                       href="{{ route('admin.dashboard') }}">
                         <i class="bi bi-house me-1"></i>
                         Dashboard
                     </a>
                 </li>
-                @auth
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.dashboard') }}">
-                            <i class="bi bi-gear me-1"></i>
-                            Administración
-                        </a>
-                    </li>
-                @endauth
             </ul>
 
             <!-- User Dropdown -->
@@ -87,4 +78,3 @@
         </div>
     </div>
 </nav>
-

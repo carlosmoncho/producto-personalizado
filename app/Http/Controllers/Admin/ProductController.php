@@ -1,12 +1,11 @@
 <?php
-// app/Http/Controllers/Admin/ProductController.php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Subcategory;
-use App\Models\CustomField;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -60,7 +59,6 @@ class ProductController extends Controller
     {
         $categories = Category::where('active', true)->orderBy('sort_order')->get();
         $subcategories = Subcategory::where('active', true)->orderBy('sort_order')->get();
-        $customFields = CustomField::where('active', true)->orderBy('sort_order')->get();
 
         $breadcrumbs = [
             ['name' => 'Productos', 'url' => route('admin.products.index')],
@@ -70,7 +68,6 @@ class ProductController extends Controller
         return view('admin.products.create', compact(
             'categories',
             'subcategories',
-            'customFields',
             'breadcrumbs'
         ));
     }
@@ -90,7 +87,7 @@ class ProductController extends Controller
             'face_count' => 'required|integer|min:1',
             'print_colors_count' => 'required|integer|min:1',
             'print_colors' => 'required|array',
-            'print_colors.*' => 'required|string',
+            'print_colors.*' => 'required|string|exists:available_print_colors,name',
             'category_id' => 'required|exists:categories,id',
             'subcategory_id' => 'required|exists:subcategories,id',
             'images' => 'nullable|array',
@@ -119,7 +116,6 @@ class ProductController extends Controller
             'category_id' => $request->category_id,
             'subcategory_id' => $request->subcategory_id,
             'active' => $request->boolean('active', true),
-            'custom_fields' => $request->custom_fields ?? []
         ];
 
         // Manejar imágenes
@@ -147,10 +143,9 @@ class ProductController extends Controller
                         ->with('success', 'Producto creado exitosamente.');
     }
 
-
     public function show(Product $product)
     {
-        $product->load(['category', 'subcategory', 'pricing', 'customFields']);
+        $product->load(['category', 'subcategory', 'pricing']);
 
         $breadcrumbs = [
             ['name' => 'Productos', 'url' => route('admin.products.index')],
@@ -164,7 +159,6 @@ class ProductController extends Controller
     {
         $categories = Category::where('active', true)->orderBy('sort_order')->get();
         $subcategories = Subcategory::where('active', true)->orderBy('sort_order')->get();
-        $customFields = CustomField::where('active', true)->orderBy('sort_order')->get();
 
         $product->load(['pricing']);
 
@@ -178,7 +172,6 @@ class ProductController extends Controller
             'product',
             'categories',
             'subcategories',
-            'customFields',
             'breadcrumbs'
         ));
     }
@@ -198,7 +191,7 @@ class ProductController extends Controller
             'face_count' => 'required|integer|min:1',
             'print_colors_count' => 'required|integer|min:1',
             'print_colors' => 'required|array',
-            'print_colors.*' => 'required|string',
+            'print_colors.*' => 'required|string|exists:available_print_colors,name',
             'category_id' => 'required|exists:categories,id',
             'subcategory_id' => 'required|exists:subcategories,id',
             'images' => 'nullable|array',
@@ -211,10 +204,10 @@ class ProductController extends Controller
             'pricing.*.unit_price' => 'required|numeric|min:0',
             'active' => 'boolean'
         ]);
-    
+
         $productData = [
             'name' => $request->name,
-            'slug' => Str::slug($request->name),
+            'slug' => $request->slug ?? Str::slug($request->name),
             'description' => $request->description,
             'sku' => $request->sku,
             'colors' => $request->colors,
@@ -227,48 +220,55 @@ class ProductController extends Controller
             'category_id' => $request->category_id,
             'subcategory_id' => $request->subcategory_id,
             'active' => $request->boolean('active', true),
-            'custom_fields' => $request->custom_fields ?? $product->custom_fields
         ];
-    
-        // Manejar imágenes
+
+        // Manejar nuevas imágenes
         if ($request->hasFile('images')) {
-            // Eliminar imágenes anteriores
-            $product->deleteImages();
-            // Guardar nuevas imágenes
-            $imagePaths = [];
+            $imagePaths = $product->images ?? [];
             foreach ($request->file('images') as $image) {
                 $imagePaths[] = $image->store('products', 'public');
             }
             $productData['images'] = $imagePaths;
         }
-    
+
         // Manejar modelo 3D
         if ($request->hasFile('model_3d')) {
-            // Eliminar modelo 3D anterior
-            $product->deleteModel3D();
-            // Guardar nuevo modelo 3D
+            // Eliminar modelo anterior si existe
+            if ($product->model_3d_file) {
+                Storage::disk('public')->delete($product->model_3d_file);
+            }
             $productData['model_3d_file'] = $request->file('model_3d')->store('3d-models', 'public');
         }
-    
+
         $product->update($productData);
-    
+
         // Actualizar precios
         $product->pricing()->delete();
         foreach ($request->pricing as $priceData) {
             $product->pricing()->create($priceData);
         }
-    
+
         return redirect()->route('admin.products.index')
                         ->with('success', 'Producto actualizado exitosamente.');
     }
-    
 
     public function destroy(Product $product)
     {
         try {
-            $product->deleteImages();
-            $product->deleteModel3D();
+            // Eliminar imágenes
+            if ($product->images && is_array($product->images)) {
+                foreach ($product->images as $image) {
+                    Storage::disk('public')->delete($image);
+                }
+            }
+
+            // Eliminar modelo 3D
+            if ($product->model_3d_file) {
+                Storage::disk('public')->delete($product->model_3d_file);
+            }
+
             $product->delete();
+
             return redirect()->route('admin.products.index')
                             ->with('success', 'Producto eliminado exitosamente.');
         } catch (\Exception $e) {
@@ -277,13 +277,12 @@ class ProductController extends Controller
         }
     }
 
-    // Método AJAX para obtener subcategorías por categoría
-    public function getSubcategories(Request $request)
+    public function getSubcategories(Category $category)
     {
-        $subcategories = Subcategory::where('category_id', $request->category_id)
-                                    ->where('active', true)
-                                    ->orderBy('sort_order')
-                                    ->get();
+        $subcategories = $category->subcategories()
+                                  ->where('active', true)
+                                  ->orderBy('sort_order')
+                                  ->get();
 
         return response()->json($subcategories);
     }

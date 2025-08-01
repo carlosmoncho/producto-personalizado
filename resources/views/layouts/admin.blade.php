@@ -5,146 +5,452 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }} - Panel de Administración</title>
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <title>@yield('title', 'Admin') - {{ config('app.name', 'Laravel') }}</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-
-    <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Custom CSS -->
     <style>
+        /* ======================================== */
+        /* ESTILOS BASE DEL PANEL */
+        /* ======================================== */
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        /* Sidebar */
         .sidebar {
             min-height: 100vh;
             background: linear-gradient(135deg, #c28928 0%, #c08025 100%);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         }
+
         .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, 0.85);
             padding: 0.75rem 1rem;
             border-radius: 0.375rem;
             margin-bottom: 0.25rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
         }
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
+
+        .sidebar .nav-link:hover {
             background: rgba(255, 255, 255, 0.1);
             color: white;
+            transform: translateX(5px);
         }
+
+        .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        }
+
         .sidebar .nav-link i {
             margin-right: 0.5rem;
             width: 1.2rem;
+            text-align: center;
         }
-        .main-content {
-            background-color: #f8f9fa;
+
+        .sidebar hr {
+            border-color: rgba(255, 255, 255, 0.2);
+            margin: 1rem 0;
+        }
+
+        /* Content wrapper */
+        .content-wrapper {
             min-height: 100vh;
+            background-color: #f8f9fa;
         }
+
+
+        /* ======================================== */
+        /* ESTILOS PARA CARDS */
+        /* ======================================== */
+        
         .card {
             border: none;
             border-radius: 0.75rem;
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: all 0.3s ease;
         }
+
+        .card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
         .card-header {
             background: linear-gradient(135deg, #c28928 0%, #c08025 100%);
             color: white;
             border-radius: 0.75rem 0.75rem 0 0 !important;
+            font-weight: 600;
+            border: none;
         }
+
+        .card-header h5,
+        .card-header h6 {
+            margin-bottom: 0;
+            color: white;
+        }
+
+        /* ======================================== */
+        /* ESTILOS PARA BOTONES */
+        /* ======================================== */
+        
         .btn-primary {
             background: linear-gradient(135deg, #c28928 0%, #c08025 100%);
             border: none;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
         }
+
         .btn-primary:hover {
             background: linear-gradient(135deg, #d9a745 0%, #c89330 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(194, 137, 40, 0.3);
         }
-        .table th {
+
+        .btn-secondary {
+            background-color: #6c757d;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            transform: translateY(-1px);
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+            border: none;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            border: none;
+            color: #212529;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border: none;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            border: none;
+        }
+
+        /* Small buttons */
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        /* ======================================== */
+        /* ESTILOS PARA TABLAS */
+        /* ======================================== */
+        
+        .table {
+            background-color: white;
+        }
+
+        .table thead th {
             background-color: #f8f9fa;
             border-top: none;
+            border-bottom: 2px solid #dee2e6;
             font-weight: 600;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 0.5px;
         }
-        .stats-card {
-            background: linear-gradient(135deg, #c28928 0%, #c08025 100%);
-            color: white;
-            border-radius: 0.75rem;
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(194, 137, 40, 0.05);
         }
-        .stats-card .card-body {
-            padding: 1.5rem;
+
+        /* ======================================== */
+        /* ESTILOS PARA FORMULARIOS */
+        /* ======================================== */
+        
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
         }
-        .stats-card i {
-            font-size: 2rem;
-            opacity: 0.8;
+
+        .form-control,
+        .form-select {
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #c28928;
+            box-shadow: 0 0 0 0.2rem rgba(194, 137, 40, 0.25);
+        }
+
+        .form-check-input:checked {
+            background-color: #c28928;
+            border-color: #c28928;
+        }
+
+        .form-check-input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(194, 137, 40, 0.25);
+        }
+
+        /* ======================================== */
+        /* ESTILOS PARA BREADCRUMBS */
+        /* ======================================== */
+        
+        .breadcrumb {
+            background-color: transparent;
+            padding: 0.75rem 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            color: #6c757d;
+        }
+
+        /* ======================================== */
+        /* ESTILOS PARA BADGES */
+        /* ======================================== */
+        
+        .badge {
+            padding: 0.375rem 0.75rem;
+            font-weight: 500;
+            border-radius: 0.375rem;
+        }
+
+        /* ======================================== */
+        /* ESTILOS PARA ALERTAS */
+        /* ======================================== */
+        
+        .alert {
+            border: none;
+            border-radius: 0.5rem;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+
+        /* ======================================== */
+        /* DASHBOARD STATS CARDS */
+        /* ======================================== */
+        
+        .border-left-primary {
+            border-left: 4px solid #0d6efd !important;
+        }
+
+        .border-left-success {
+            border-left: 4px solid #198754 !important;
+        }
+
+        .border-left-info {
+            border-left: 4px solid #0dcaf0 !important;
+        }
+
+        .border-left-warning {
+            border-left: 4px solid #ffc107 !important;
+        }
+
+        .text-xs {
+            font-size: 0.7rem;
+        }
+
+        .font-weight-bold {
+            font-weight: 700 !important;
+        }
+
+        .text-uppercase {
+            text-transform: uppercase !important;
+        }
+
+        .shadow {
+            box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15) !important;
+        }
+
+        .text-gray-800 {
+            color: #5a5c69 !important;
+        }
+
+        /* ======================================== */
+        /* UTILIDADES ADICIONALES */
+        /* ======================================== */
+        
+        .text-danger {
+            color: #dc3545 !important;
+        }
+
+        .text-muted {
+            color: #6c757d !important;
+        }
+
+        .img-thumbnail {
+            border: 2px solid #dee2e6;
+            border-radius: 0.375rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .img-thumbnail:hover {
+            border-color: #c28928;
+        }
+
+        /* Form switch */
+        .form-switch .form-check-input {
+            width: 3em;
+        }
+
+        .form-switch .form-check-input:checked {
+            background-color: #c28928;
+            border-color: #c28928;
+        }
+
+        /* ======================================== */
+        /* RESPONSIVE */
+        /* ======================================== */
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                min-height: auto;
+                margin-bottom: 1rem;
+            }
+            
+            .content-wrapper {
+                padding: 0 0.5rem;
+            }
+            
+            .table {
+                font-size: 0.875rem;
+            }
+            
+            .btn-group {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .btn-group .btn {
+                border-radius: 0.375rem !important;
+                margin-bottom: 0.25rem;
+            }
+        }
+
+        /* ======================================== */
+        /* ANIMACIONES */
+        /* ======================================== */
+        
+        * {
+            transition: color 0.15s ease-in-out,
+                        background-color 0.15s ease-in-out,
+                        border-color 0.15s ease-in-out,
+                        box-shadow 0.15s ease-in-out,
+                        transform 0.15s ease-in-out;
+        }
+
+        /* Loading spinner */
+        .spinner-border {
+            color: #c28928;
         }
     </style>
+    
+    @stack('styles')
 </head>
-<body class="font-sans antialiased">
+<body>
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 d-md-block sidebar " id="sidebarMenu">
-                <div class="position-sticky pt-3">
-                    <div class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-                        <i class="bi bi-shop fs-4 me-2"></i>
-                        <span class="fs-5 fw-bold">Panel Admin</span>
+            <nav class="col-md-2 d-md-block sidebar py-4">
+                <div class="position-sticky">
+                    <div class="text-center mb-4 text-white">
+                        <h5 class="mb-1">{{ config('app.name', 'Laravel') }}</h5>
+                        <small class="opacity-75">Panel de Administración</small>
                     </div>
-                    <hr class="text-white-50">
+                    
                     <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" 
                                href="{{ route('admin.dashboard') }}">
-                                <i class="bi bi-speedometer2"></i>
-                                Dashboard
+                                <i class="bi bi-speedometer2"></i> Dashboard
                             </a>
                         </li>
+                        
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" 
                                href="{{ route('admin.categories.index') }}">
-                                <i class="bi bi-folder"></i>
-                                Categorías
+                                <i class="bi bi-folder"></i> Categorías
                             </a>
                         </li>
+                        
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.subcategories.*') ? 'active' : '' }}" 
                                href="{{ route('admin.subcategories.index') }}">
-                                <i class="bi bi-folder2"></i>
-                                Subcategorías
+                                <i class="bi bi-folder2-open"></i> Subcategorías
                             </a>
                         </li>
+                        
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}" 
                                href="{{ route('admin.products.index') }}">
-                                <i class="bi bi-box"></i>
-                                Productos
+                                <i class="bi bi-box-seam"></i> Productos
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.custom-fields.*') ? 'active' : '' }}" 
-                               href="{{ route('admin.custom-fields.index') }}">
-                                <i class="bi bi-sliders"></i>
-                                Campos Personalizados
-                            </a>
-                        </li>
+                        
+                        @if(Route::has('admin.orders.index'))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}" 
                                href="{{ route('admin.orders.index') }}">
-                                <i class="bi bi-cart"></i>
-                                Pedidos
+                                <i class="bi bi-cart"></i> Pedidos
                             </a>
                         </li>
-                        <hr class="text-white-50">
+                        @endif
+                        
+                        <hr>
+                        
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('profile.edit') }}">
-                                <i class="bi bi-person"></i>
-                                Perfil
+                                <i class="bi bi-person"></i> Mi Perfil
                             </a>
                         </li>
+                        
                         <li class="nav-item">
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="nav-link border-0 bg-transparent text-start w-100">
-                                    <i class="bi bi-box-arrow-right"></i>
-                                    Cerrar Sesión
+                                <button type="submit" class="nav-link btn btn-link text-start w-100 border-0 bg-transparent">
+                                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
                                 </button>
                             </form>
                         </li>
@@ -153,73 +459,29 @@
             </nav>
 
             <!-- Main content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+            <main class="col-md-10 ms-sm-auto px-md-4 content-wrapper">
                 <!-- Top navbar -->
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">@yield('title', 'Panel de Administración')</h1>
-                    <div class="btn-toolbar mb-2 mb-md-0">
-                        <div class="btn-group me-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                                <i class="bi bi-calendar-event"></i>
-                                Esta semana
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#">Hoy</a></li>
-                                <li><a class="dropdown-item" href="#">Esta semana</a></li>
-                                <li><a class="dropdown-item" href="#">Este mes</a></li>
-                            </ul>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <span class="text-muted me-2">Bienvenido, {{ Auth::user()->name }}</span>
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=667eea&color=fff&size=32" 
-                                 alt="Avatar" class="rounded-circle" width="32" height="32">
+                <nav class="navbar navbar-light mb-4">
+                    <div class="container-fluid">
+                        <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        
+                        <div class="d-flex align-items-center ms-auto">
+                            <span class="me-3">{{ Auth::user()->name }}</span>
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=c28928&color=fff" 
+                                 alt="Avatar" 
+                                 class="rounded-circle" 
+                                 width="32" 
+                                 height="32">
                         </div>
                     </div>
-                </div>
-
-                <!-- Breadcrumb -->
-                @if(isset($breadcrumbs))
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        @foreach($breadcrumbs as $breadcrumb)
-                            @if($loop->last)
-                                <li class="breadcrumb-item active" aria-current="page">{{ $breadcrumb['name'] }}</li>
-                            @else
-                                <li class="breadcrumb-item"><a href="{{ $breadcrumb['url'] }}">{{ $breadcrumb['name'] }}</a></li>
-                            @endif
-                        @endforeach
-                    </ol>
                 </nav>
-                @endif
-
-                <!-- Flash messages -->
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="bi bi-check-circle me-2"></i>
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                @if(session('warning'))
-                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        {{ session('warning') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
 
                 <!-- Page content -->
-                @yield('content')
+                <div class="py-3">
+                    @yield('content')
+                </div>
             </main>
         </div>
     </div>
@@ -227,37 +489,6 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Custom JS -->
-    <script>
-        // Auto-hide alerts after 5 seconds
-        setTimeout(function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                if (alert.classList.contains('show')) {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
-                }
-            });
-        }, 5000);
-
-        // Confirm delete actions
-        document.addEventListener('DOMContentLoaded', function() {
-            const deleteButtons = document.querySelectorAll('.btn-delete');
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const form = this.closest('form');
-                    const itemName = this.getAttribute('data-item-name') || 'este elemento';
-                    
-                    if (confirm(`¿Estás seguro de que quieres eliminar ${itemName}?`)) {
-                        form.submit();
-                    }
-                });
-            });
-        });
-    </script>
-
     @stack('scripts')
 </body>
-
 </html>

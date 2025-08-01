@@ -1,124 +1,197 @@
 @extends('layouts.admin')
 
-@section('title', 'Detalles del Producto')
+@section('title', $product->name)
 
 @section('content')
-<div class="row">
-    <div class="col-md-5">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Información del Producto</h5>
-            </div>
-            <div class="card-body">
-                <!-- Imágenes del producto -->
-                @if($product->getImagesUrls())
-                    <div id="productCarousel" class="carousel slide mb-3" data-bs-ride="carousel">
-                        <div class="carousel-inner">
-                            @foreach($product->getImagesUrls() as $index => $imageUrl)
-                                <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
-                                    <img src="{{ $imageUrl }}" class="d-block w-100 rounded" alt="{{ $product->name }}" 
-                                         style="height: 300px; object-fit: cover;">
-                                </div>
-                            @endforeach
-                        </div>
-                        @if(count($product->getImagesUrls()) > 1)
-                            <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
-                                <span class="carousel-control-prev-icon"></span>
-                            </button>
-                            <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
-                                <span class="carousel-control-next-icon"></span>
-                            </button>
-                        @endif
-                    </div>
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            @foreach($breadcrumbs as $breadcrumb)
+                @if($loop->last)
+                    <li class="breadcrumb-item active">{{ $breadcrumb['name'] }}</li>
                 @else
-                    <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3" 
-                         style="width: 100%; height: 300px;">
-                        <i class="bi bi-image display-4 text-muted"></i>
-                    </div>
+                    <li class="breadcrumb-item"><a href="{{ $breadcrumb['url'] }}">{{ $breadcrumb['name'] }}</a></li>
                 @endif
+            @endforeach
+        </ol>
+    </nav>
 
-                <h4>{{ $product->name }}</h4>
-                <p class="text-muted">{{ $product->description }}</p>
-                
-                <div class="row text-center mb-3">
-                    <div class="col-6">
-                        <h6 class="text-primary">{{ $product->category->name }}</h6>
-                        <small>Categoría</small>
-                    </div>
-                    <div class="col-6">
-                        <h6 class="text-success">{{ $product->subcategory->name }}</h6>
-                        <small>Subcategoría</small>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    @if($product->active)
-                        <span class="badge bg-success">Activo</span>
-                    @else
-                        <span class="badge bg-secondary">Inactivo</span>
-                    @endif
-                </div>
-
-                <div class="d-flex gap-2">
-                    <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-primary">
-                        <i class="bi bi-pencil me-2"></i>Editar
-                    </a>
-                    <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-2"></i>Volver
-                    </a>
-                </div>
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3">{{ $product->name }}</h1>
+            <div>
+                <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> Editar
+                </a>
+                <a href="{{ route('admin.products.index') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
             </div>
         </div>
     </div>
 
-    <div class="col-md-7">
-        <!-- Especificaciones -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Especificaciones</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <strong>SKU:</strong> <code>{{ $product->sku }}</code><br>
-                        <strong>Color:</strong> <span class="badge bg-info">{{ $product->color }}</span><br>
-                        <strong>Material:</strong> {{ $product->material }}<br>
-                        <strong>Sistema de Impresión:</strong> {{ $product->printing_system }}
+    <div class="row">
+        <!-- Columna principal -->
+        <div class="col-lg-8">
+            <!-- Información básica -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Información Básica</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>SKU:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            <code>{{ $product->sku }}</code>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <strong>Número de Caras:</strong> {{ $product->face_count }}<br>
-                        <strong>Colores de Impresión:</strong> {{ $product->print_colors_count }}<br>
-                        @if($product->getModel3DUrl())
-                            <strong>Modelo 3D:</strong> <a href="{{ $product->getModel3DUrl() }}" target="_blank">Ver archivo</a>
-                        @endif
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Slug:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            {{ $product->slug }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Estado:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @if($product->active)
+                                <span class="badge bg-success">Activo</span>
+                            @else
+                                <span class="badge bg-danger">Inactivo</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Categoría:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            {{ $product->category->name }} / {{ $product->subcategory->name }}
+                        </div>
+                    </div>
+
+                    @if($product->description)
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Descripción:</strong>
+                            </div>
+                            <div class="col-md-9">
+                                {{ $product->description }}
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Especificaciones -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Especificaciones</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Material:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ $product->material }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Sistema de Impresión:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ $product->printing_system }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Número de Caras:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ $product->face_count }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Colores de Impresión:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ $product->print_colors_count }} colores
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="mt-3">
-                    <strong>Tamaños Disponibles:</strong><br>
-                    @foreach($product->sizes as $size)
-                        <span class="badge bg-secondary me-1">{{ $size }}</span>
-                    @endforeach
+            <!-- Colores y Tallas -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Colores y Tallas</h5>
                 </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Colores Disponibles:</strong>
+                        <div class="mt-2">
+                            @php
+                                $availableColors = \App\Models\AvailableColor::whereIn('name', $product->colors ?? [])->get();
+                            @endphp
+                            @foreach($availableColors as $color)
+                                <span class="badge me-2 mb-2" 
+                                      style="background-color: {{ $color->hex_code }}; color: {{ $color->hex_code == '#FFFFFF' ? '#000' : '#FFF' }}">
+                                    {{ $color->name }}
+                                </span>
+                            @endforeach
+                        </div>
+                    </div>
 
-                <div class="mt-3">
-                    <strong>Colores de Impresión:</strong><br>
-                    @foreach($product->print_colors as $color)
-                        <span class="badge bg-primary me-1">{{ $color }}</span>
-                    @endforeach
+                    <div class="mb-3">
+                        <strong>Colores de Impresión:</strong>
+                        <div class="mt-2">
+                            @php
+                                $printColors = \App\Models\AvailablePrintColor::whereIn('name', $product->print_colors ?? [])->get();
+                            @endphp
+                            @foreach($printColors as $color)
+                                <span class="badge me-2 mb-2" 
+                                      style="background-color: {{ $color->hex_code }}; color: {{ $color->hex_code == '#FFFFFF' ? '#000' : '#FFF' }}">
+                                    {{ $color->name }}
+                                </span>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div>
+                        <strong>Tallas Disponibles:</strong>
+                        <div class="mt-2">
+                            @foreach($product->sizes ?? [] as $size)
+                                <span class="badge bg-secondary me-2">{{ $size }}</span>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Precios -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Tabla de Precios</h5>
-            </div>
-            <div class="card-body">
-                @if($product->pricing->count() > 0)
+            <!-- Precios -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Tabla de Precios</h5>
+                </div>
+                <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-sm">
+                        <table class="table table-bordered">
                             <thead>
                                 <tr>
                                     <th>Cantidad</th>
@@ -127,25 +200,109 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($product->pricing->sortBy('quantity_from') as $pricing)
+                                @foreach($product->pricing->sortBy('quantity_from') as $price)
                                     <tr>
-                                        <td>{{ $pricing->quantity_from }} - {{ $pricing->quantity_to }}</td>
-                                        <td><strong>€{{ number_format($pricing->price, 2) }}</strong></td>
-                                        <td>€{{ number_format($pricing->unit_price, 2) }}</td>
+                                        <td>{{ $price->quantity_from }} - {{ $price->quantity_to }}</td>
+                                        <td>€{{ number_format($price->price, 2) }}</td>
+                                        <td>€{{ number_format($price->unit_price, 2) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
-                @else
-                    <div class="text-center py-4">
-                        <i class="bi bi-currency-euro display-4 text-muted"></i>
-                        <h6 class="mt-2">No hay precios configurados</h6>
-                        <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-primary btn-sm">
-                            <i class="bi bi-plus-circle me-1"></i>Configurar Precios
-                        </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna lateral -->
+        <div class="col-lg-4">
+            <!-- Imágenes -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Imágenes</h5>
+                </div>
+                <div class="card-body">
+                    @if($product->images && count($product->images) > 0)
+                        <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                @foreach($product->getImagesUrls() as $index => $imageUrl)
+                                    <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
+                                        <img src="{{ $imageUrl }}" class="d-block w-100" alt="Imagen {{ $index + 1 }}">
+                                    </div>
+                                @endforeach
+                            </div>
+                            @if(count($product->images) > 1)
+                                <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon"></span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon"></span>
+                                </button>
+                            @endif
+                        </div>
+                    @else
+                        <p class="text-muted text-center">No hay imágenes disponibles</p>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Modelo 3D -->
+            @if($product->model_3d_file)
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Modelo 3D</h5>
                     </div>
-                @endif
+                    <div class="card-body">
+                        <div class="d-grid">
+                            <a href="{{ $product->getModel3dUrl() }}" class="btn btn-primary" download>
+                                <i class="bi bi-download"></i> Descargar Modelo 3D
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Información adicional -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Información Adicional</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <small class="text-muted">Creado:</small><br>
+                        {{ $product->created_at->format('d/m/Y H:i') }}
+                    </p>
+                    <p class="mb-0">
+                        <small class="text-muted">Última actualización:</small><br>
+                        {{ $product->updated_at->format('d/m/Y H:i') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <hr>
+            <div class="d-flex justify-content-between">
+                <form action="{{ route('admin.products.destroy', $product) }}" method="POST" 
+                      onsubmit="return confirm('¿Estás seguro de que quieres eliminar este producto?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Eliminar Producto
+                    </button>
+                </form>
+                
+                <div>
+                    <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-primary">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                    <a href="{{ route('admin.products.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver al Listado
+                    </a>
+                </div>
             </div>
         </div>
     </div>

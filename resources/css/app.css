@@ -1,3 +1,477 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* ===================================
+   ESTILOS GENERALES Y VARIABLES
+   =================================== */
+
+   :root {
+    --primary-color: #c28928;
+    --primary-dark: #c08025;
+    --primary-light: #d9a745;
+    --primary-lighter: #c89330;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --info-color: #17a2b8;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --white: #ffffff;
+    --gray-100: #f8f9fa;
+    --gray-200: #e9ecef;
+    --gray-300: #dee2e6;
+    --gray-400: #ced4da;
+    --gray-500: #adb5bd;
+    --gray-600: #6c757d;
+    --gray-700: #495057;
+    --gray-800: #343a40;
+    --gray-900: #212529;
+}
+
+body {
+    font-family: 'Figtree', sans-serif;
+}
+
+/* ===================================
+   SIDEBAR Y NAVEGACIÓN ADMIN
+   =================================== */
+
+.sidebar {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 0.25rem;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.sidebar .nav-link i {
+    margin-right: 0.5rem;
+    width: 1.2rem;
+}
+
+/* ===================================
+   MAIN CONTENT
+   =================================== */
+
+.main-content {
+    background-color: var(--light-color);
+    min-height: 100vh;
+}
+
+/* ===================================
+   CARDS
+   =================================== */
+
+.card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-radius: 0.75rem 0.75rem 0 0 !important;
+}
+
+/* Stats Cards del Dashboard */
+.stats-card {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-radius: 0.75rem;
+}
+
+.stats-card .card-body {
+    padding: 1.5rem;
+}
+
+.stats-card i {
+    font-size: 2rem;
+    opacity: 0.8;
+}
+
+/* ===================================
+   BOTONES
+   =================================== */
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-lighter) 100%);
+}
+
+.btn-custom {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    border: none;
+    color: white;
+    padding: 12px 30px;
+}
+
+/* ===================================
+   TABLAS
+   =================================== */
+
+.table th {
+    background-color: var(--light-color);
+    border-top: none;
+    font-weight: 600;
+}
+
+/* ===================================
+   FORMULARIOS - COLORES Y PRODUCTOS
+   =================================== */
+
+.form-control-color {
+    width: 50px;
+    height: 38px;
+    padding: 0.375rem;
+    cursor: pointer;
+}
+
+.color-preview {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    cursor: pointer;
+}
+
+.form-check-label:hover .color-preview {
+    transform: scale(1.1);
+    transition: transform 0.2s;
+}
+
+.color-item .form-check-label,
+.print-color-item .form-check-label {
+    width: 100%;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.color-item .form-check-label:hover,
+.print-color-item .form-check-label:hover {
+    background-color: var(--light-color);
+}
+
+.selected-color-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    background-color: var(--light-color);
+    border: 1px solid var(--gray-300);
+    border-radius: 20px;
+    font-size: 0.875rem;
+}
+
+.selected-color-badge .color-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    margin-right: 5px;
+    border: 1px solid #ddd;
+}
+
+.remove-color,
+.remove-print-color-btn {
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+}
+
+.remove-color:hover,
+.remove-print-color-btn:hover {
+    color: var(--danger-color) !important;
+}
+
+/* ===================================
+   PREVIEW DE IMÁGENES
+   =================================== */
+
+.image-preview {
+    position: relative;
+    display: inline-block;
+}
+
+.image-preview img {
+    max-width: 100px;
+    max-height: 100px;
+    object-fit: cover;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.image-preview .remove-preview {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--danger-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+/* ===================================
+   TOAST NOTIFICATIONS
+   =================================== */
+
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+/* ===================================
+   LOGIN Y GUEST LAYOUT
+   =================================== */
+
+body.login-page {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-container {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+}
+
+.logo-container {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.logo {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+/* ===================================
+   NAVBAR Y APP LAYOUT
+   =================================== */
+
+.navbar-brand-custom {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white !important;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.navbar-brand-custom:hover {
+    color: white !important;
+    transform: translateY(-1px);
+    transition: all 0.2s;
+}
+
+/* ===================================
+   HERO SECTION Y LANDING PAGE
+   =================================== */
+
+.hero-section {
+    padding: 100px 0;
+    color: white;
+    text-align: center;
+}
+
+.feature-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    height: 100%;
+}
+
+.feature-icon {
+    font-size: 3rem;
+    color: #667eea;
+    margin-bottom: 1rem;
+}
+
+/* ===================================
+   RESPONSIVE
+   =================================== */
+
+@media (max-width: 768px) {
+    .sidebar {
+        min-height: auto;
+    }
+    
+    .stats-card {
+        margin-bottom: 1rem;
+    }
+    
+    .login-container {
+        margin: 1rem;
+    }
+}
+
+/* ===================================
+   UTILITIES
+   =================================== */
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+}
+
+.text-primary-custom {
+    color: var(--primary-color) !important;
+}
+
+.border-primary-custom {
+    border-color: var(--primary-color) !important;
+}
+
+/* Badges */
+.badge {
+    border-radius: 0.375rem;
+}
+
+/* Shadows */
+.shadow-sm {
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.075) !important;
+}
+
+.shadow {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+}
+
+.shadow-lg {
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+}
+
+/* ===================================
+   ANIMACIONES
+   =================================== */
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hover-scale:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+}
+
+/* ===================================
+   PERSONALIZACIÓN ADICIONAL
+   =================================== */
+
+/* Breadcrumbs */
+.breadcrumb {
+    background-color: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+/* Forms */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(194, 137, 40, 0.25);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--gray-100);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--gray-400);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-600);
+}
+
+/* Print styles */
+@media print {
+    .sidebar,
+    .navbar,
+    .btn,
+    .no-print {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
+
+/* ===================================
+   COMPONENTES ESPECÍFICOS
+   =================================== */
+
+/* Pricing table */
+.pricing-table th {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Product gallery */
+.product-gallery {
+    border: 1px solid var(--gray-300);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+/* Order status badges */
+.order-status-pending { background-color: var(--warning-color); }
+.order-status-processing { background-color: var(--info-color); }
+.order-status-approved { background-color: var(--primary-color); }
+.order-status-shipped { background-color: var(--success-color); }
+.order-status-delivered { background-color: var(--success-color); }
+.order-status-cancelled { background-color: var(--danger-color); }
