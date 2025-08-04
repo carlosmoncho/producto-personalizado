@@ -6,15 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Subcategory;
+use App\Models\PrintingSystem;
+use App\Models\AvailableColor;
+use App\Models\AvailableMaterial;
+use App\Models\AvailableSize;
+use App\Models\AvailablePrintColor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'subcategory', 'pricing']);
+        $query = Product::with(['category', 'subcategory', 'pricing', 'printingSystems']);
 
         // Filtros
         if ($request->has('category_id') && $request->category_id) {
@@ -59,6 +65,11 @@ class ProductController extends Controller
     {
         $categories = Category::where('active', true)->orderBy('sort_order')->get();
         $subcategories = Subcategory::where('active', true)->orderBy('sort_order')->get();
+        $printingSystems = PrintingSystem::where('active', true)->orderBy('sort_order')->get();
+        $availableColors = AvailableColor::where('active', true)->orderBy('sort_order')->get();
+        $availableMaterials = AvailableMaterial::where('active', true)->orderBy('sort_order')->get();
+        $availableSizes = AvailableSize::where('active', true)->orderBy('sort_order')->get();
+        $availablePrintColors = AvailablePrintColor::where('active', true)->orderBy('sort_order')->get();
 
         $breadcrumbs = [
             ['name' => 'Productos', 'url' => route('admin.products.index')],
@@ -68,6 +79,11 @@ class ProductController extends Controller
         return view('admin.products.create', compact(
             'categories',
             'subcategories',
+            'printingSystems',
+            'availableColors',
+            'availableMaterials',
+            'availableSizes',
+            'availablePrintColors',
             'breadcrumbs'
         ));
     }
@@ -80,10 +96,12 @@ class ProductController extends Controller
             'sku' => 'required|string|unique:products,sku',
             'colors' => 'required|array|min:1',
             'colors.*' => 'required|string|exists:available_colors,name',
-            'material' => 'required|string|max:255',
+            'materials' => 'required|array|min:1',
+            'materials.*' => 'required|string|exists:available_materials,name',
             'sizes' => 'required|array',
             'sizes.*' => 'required|string',
-            'printing_system' => 'required|string|max:255',
+            'printing_systems' => 'required|array|min:1',
+            'printing_systems.*' => 'required|exists:printing_systems,id',
             'face_count' => 'required|integer|min:1',
             'print_colors_count' => 'required|integer|min:1',
             'print_colors' => 'required|array',
@@ -101,51 +119,75 @@ class ProductController extends Controller
             'active' => 'boolean'
         ]);
 
-        $productData = [
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'description' => $request->description,
-            'sku' => $request->sku,
-            'colors' => $request->colors,
-            'material' => $request->material,
-            'sizes' => $request->sizes,
-            'printing_system' => $request->printing_system,
-            'face_count' => $request->face_count,
-            'print_colors_count' => $request->print_colors_count,
-            'print_colors' => $request->print_colors,
-            'category_id' => $request->category_id,
-            'subcategory_id' => $request->subcategory_id,
-            'active' => $request->boolean('active', true),
-        ];
+        DB::beginTransaction();
 
-        // Manejar imágenes
-        if ($request->hasFile('images')) {
-            $imagePaths = [];
-            foreach ($request->file('images') as $image) {
-                $imagePaths[] = $image->store('products', 'public');
+        try {
+            $productData = [
+                'name' => $request->name,
+                'slug' => Str::slug($request->name),
+                'description' => $request->description,
+                'sku' => $request->sku,
+                'colors' => $request->colors,
+                'materials' => $request->materials,
+                'sizes' => $request->sizes,
+                'face_count' => $request->face_count,
+                'print_colors_count' => $request->print_colors_count,
+                'print_colors' => $request->print_colors,
+                'category_id' => $request->category_id,
+                'subcategory_id' => $request->subcategory_id,
+                'active' => $request->boolean('active', true),
+            ];
+
+            // Manejar imágenes
+            if ($request->hasFile('images')) {
+                $imagePaths = [];
+                foreach ($request->file('images') as $image) {
+                    $imagePaths[] = $image->store('products', 'public');
+                }
+                $productData['images'] = $imagePaths;
             }
-            $productData['images'] = $imagePaths;
+
+            // Manejar modelo 3D
+            if ($request->hasFile('model_3d')) {
+                $productData['model_3d_file'] = $request->file('model_3d')->store('3d-models', 'public');
+            }
+
+            $product = Product::create($productData);
+
+            // Asociar sistemas de impresión
+            $product->printingSystems()->attach($request->printing_systems);
+
+            // Guardar precios
+            foreach ($request->pricing as $priceData) {
+                $product->pricing()->create($priceData);
+            }
+
+            DB::commit();
+
+            return redirect()->route('admin.products.index')
+                            ->with('success', 'Producto creado exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            // Limpiar archivos subidos si hay error
+            if (isset($imagePaths)) {
+                foreach ($imagePaths as $path) {
+                    Storage::disk('public')->delete($path);
+                }
+            }
+            if (isset($productData['model_3d_file'])) {
+                Storage::disk('public')->delete($productData['model_3d_file']);
+            }
+
+            return redirect()->back()
+                            ->withInput()
+                            ->with('error', 'Error al crear el producto: ' . $e->getMessage());
         }
-
-        // Manejar modelo 3D
-        if ($request->hasFile('model_3d')) {
-            $productData['model_3d_file'] = $request->file('model_3d')->store('3d-models', 'public');
-        }
-
-        $product = Product::create($productData);
-
-        // Guardar precios
-        foreach ($request->pricing as $priceData) {
-            $product->pricing()->create($priceData);
-        }
-
-        return redirect()->route('admin.products.index')
-                        ->with('success', 'Producto creado exitosamente.');
     }
 
     public function show(Product $product)
     {
-        $product->load(['category', 'subcategory', 'pricing']);
+        $product->load(['category', 'subcategory', 'pricing', 'printingSystems']);
 
         $breadcrumbs = [
             ['name' => 'Productos', 'url' => route('admin.products.index')],
@@ -159,8 +201,13 @@ class ProductController extends Controller
     {
         $categories = Category::where('active', true)->orderBy('sort_order')->get();
         $subcategories = Subcategory::where('active', true)->orderBy('sort_order')->get();
+        $printingSystems = PrintingSystem::where('active', true)->orderBy('sort_order')->get();
+        $availableColors = AvailableColor::where('active', true)->orderBy('sort_order')->get();
+        $availableMaterials = AvailableMaterial::where('active', true)->orderBy('sort_order')->get();
+        $availableSizes = AvailableSize::where('active', true)->orderBy('sort_order')->get();
+        $availablePrintColors = AvailablePrintColor::where('active', true)->orderBy('sort_order')->get();
 
-        $product->load(['pricing']);
+        $product->load(['pricing', 'printingSystems']);
 
         $breadcrumbs = [
             ['name' => 'Productos', 'url' => route('admin.products.index')],
@@ -172,6 +219,11 @@ class ProductController extends Controller
             'product',
             'categories',
             'subcategories',
+            'printingSystems',
+            'availableColors',
+            'availableMaterials',
+            'availableSizes',
+            'availablePrintColors',
             'breadcrumbs'
         ));
     }
@@ -184,10 +236,12 @@ class ProductController extends Controller
             'sku' => 'required|string|unique:products,sku,' . $product->id,
             'colors' => 'required|array|min:1',
             'colors.*' => 'required|string|exists:available_colors,name',
-            'material' => 'required|string|max:255',
+            'materials' => 'required|array|min:1',
+            'materials.*' => 'required|string|exists:available_materials,name',
             'sizes' => 'required|array',
             'sizes.*' => 'required|string',
-            'printing_system' => 'required|string|max:255',
+            'printing_systems' => 'required|array|min:1',
+            'printing_systems.*' => 'required|exists:printing_systems,id',
             'face_count' => 'required|integer|min:1',
             'print_colors_count' => 'required|integer|min:1',
             'print_colors' => 'required|array',
@@ -205,55 +259,71 @@ class ProductController extends Controller
             'active' => 'boolean'
         ]);
 
-        $productData = [
-            'name' => $request->name,
-            'slug' => $request->slug ?? Str::slug($request->name),
-            'description' => $request->description,
-            'sku' => $request->sku,
-            'colors' => $request->colors,
-            'material' => $request->material,
-            'sizes' => $request->sizes,
-            'printing_system' => $request->printing_system,
-            'face_count' => $request->face_count,
-            'print_colors_count' => $request->print_colors_count,
-            'print_colors' => $request->print_colors,
-            'category_id' => $request->category_id,
-            'subcategory_id' => $request->subcategory_id,
-            'active' => $request->boolean('active', true),
-        ];
+        DB::beginTransaction();
 
-        // Manejar nuevas imágenes
-        if ($request->hasFile('images')) {
-            $imagePaths = $product->images ?? [];
-            foreach ($request->file('images') as $image) {
-                $imagePaths[] = $image->store('products', 'public');
+        try {
+            $productData = [
+                'name' => $request->name,
+                'slug' => $request->slug ?? Str::slug($request->name),
+                'description' => $request->description,
+                'sku' => $request->sku,
+                'colors' => $request->colors,
+                'materials' => $request->materials,
+                'sizes' => $request->sizes,
+                'face_count' => $request->face_count,
+                'print_colors_count' => $request->print_colors_count,
+                'print_colors' => $request->print_colors,
+                'category_id' => $request->category_id,
+                'subcategory_id' => $request->subcategory_id,
+                'active' => $request->boolean('active', true),
+            ];
+
+            // Manejar nuevas imágenes
+            if ($request->hasFile('images')) {
+                $imagePaths = $product->images ?? [];
+                foreach ($request->file('images') as $image) {
+                    $imagePaths[] = $image->store('products', 'public');
+                }
+                $productData['images'] = $imagePaths;
             }
-            $productData['images'] = $imagePaths;
-        }
 
-        // Manejar modelo 3D
-        if ($request->hasFile('model_3d')) {
-            // Eliminar modelo anterior si existe
-            if ($product->model_3d_file) {
-                Storage::disk('public')->delete($product->model_3d_file);
+            // Manejar modelo 3D
+            if ($request->hasFile('model_3d')) {
+                // Eliminar modelo anterior si existe
+                if ($product->model_3d_file) {
+                    Storage::disk('public')->delete($product->model_3d_file);
+                }
+                $productData['model_3d_file'] = $request->file('model_3d')->store('3d-models', 'public');
             }
-            $productData['model_3d_file'] = $request->file('model_3d')->store('3d-models', 'public');
+
+            $product->update($productData);
+
+            // Actualizar sistemas de impresión (sync reemplaza las relaciones existentes)
+            $product->printingSystems()->sync($request->printing_systems);
+
+            // Actualizar precios
+            $product->pricing()->delete();
+            foreach ($request->pricing as $priceData) {
+                $product->pricing()->create($priceData);
+            }
+
+            DB::commit();
+
+            return redirect()->route('admin.products.index')
+                            ->with('success', 'Producto actualizado exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return redirect()->back()
+                            ->withInput()
+                            ->with('error', 'Error al actualizar el producto: ' . $e->getMessage());
         }
-
-        $product->update($productData);
-
-        // Actualizar precios
-        $product->pricing()->delete();
-        foreach ($request->pricing as $priceData) {
-            $product->pricing()->create($priceData);
-        }
-
-        return redirect()->route('admin.products.index')
-                        ->with('success', 'Producto actualizado exitosamente.');
     }
 
     public function destroy(Product $product)
     {
+        DB::beginTransaction();
+
         try {
             // Eliminar imágenes
             if ($product->images && is_array($product->images)) {
@@ -269,11 +339,15 @@ class ProductController extends Controller
 
             $product->delete();
 
+            DB::commit();
+
             return redirect()->route('admin.products.index')
                             ->with('success', 'Producto eliminado exitosamente.');
         } catch (\Exception $e) {
+            DB::rollBack();
+            
             return redirect()->route('admin.products.index')
-                            ->with('error', 'No se puede eliminar el producto porque tiene pedidos asociados.');
+                            ->with('error', 'Error al eliminar el producto: ' . $e->getMessage());
         }
     }
 
@@ -285,5 +359,39 @@ class ProductController extends Controller
                                   ->get();
 
         return response()->json($subcategories);
+    }
+
+    public function deleteImage(Product $product, Request $request)
+    {
+        $request->validate([
+            'image' => 'required|string'
+        ]);
+
+        $images = $product->images ?? [];
+        $imageToDelete = $request->image;
+
+        // Buscar y eliminar la imagen
+        $key = array_search($imageToDelete, $images);
+        if ($key !== false) {
+            Storage::disk('public')->delete($imageToDelete);
+            unset($images[$key]);
+            $product->images = array_values($images); // Reindexar el array
+            $product->save();
+
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['success' => false], 404);
+    }
+
+    public function toggleStatus(Product $product)
+    {
+        $product->active = !$product->active;
+        $product->save();
+
+        return response()->json([
+            'success' => true,
+            'active' => $product->active
+        ]);
     }
 }

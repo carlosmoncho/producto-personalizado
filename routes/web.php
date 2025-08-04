@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\AvailableColorController; 
 use App\Http\Controllers\Admin\AvailablePrintColorController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\AvailableMaterialController;
+use App\Http\Controllers\Admin\PrintingSystemController;
 
 Route::get('/', function () {
     return Auth::check() 
@@ -65,6 +67,15 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::post('available-sizes', [\App\Http\Controllers\Admin\AvailableSizeController::class, 'store'])->name('available-sizes.store');
     Route::delete('available-sizes/{id}', [\App\Http\Controllers\Admin\AvailableSizeController::class, 'destroy'])->name('available-sizes.destroy');
     Route::put('available-sizes/order', [\App\Http\Controllers\Admin\AvailableSizeController::class, 'updateOrder'])->name('available-sizes.update-order');
+
+    // Materiales disponibles
+    Route::post('available-materials', [AvailableMaterialController::class, 'store'])->name('available-materials.store');
+    Route::delete('available-materials/{id}', [AvailableMaterialController::class, 'destroy'])->name('available-materials.destroy');
+    Route::put('available-materials/order', [AvailableMaterialController::class, 'updateOrder'])->name('available-materials.update-order');
+
+    // Sistemas de impresión
+    Route::resource('printing-systems', PrintingSystemController::class);
+    Route::put('printing-systems/order', [PrintingSystemController::class, 'updateOrder'])->name('printing-systems.update-order');
 });
 
 require __DIR__.'/auth.php';
