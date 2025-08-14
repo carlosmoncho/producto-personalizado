@@ -14,6 +14,12 @@
         <!-- Bootstrap CSS (para consistencia) -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+        
+        <!-- Toastr CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+        
+        <!-- SweetAlert2 CSS -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -60,22 +66,6 @@
 
             <!-- Page Content -->
             <main class="container py-4">
-                <!-- Flash messages -->
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="bi bi-check-circle me-2"></i>
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
 
                 {{ $slot }}
             </main>
@@ -83,6 +73,75 @@
 
         <!-- Bootstrap JS -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        
+        <!-- jQuery (required for Toastr) -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        
+        <!-- Toastr JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+        
+        <!-- SweetAlert2 JS -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        
+        <!-- Toastr Configuration -->
+        <script>
+            // Configure toastr options
+            if (typeof toastr !== 'undefined') {
+                toastr.options = {
+                    "closeButton": true,
+                    "debug": false,
+                    "newestOnTop": true,
+                    "progressBar": true,
+                    "positionClass": "toast-top-right",
+                    "preventDuplicates": true,
+                    "onclick": null,
+                    "showDuration": "300",
+                    "hideDuration": "1000",
+                    "timeOut": "5000",
+                    "extendedTimeOut": "1000",
+                    "showEasing": "swing",
+                    "hideEasing": "linear",
+                    "showMethod": "fadeIn",
+                    "hideMethod": "fadeOut"
+                };
+
+                // Show session flash messages as toastr notifications
+                @if(session('success'))
+                    toastr.success('{{ session('success') }}');
+                @endif
+                
+                @if(session('error'))
+                    toastr.error('{{ session('error') }}');
+                @endif
+                
+                @if(session('warning'))
+                    toastr.warning('{{ session('warning') }}');
+                @endif
+                
+                @if(session('info'))
+                    toastr.info('{{ session('info') }}');
+                @endif
+                
+                @if(session('status'))
+                    @if(session('status') == 'profile-updated')
+                        toastr.success('Perfil actualizado exitosamente');
+                    @elseif(session('status') == 'password-updated')
+                        toastr.success('Contraseña actualizada exitosamente');
+                    @elseif(session('status') == 'verification-link-sent')
+                        toastr.info('Enlace de verificación enviado');
+                    @else
+                        toastr.info('{{ session('status') }}');
+                    @endif
+                @endif
+
+                // Show validation errors as toastr notifications
+                @if($errors->any())
+                    @foreach($errors->all() as $error)
+                        toastr.error('{{ $error }}');
+                    @endforeach
+                @endif
+            }
+        </script>
     </body>
 </html>
 

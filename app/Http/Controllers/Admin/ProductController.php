@@ -32,14 +32,16 @@ class ProductController extends Controller
         }
 
         if ($request->has('search') && $request->search) {
-            $query->where(function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('sku', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%');
+            $searchTerm = trim($request->search);
+            $query->where(function($q) use ($searchTerm) {
+                // Búsqueda insensible a mayúsculas/minúsculas
+                $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
+                  ->orWhereRaw('LOWER(sku) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
+                  ->orWhereRaw('LOWER(description) LIKE ?', ['%' . strtolower($searchTerm) . '%']);
             });
         }
 
-        if ($request->has('status') && $request->status !== '') {
+        if ($request->filled('status')) {
             $query->where('active', $request->status == 'active');
         }
 
@@ -278,14 +280,28 @@ class ProductController extends Controller
                 'active' => $request->boolean('active', true),
             ];
 
+            // Manejar eliminación de imágenes
+            $imagePaths = $product->images ?? [];
+            if ($request->has('remove_images') && $request->remove_images) {
+                $imagesToRemove = explode(',', $request->remove_images);
+                foreach ($imagesToRemove as $imageToRemove) {
+                    $imageToRemove = trim($imageToRemove);
+                    if (($key = array_search($imageToRemove, $imagePaths)) !== false) {
+                        Storage::disk('public')->delete($imageToRemove);
+                        unset($imagePaths[$key]);
+                    }
+                }
+                $imagePaths = array_values($imagePaths); // Reindexar array
+            }
+
             // Manejar nuevas imágenes
             if ($request->hasFile('images')) {
-                $imagePaths = $product->images ?? [];
                 foreach ($request->file('images') as $image) {
                     $imagePaths[] = $image->store('products', 'public');
                 }
-                $productData['images'] = $imagePaths;
             }
+            
+            $productData['images'] = $imagePaths;
 
             // Manejar modelo 3D
             if ($request->hasFile('model_3d')) {
@@ -322,9 +338,33 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        DB::beginTransaction();
-
         try {
+            // Verificar dependencias - revisar si el producto está en pedidos
+            $orderItemsCount = $product->orderItems()->count();
+            
+            if ($orderItemsCount > 0) {
+                $orderNumbers = $product->orderItems()
+                    ->join('orders', 'order_items.order_id', '=', 'orders.id')
+                    ->pluck('orders.order_number')
+                    ->unique();
+                    
+                $ordersCount = $orderNumbers->count();
+                $ordersList = $orderNumbers->take(5)->implode(', ');
+                
+                if ($ordersCount > 5) {
+                    $ordersList .= " y " . ($ordersCount - 5) . " más";
+                }
+                
+                $message = "No se puede eliminar el producto '{$product->name}' porque está incluido en {$ordersCount} pedido(s):\n\n";
+                $message .= "• Pedidos: {$ordersList}\n\n";
+                $message .= "Los productos que forman parte del historial de pedidos no pueden eliminarse para mantener la integridad de los datos.";
+                
+                return redirect()->route('admin.products.index')
+                                ->with('error', $message);
+            }
+
+            DB::beginTransaction();
+
             // Eliminar imágenes
             if ($product->images && is_array($product->images)) {
                 foreach ($product->images as $image) {
@@ -337,14 +377,20 @@ class ProductController extends Controller
                 Storage::disk('public')->delete($product->model_3d_file);
             }
 
+            // Guardar el nombre del producto para el mensaje
+            $productName = $product->name;
+            
             $product->delete();
 
             DB::commit();
 
             return redirect()->route('admin.products.index')
-                            ->with('success', 'Producto eliminado exitosamente.');
+                            ->with('success', "Producto '{$productName}' eliminado exitosamente.");
+
         } catch (\Exception $e) {
-            DB::rollBack();
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
             
             return redirect()->route('admin.products.index')
                             ->with('error', 'Error al eliminar el producto: ' . $e->getMessage());
@@ -393,5 +439,79 @@ class ProductController extends Controller
             'success' => true,
             'active' => $product->active
         ]);
+    }
+    
+    /**
+     * Obtener información de dependencias para AJAX
+     */
+    public function dependencies(Product $product)
+    {
+        try {
+            $orderItemsCount = $product->orderItems()->count();
+            
+            if ($orderItemsCount > 0) {
+                $orderNumbers = $product->orderItems()
+                    ->join('orders', 'order_items.order_id', '=', 'orders.id')
+                    ->pluck('orders.order_number')
+                    ->unique();
+            } else {
+                $orderNumbers = collect([]);
+            }
+            
+            return response()->json([
+                'can_delete' => $orderItemsCount === 0,
+                'order_items_count' => $orderItemsCount,
+                'orders' => $orderNumbers->map(function($orderNumber) {
+                    return [
+                        'order_number' => $orderNumber
+                    ];
+                })
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'can_delete' => true,
+                'order_items_count' => 0,
+                'orders' => [],
+                'error' => 'Could not check dependencies'
+            ]);
+        }
+    }
+    
+    /**
+     * Buscar productos para API (usado en crear pedidos)
+     */
+    public function search(Request $request)
+    {
+        $searchTerm = $request->get('q', '');
+        
+        if (strlen($searchTerm) < 2) {
+            return response()->json([]);
+        }
+        
+        $products = Product::where('active', true)
+            ->where(function($query) use ($searchTerm) {
+                $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
+                      ->orWhereRaw('LOWER(sku) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
+                      ->orWhereRaw('LOWER(description) LIKE ?', ['%' . strtolower($searchTerm) . '%']);
+            })
+            ->with('pricing')
+            ->limit(10)
+            ->get();
+        
+        return response()->json($products->map(function($product) {
+            $minPrice = $product->pricing->count() > 0 
+                ? $product->pricing->min('unit_price') 
+                : 10.00;
+            
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'sku' => $product->sku,
+                'description' => Str::limit($product->description, 100),
+                'price' => $minPrice,
+                'image' => $product->getFirstImageUrl()
+            ];
+        }));
     }
 }

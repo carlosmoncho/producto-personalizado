@@ -152,13 +152,30 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <strong>Nombre:</strong> {{ $order->customer_name }}<br>
+                        <strong>Nombre:</strong> 
+                        @if($order->customer_id && $order->customer)
+                            <a href="{{ route('admin.customers.show', $order->customer) }}" class="text-decoration-none">
+                                {{ $order->customer_name }}
+                                <i class="bi bi-external-link ms-1"></i>
+                            </a>
+                        @else
+                            {{ $order->customer_name }}
+                        @endif
+                        <br>
                         <strong>Email:</strong> {{ $order->customer_email }}<br>
                         <strong>Teléfono:</strong> {{ $order->customer_phone }}
                     </div>
                     <div class="col-md-6">
                         <strong>Dirección:</strong><br>
                         {{ $order->customer_address }}
+                        
+                        @if($order->customer_id && $order->customer)
+                            <div class="mt-2">
+                                <a href="{{ route('admin.customers.show', $order->customer) }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-person me-1"></i>Ver Ficha Cliente
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
                 @if($order->notes)
@@ -193,13 +210,24 @@
                                     @endif
                                 </div>
                                 <div class="col-md-6">
-                                    <h6>{{ $item->product->name }}</h6>
+                                    <h6>
+                                        <a href="{{ route('admin.products.show', $item->product) }}" class="text-decoration-none">
+                                            {{ $item->product->name }}
+                                            <i class="bi bi-external-link ms-1"></i>
+                                        </a>
+                                    </h6>
                                     <p class="text-muted mb-1">SKU: {{ $item->product->sku }}</p>
                                     <p class="mb-1"><strong>Tamaño:</strong> {{ $item->selected_size }}</p>
                                     <p class="mb-1"><strong>Cantidad:</strong> {{ $item->quantity }}</p>
                                     
+                                    <div class="mt-2">
+                                        <a href="{{ route('admin.products.show', $item->product) }}" class="btn btn-outline-info btn-sm">
+                                            <i class="bi bi-box me-1"></i>Ver Producto
+                                        </a>
+                                    </div>
+                                    
                                     @if($item->design_comments)
-                                        <p class="mb-1"><strong>Comentarios:</strong> {{ $item->design_comments }}</p>
+                                        <p class="mb-1 mt-2"><strong>Comentarios:</strong> {{ $item->design_comments }}</p>
                                     @endif
                                 </div>
                                 <div class="col-md-2 text-center">

@@ -119,14 +119,60 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
+        // Verificar dependencias
+        $subcategoriesCount = $category->subcategories()->count();
+        $productsCount = $category->products()->count();
+        
+        if ($subcategoriesCount > 0 || $productsCount > 0) {
+            $message = "No se puede eliminar la categoría '{$category->name}' porque tiene dependencias:";
+            
+            if ($subcategoriesCount > 0) {
+                $message .= "\n• {$subcategoriesCount} subcategoría(s)";
+            }
+            
+            if ($productsCount > 0) {
+                $message .= "\n• {$productsCount} producto(s)";
+            }
+            
+            $message .= "\n\nPrimero debe eliminar o reasignar estos elementos.";
+            
+            return redirect()->route('admin.categories.index')
+                            ->with('error', $message);
+        }
+
         try {
             $category->deleteImage();
             $category->delete();
+            
             return redirect()->route('admin.categories.index')
-                            ->with('success', 'Categoría eliminada exitosamente.');
+                            ->with('success', "Categoría '{$category->name}' eliminada exitosamente.");
         } catch (\Exception $e) {
             return redirect()->route('admin.categories.index')
-                            ->with('error', 'No se puede eliminar la categoría porque tiene productos asociados.');
+                            ->with('error', 'Error al eliminar la categoría: ' . $e->getMessage());
         }
+    }
+    
+    /**
+     * Obtener información de dependencias para AJAX
+     */
+    public function dependencies(Category $category)
+    {
+        $subcategories = $category->subcategories()->with('products')->get();
+        $directProducts = $category->products()->count();
+        
+        $subcategoryInfo = $subcategories->map(function($subcategory) {
+            return [
+                'name' => $subcategory->name,
+                'products_count' => $subcategory->products()->count()
+            ];
+        });
+        
+        return response()->json([
+            'can_delete' => $subcategories->count() === 0 && $directProducts === 0,
+            'subcategories_count' => $subcategories->count(),
+            'products_count' => $directProducts,
+            'subcategories' => $subcategoryInfo,
+            'total_products' => $subcategories->sum(function($sub) { return $sub->products()->count(); }) + $directProducts
+        ]);
     }
 }

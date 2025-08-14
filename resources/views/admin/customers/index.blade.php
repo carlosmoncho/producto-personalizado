@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Pedidos')
+@section('title', 'Clientes')
 
 @section('content')
 <!-- Header con Breadcrumb -->
@@ -14,34 +14,34 @@
                         <i class="bi bi-house-fill"></i> Dashboard
                     </a>
                 </li>
-                <li class="breadcrumb-item active" aria-current="page">Pedidos</li>
+                <li class="breadcrumb-item active" aria-current="page">Clientes</li>
             </ol>
         </nav>
         
         <!-- Título y descripción -->
         <div class="d-flex align-items-center">
             <div class="icon-square bg-primary text-white rounded me-3">
-                <i class="bi bi-cart-fill"></i>
+                <i class="bi bi-people-fill"></i>
             </div>
             <div>
-                <h2 class="mb-0">Gestión de Pedidos</h2>
-                <small class="text-muted">Administra y controla todos los pedidos del sistema</small>
+                <h2 class="mb-0">Gestión de Clientes</h2>
+                <small class="text-muted">Administra la base de datos de clientes del sistema</small>
             </div>
         </div>
     </div>
     
     <!-- Botones de acción -->
     <div class="d-flex gap-2">
-        <a href="{{ route('admin.orders.export') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}" 
+        <a href="{{ route('admin.customers.export') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}" 
            class="btn btn-outline-success export-csv-btn" 
-           title="Exportar {{ $orders->total() }} pedido{{ $orders->total() !== 1 ? 's' : '' }}{{ request()->has('status') || request()->has('search') || request()->has('date_from') || request()->has('date_to') ? ' filtrados' : '' }} a CSV">
+           title="Exportar {{ $customers->total() }} cliente{{ $customers->total() !== 1 ? 's' : '' }}{{ request()->has('status') || request()->has('search') || request()->has('has_orders') ? ' filtrados' : '' }} a CSV">
             <i class="bi bi-download me-2"></i>Exportar CSV
-            @if($orders->total() > 0)
-                <span class="badge bg-success ms-2">{{ $orders->total() }}</span>
+            @if($customers->total() > 0)
+                <span class="badge bg-success ms-2">{{ $customers->total() }}</span>
             @endif
         </a>
-        <a href="{{ route('admin.orders.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-2"></i>Nuevo Pedido
+        <a href="{{ route('admin.customers.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Nuevo Cliente
         </a>
     </div>
 </div>
@@ -55,48 +55,41 @@
             </div>
             <div>
                 <h5 class="mb-0">Filtros de Búsqueda</h5>
-                <small>Buscar pedidos por diferentes criterios</small>
+                <small>Buscar clientes por diferentes criterios</small>
             </div>
         </div>
     </div>
     <div class="card-body">
-        <form method="GET" action="{{ route('admin.orders.index') }}">
+        <form method="GET" action="{{ route('admin.customers.index') }}">
             <div class="row g-3">
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label for="search" class="form-label">Buscar</label>
                     <input type="text" class="form-control" id="search" name="search" 
-                           value="{{ request('search') }}" placeholder="Número, cliente o email">
+                           value="{{ request('search') }}" placeholder="Nombre, email, empresa o teléfono">
                 </div>
                 <div class="col-md-2">
                     <label for="status" class="form-label">Estado</label>
                     <select class="form-select" id="status" name="status">
                         <option value="">Todos</option>
-                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pendiente</option>
-                        <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Procesando</option>
-                        <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Aprobado</option>
-                        <option value="in_production" {{ request('status') == 'in_production' ? 'selected' : '' }}>En Producción</option>
-                        <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>Enviado</option>
-                        <option value="delivered" {{ request('status') == 'delivered' ? 'selected' : '' }}>Entregado</option>
-                        <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelado</option>
+                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Activos</option>
+                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactivos</option>
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label for="date_from" class="form-label">Desde</label>
-                    <input type="date" class="form-control" id="date_from" name="date_from" 
-                           value="{{ request('date_from') }}">
+                    <label for="has_orders" class="form-label">Con Pedidos</label>
+                    <select class="form-select" id="has_orders" name="has_orders">
+                        <option value="">Todos</option>
+                        <option value="yes" {{ request('has_orders') == 'yes' ? 'selected' : '' }}>Con pedidos</option>
+                        <option value="no" {{ request('has_orders') == 'no' ? 'selected' : '' }}>Sin pedidos</option>
+                    </select>
                 </div>
-                <div class="col-md-2">
-                    <label for="date_to" class="form-label">Hasta</label>
-                    <input type="date" class="form-control" id="date_to" name="date_to" 
-                           value="{{ request('date_to') }}">
-                </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label">&nbsp;</label>
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-search me-1"></i>Filtrar
                         </button>
-                        <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">
+                        <a href="{{ route('admin.customers.index') }}" class="btn btn-outline-secondary">
                             <i class="bi bi-x-circle me-1"></i>Limpiar
                         </a>
                     </div>
@@ -113,81 +106,91 @@
                 <i class="bi bi-list-ul"></i>
             </div>
             <div>
-                <h5 class="mb-0">Lista de Pedidos ({{ $orders->total() }})</h5>
-                <small>Todos los pedidos registrados en el sistema</small>
+                <h5 class="mb-0">Lista de Clientes ({{ $customers->total() }})</h5>
+                <small>Todos los clientes registrados en el sistema</small>
             </div>
         </div>
     </div>
     <div class="card-body">
-        @if($orders->count() > 0)
+        @if($customers->count() > 0)
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>Pedido</th>
                             <th>Cliente</th>
-                            <th>Total</th>
+                            <th>Contacto</th>
+                            <th>Empresa</th>
+                            <th>Pedidos</th>
+                            <th>Total Gastado</th>
                             <th>Estado</th>
-                            <th>Fecha</th>
+                            <th>Último Pedido</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($orders as $order)
+                        @foreach($customers as $customer)
                             <tr>
                                 <td>
-                                    <strong>{{ $order->order_number }}</strong>
-                                    <br><small class="text-muted">{{ $order->items->count() }} productos</small>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-person-fill text-muted"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <strong>{{ $customer->name }}</strong>
+                                            @if($customer->tax_id)
+                                                <br><small class="text-muted">{{ $customer->tax_id }}</small>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
-                                    @if($order->customer_id && $order->customer)
-                                        <a href="{{ route('admin.customers.show', $order->customer) }}" class="text-decoration-none">
-                                            <strong>{{ $order->customer_name }}</strong>
-                                        </a>
-                                        <br><small class="text-muted">{{ $order->customer_email }}</small>
-                                    @else
-                                        <strong>{{ $order->customer_name }}</strong>
-                                        <br><small class="text-muted">{{ $order->customer_email }}</small>
+                                    <strong>{{ $customer->email }}</strong>
+                                    @if($customer->phone)
+                                        <br><small class="text-muted">{{ $customer->phone }}</small>
                                     @endif
                                 </td>
                                 <td>
-                                    <strong>€{{ number_format($order->total_amount, 2) }}</strong>
+                                    {{ $customer->company ?: '-' }}
                                 </td>
                                 <td>
-                                    @php
-                                        $statusColors = [
-                                            'pending' => 'warning',
-                                            'processing' => 'info',
-                                            'approved' => 'success',
-                                            'in_production' => 'primary',
-                                            'shipped' => 'info',
-                                            'delivered' => 'success',
-                                            'cancelled' => 'danger'
-                                        ];
-                                        $color = $statusColors[$order->status] ?? 'secondary';
-                                    @endphp
-                                    <span class="badge bg-{{ $color }}">{{ $order->status_label }}</span>
+                                    <span class="badge bg-info">{{ $customer->total_orders_count }}</span>
                                 </td>
                                 <td>
-                                    {{ $order->created_at->format('d/m/Y H:i') }}
-                                    <br><small class="text-muted">{{ $order->created_at->diffForHumans() }}</small>
+                                    <strong>€{{ number_format($customer->total_orders_amount, 2) }}</strong>
+                                </td>
+                                <td>
+                                    @if($customer->active)
+                                        <span class="badge bg-success">Activo</span>
+                                    @else
+                                        <span class="badge bg-secondary">Inactivo</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($customer->last_order_at)
+                                        {{ $customer->last_order_at->format('d/m/Y') }}
+                                        <br><small class="text-muted">{{ $customer->last_order_at->diffForHumans() }}</small>
+                                    @else
+                                        <span class="text-muted">Nunca</span>
+                                    @endif
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="{{ route('admin.orders.show', $order) }}" 
+                                        <a href="{{ route('admin.customers.show', $customer) }}" 
                                            class="btn btn-outline-primary btn-sm">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="{{ route('admin.orders.edit', $order) }}" 
+                                        <a href="{{ route('admin.customers.edit', $customer) }}" 
                                            class="btn btn-outline-secondary btn-sm">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <form method="POST" action="{{ route('admin.orders.destroy', $order) }}" 
+                                        <form method="POST" action="{{ route('admin.customers.destroy', $customer) }}" 
                                               class="d-inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-outline-danger btn-sm btn-delete" 
-                                                    data-item-name="{{ $order->order_number }}">
+                                                    data-item-name="{{ $customer->name }}">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
@@ -202,17 +205,20 @@
             <!-- Paginación -->
             <div class="pagination-wrapper">
                 <div class="pagination-info">
-                    Mostrando {{ $orders->firstItem() ?? 0 }} a {{ $orders->lastItem() ?? 0 }} de {{ $orders->total() }} resultados
+                    Mostrando {{ $customers->firstItem() ?? 0 }} a {{ $customers->lastItem() ?? 0 }} de {{ $customers->total() }} resultados
                 </div>
                 <div>
-                    {{ $orders->withQueryString()->links('pagination::bootstrap-5') }}
+                    {{ $customers->withQueryString()->links('pagination::bootstrap-5') }}
                 </div>
             </div>
         @else
             <div class="text-center py-5">
-                <i class="bi bi-cart display-1 text-muted"></i>
-                <h4 class="mt-3">No hay pedidos</h4>
-                <p class="text-muted">Los pedidos aparecerán aquí cuando los clientes realicen compras.</p>
+                <i class="bi bi-people display-1 text-muted"></i>
+                <h4 class="mt-3">No hay clientes</h4>
+                <p class="text-muted">Los clientes aparecerán aquí cuando se registren en el sistema.</p>
+                <a href="{{ route('admin.customers.create') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Agregar Primer Cliente
+                </a>
             </div>
         @endif
     </div>
@@ -245,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Show success notification
                 if (typeof toastr !== 'undefined') {
-                    toastr.success('CSV exportado correctamente');
+                    toastr.success('CSV de clientes exportado correctamente');
                 }
             }, 2000);
         });
@@ -257,13 +263,13 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             
-            const orderNumber = this.dataset.itemName;
+            const customerName = this.dataset.itemName;
             const form = this.closest('form');
-            const orderId = form.action.split('/').pop();
+            const customerId = form.action.split('/').pop();
             
             // Mostrar loading mientras se verifica dependencias
             Swal.fire({
-                title: 'Verificando restricciones...',
+                title: 'Verificando dependencias...',
                 text: 'Por favor espere',
                 icon: 'info',
                 allowOutsideClick: false,
@@ -274,44 +280,33 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             // Verificar dependencias via AJAX
-            fetch(`{{ url('admin/orders') }}/${orderId}/dependencies`)
+            fetch(`{{ url('admin/customers') }}/${customerId}/dependencies`)
                 .then(response => response.json())
                 .then(data => {
-                    let html = `¿Está seguro de eliminar el pedido <strong>"${orderNumber}"</strong>?`;
+                    let html = `¿Está seguro de eliminar el cliente <strong>"${customerName}"</strong>?`;
                     let canDelete = data.can_delete;
                     
                     if (!canDelete) {
                         html += `<br><br><div class="alert alert-warning text-start mt-3 mb-0">`;
                         html += `<strong><i class="bi bi-exclamation-triangle me-2"></i>¡Atención!</strong><br>`;
-                        html += `${data.restriction_reason}<br><br>`;
-                        html += `<strong>Estado:</strong> ${data.status}<br>`;
-                        html += `<strong>Productos:</strong> ${data.items_count} artículo(s)<br>`;
-                        html += `<strong>Importe:</strong> €${parseFloat(data.total_amount).toFixed(2)}<br><br>`;
+                        html += `Este cliente tiene <strong>${data.orders_count} pedido(s)</strong> asociado(s):<br><br>`;
                         
-                        // Mostrar algunos productos
-                        if (data.items.length > 0) {
-                            html += `<strong>Productos incluidos:</strong><br>`;
-                            data.items.slice(0, 3).forEach(item => {
-                                html += `• ${item.product_name} (${item.quantity} uds.)<br>`;
-                            });
-                            if (data.items.length > 3) {
-                                html += `• Y ${data.items.length - 3} producto(s) más<br>`;
-                            }
+                        // Mostrar hasta 5 pedidos
+                        data.orders.slice(0, 5).forEach(order => {
+                            html += `• ${order.order_number} (€${parseFloat(order.total_amount).toFixed(2)})<br>`;
+                        });
+                        
+                        if (data.orders_count > 5) {
+                            html += `• Y ${data.orders_count - 5} pedido(s) más<br>`;
                         }
                         
-                        html += `</div>`;
-                    } else {
-                        html += `<br><br><div class="alert alert-info text-start mt-3 mb-0">`;
-                        html += `<strong><i class="bi bi-info-circle me-2"></i>Información del pedido:</strong><br>`;
-                        html += `<strong>Estado:</strong> ${data.status}<br>`;
-                        html += `<strong>Productos:</strong> ${data.items_count} artículo(s)<br>`;
-                        html += `<strong>Importe:</strong> €${parseFloat(data.total_amount).toFixed(2)}<br>`;
-                        html += `<br><small>Esta acción no se puede deshacer.</small>`;
+                        html += `<br><strong>Importe total: €${parseFloat(data.total_amount).toFixed(2)}</strong><br>`;
+                        html += `<br><small>Los clientes con historial de pedidos no pueden eliminarse para mantener la integridad de los datos.</small>`;
                         html += `</div>`;
                     }
                     
                     Swal.fire({
-                        title: canDelete ? '¿Eliminar Pedido?' : 'No se puede eliminar',
+                        title: canDelete ? '¿Eliminar Cliente?' : 'No se puede eliminar',
                         html: html,
                         icon: canDelete ? 'warning' : 'error',
                         showCancelButton: true,
@@ -332,8 +327,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 .catch(error => {
                     console.error('Error verificando dependencias:', error);
                     Swal.fire({
-                        title: '¿Eliminar Pedido?',
-                        html: `¿Está seguro de eliminar el pedido <strong>"${orderNumber}"</strong>?<br><small class="text-muted">No se pudieron verificar las restricciones</small>`,
+                        title: '¿Eliminar Cliente?',
+                        html: `¿Está seguro de eliminar el cliente <strong>"${customerName}"</strong>?<br><small class="text-muted">No se pudieron verificar las dependencias</small>`,
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonColor: '#dc3545',

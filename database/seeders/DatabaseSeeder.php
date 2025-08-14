@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             AvailablePrintColorSeeder::class,
             AvailableSizeSeeder::class,
             ProductSeeder::class,
+            CustomerSeeder::class, // Crear clientes antes de pedidos
             OrderSeeder::class,
         ]);
     }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\SubcategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\AvailableColorController; 
 use App\Http\Controllers\Admin\AvailablePrintColorController;
 use Illuminate\Support\Facades\Route;
@@ -38,20 +39,37 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     
     // Categorías
     Route::resource('categories', CategoryController::class);
+    // Ruta AJAX para verificar dependencias
+    Route::get('categories/{category}/dependencies', [CategoryController::class, 'dependencies'])->name('categories.dependencies');
     
     // Subcategorías
     Route::resource('subcategories', SubcategoryController::class);
+    // Ruta AJAX para verificar dependencias
+    Route::get('subcategories/{subcategory}/dependencies', [SubcategoryController::class, 'dependencies'])->name('subcategories.dependencies');
     
     // Productos
     Route::resource('products', ProductController::class);
     // Ruta AJAX para obtener subcategorías por categoría
     Route::get('products/subcategories/{category}', [ProductController::class, 'getSubcategories'])->name('products.subcategories');
+    // Ruta AJAX para verificar dependencias
+    Route::get('products/{product}/dependencies', [ProductController::class, 'dependencies'])->name('products.dependencies');
     
-    // Pedidos
+    // API para búsqueda de productos
+    Route::get('api/products/search', [ProductController::class, 'search'])->name('api.products.search');
+    
+    // Pedidos - ruta export debe ir ANTES del resource para evitar conflictos
+    Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');
     Route::resource('orders', OrderController::class);
     // Rutas adicionales para pedidos
     Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
-    Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');
+    // Ruta AJAX para verificar dependencias
+    Route::get('orders/{order}/dependencies', [OrderController::class, 'dependencies'])->name('orders.dependencies');
+
+    // Clientes - ruta export debe ir ANTES del resource para evitar conflictos
+    Route::get('customers/export', [CustomerController::class, 'export'])->name('customers.export');
+    Route::resource('customers', CustomerController::class);
+    // Ruta AJAX para verificar dependencias
+    Route::get('customers/{customer}/dependencies', [CustomerController::class, 'dependencies'])->name('customers.dependencies');
 
     // Colores disponibles
     Route::post('available-colors', [AvailableColorController::class, 'store'])->name('available-colors.store');

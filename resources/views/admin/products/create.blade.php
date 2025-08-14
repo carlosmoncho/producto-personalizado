@@ -3,13 +3,41 @@
 @section('title', 'Crear Producto')
 
 @section('content')
+<!-- Header with breadcrumb and actions -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.products.index') }}">Productos</a></li>
+                <li class="breadcrumb-item active">Crear Producto</li>
+            </ol>
+        </nav>
+        <h1 class="h3 mb-0 text-gray-800"><i class="bi bi-plus-circle-fill text-primary me-2"></i>Crear Nuevo Producto</h1>
+        <p class="text-muted mb-0">Complete la información para crear un nuevo producto personalizable</p>
+    </div>
+    <div>
+        <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+</div>
+
 <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
     
     <!-- Información Básica -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Información Básica</h5>
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-golden border-bottom-0 py-3">
+            <div class="d-flex align-items-center">
+                <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
+                    <i class="bi bi-info-circle-fill"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0">Información Básica</h5>
+                    <small>Datos fundamentales del producto</small>
+                </div>
+            </div>
         </div>
         <div class="card-body">
             <div class="row">
@@ -85,104 +113,20 @@
         </div>
     </div>
 
-    <!-- Especificaciones del Producto -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Especificaciones del Producto</h5>
+    <!-- Especificaciones Técnicas -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-golden border-bottom-0 py-3">
+            <div class="d-flex align-items-center">
+                <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
+                    <i class="bi bi-gear-fill"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0">Especificaciones Técnicas</h5>
+                    <small>Características y especificaciones del producto</small>
+                </div>
+            </div>
         </div>
         <div class="card-body">
-            <div class="row">
-                <!-- Materiales -->
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label mb-0">Materiales <span class="text-danger">*</span></label>
-                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addMaterialModal">
-                                <i class="bi bi-plus"></i> Agregar Material
-                            </button>
-                        </div>
-                        <div id="materialsContainer">
-                            <div class="row">
-                                @php
-                                    $availableMaterials = \App\Models\AvailableMaterial::where('active', true)->orderBy('sort_order')->get();
-                                @endphp
-                                @foreach($availableMaterials as $material)
-                                    <div class="col-md-4 mb-2" id="material-item-{{ $material->id }}">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="materials[]" 
-                                                   value="{{ $material->name }}" id="material_{{ $material->id }}"
-                                                   {{ in_array($material->name, old('materials', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="material_{{ $material->id }}">
-                                                {{ $material->name }}
-                                            </label>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                        @error('materials')
-                            <div class="text-danger">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-
-                <!-- Sistemas de Impresión (MÚLTIPLE SELECCIÓN) -->
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label mb-0">Sistemas de Impresión <span class="text-danger">*</span></label>
-                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addPrintingSystemModal">
-                                <i class="bi bi-plus"></i> Nuevo Sistema
-                            </button>
-                        </div>
-                        <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
-                            <div class="row" id="printingSystemsContainer">
-                                @php
-                                    $printingSystems = \App\Models\PrintingSystem::where('active', true)->orderBy('sort_order')->get();
-                                @endphp
-                                @foreach($printingSystems as $system)
-                                    <div class="col-12 mb-2" id="printing-system-item-{{ $system->id }}">
-                                        <div class="d-flex align-items-start">
-                                            <div class="form-check flex-grow-1">
-                                                <input class="form-check-input printing-system-checkbox @error('printing_systems') is-invalid @enderror" 
-                                                    type="checkbox" 
-                                                    name="printing_systems[]" 
-                                                    value="{{ $system->id }}" 
-                                                    id="printing_system_{{ $system->id }}"
-                                                    data-colors="{{ $system->total_colors }}"
-                                                    data-min-units="{{ $system->min_units }}"
-                                                    data-price="{{ $system->price_per_unit }}"
-                                                    {{ (is_array(old('printing_systems')) && in_array($system->id, old('printing_systems'))) ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="printing_system_{{ $system->id }}">
-                                                    <strong>{{ $system->name }}</strong>
-                                                    <small class="text-muted d-block">
-                                                        {{ $system->total_colors }} colores, mín. {{ $system->min_units }} uds, €{{ number_format($system->price_per_unit, 2) }}/ud
-                                                    </small>
-                                                </label>
-                                            </div>
-                                            <button type="button" class="btn btn-sm btn-outline-danger ms-2" 
-                                                    onclick="deletePrintingSystem({{ $system->id }}, '{{ $system->name }}')"
-                                                    title="Eliminar sistema">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                        @error('printing_systems')
-                            <div class="text-danger mt-1">{{ $message }}</div>
-                        @enderror
-                        
-                        <!-- Información de los sistemas seleccionados -->
-                        <div id="printing-systems-info" class="mt-2" style="display: none;">
-                            <div class="alert alert-info">
-                                <strong>Sistemas seleccionados:</strong>
-                                <div id="systems-info-text"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
@@ -208,10 +152,120 @@
         </div>
     </div>
 
+    <!-- Materiales y Sistemas -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-golden border-bottom-0 py-3">
+            <div class="d-flex align-items-center">
+                <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
+                    <i class="bi bi-tools"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0">Materiales y Sistemas</h5>
+                    <small>Materiales disponibles y sistemas de impresión</small>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Materiales -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label mb-0">Materiales Disponibles <span class="text-danger">*</span></label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addMaterialModal">
+                        <i class="bi bi-plus"></i> Agregar Material
+                    </button>
+                </div>
+                <div class="row" id="materialsContainer">
+                    @php
+                        $availableMaterials = \App\Models\AvailableMaterial::where('active', true)->orderBy('sort_order')->get();
+                    @endphp
+                    @foreach($availableMaterials as $material)
+                        <div class="col-md-4 mb-2" id="material-item-{{ $material->id }}">
+                            <div class="d-flex align-items-center">
+                                <div class="form-check flex-grow-1">
+                                    <input class="form-check-input" type="checkbox" name="materials[]" 
+                                           value="{{ $material->name }}" id="material_{{ $material->id }}"
+                                           {{ in_array($material->name, old('materials', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="material_{{ $material->id }}">
+                                        {{ $material->name }}
+                                        @if($material->description)
+                                            <small class="text-muted d-block">{{ $material->description }}</small>
+                                        @endif
+                                    </label>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger ms-2" 
+                                        onclick="deleteMaterial({{ $material->id }}, '{{ $material->name }}')"
+                                        title="Eliminar material">
+                                    <i class="bi bi-trash" style="font-size: 0.75rem;"></i>
+                                </button>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                @error('materials')
+                    <div class="text-danger">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <!-- Sistemas de Impresión -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label mb-0">Sistemas de Impresión <span class="text-danger">*</span></label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addPrintingSystemModal">
+                        <i class="bi bi-plus"></i> Agregar Sistema
+                    </button>
+                </div>
+                <div class="row" id="printingSystemsContainer">
+                    @php
+                        $printingSystems = \App\Models\PrintingSystem::where('active', true)->orderBy('sort_order')->get();
+                    @endphp
+                    @foreach($printingSystems as $system)
+                        <div class="col-md-4 mb-2" id="printing-system-item-{{ $system->id }}">
+                            <div class="d-flex align-items-start">
+                                <div class="form-check flex-grow-1">
+                                    <input class="form-check-input printing-system-checkbox" type="checkbox" name="printing_systems[]" 
+                                           value="{{ $system->id }}" id="printing_system_{{ $system->id }}"
+                                           data-colors="{{ $system->total_colors }}"
+                                           data-min-units="{{ $system->min_units }}"
+                                           data-price="{{ $system->price_per_unit }}"
+                                           {{ (is_array(old('printing_systems')) && in_array($system->id, old('printing_systems'))) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="printing_system_{{ $system->id }}">
+                                        <strong>{{ $system->name }}</strong>
+                                        @if($system->description)
+                                            <small class="text-muted d-block">{{ $system->description }}</small>
+                                        @endif
+                                        <small class="text-muted d-block">
+                                            {{ $system->total_colors }} colores, mín. {{ $system->min_units }} uds, €{{ number_format($system->price_per_unit, 2) }}/ud
+                                        </small>
+                                    </label>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger ms-2" 
+                                        onclick="deletePrintingSystem({{ $system->id }}, '{{ $system->name }}')"
+                                        title="Eliminar sistema">
+                                    <i class="bi bi-trash" style="font-size: 0.75rem;"></i>
+                                </button>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                @error('printing_systems')
+                    <div class="text-danger">{{ $message }}</div>
+                @enderror
+            </div>
+        </div>
+    </div>
+
     <!-- Colores y Tamaños -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Colores y Tamaños</h5>
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-golden border-bottom-0 py-3">
+            <div class="d-flex align-items-center">
+                <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
+                    <i class="bi bi-palette-fill"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0">Colores y Tamaños</h5>
+                    <small>Opciones de personalización disponibles</small>
+                </div>
+            </div>
         </div>
         <div class="card-body">
             <!-- Colores Disponibles -->
@@ -228,14 +282,21 @@
                     @endphp
                     @foreach($availableColors as $color)
                         <div class="col-md-3 mb-2" id="color-item-{{ $color->id }}">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="colors[]" 
-                                       value="{{ $color->name }}" id="color_{{ $color->id }}"
-                                       {{ in_array($color->name, old('colors', [])) ? 'checked' : '' }}>
-                                <label class="form-check-label d-flex align-items-center" for="color_{{ $color->id }}">
-                                    <span class="badge me-2" style="background-color: {{ $color->hex_code }}; color: {{ $color->hex_code == '#FFFFFF' ? '#000' : '#FFF' }}; width: 20px; height: 20px; display: inline-block;"></span>
-                                    {{ $color->name }}
-                                </label>
+                            <div class="d-flex align-items-center">
+                                <div class="form-check flex-grow-1">
+                                    <input class="form-check-input" type="checkbox" name="colors[]" 
+                                           value="{{ $color->name }}" id="color_{{ $color->id }}"
+                                           {{ in_array($color->name, old('colors', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label d-flex align-items-center" for="color_{{ $color->id }}">
+                                        <span class="badge me-2" style="background-color: {{ $color->hex_code }}; color: {{ $color->hex_code == '#FFFFFF' ? '#000' : '#FFF' }}; width: 20px; height: 20px; display: inline-block;"></span>
+                                        {{ $color->name }}
+                                    </label>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger ms-2" 
+                                        onclick="deleteColor({{ $color->id }}, '{{ $color->name }}')"
+                                        title="Eliminar color">
+                                    <i class="bi bi-trash" style="font-size: 0.75rem;"></i>
+                                </button>
                             </div>
                         </div>
                     @endforeach
@@ -258,16 +319,22 @@
                         $availablePrintColors = \App\Models\AvailablePrintColor::where('active', true)->orderBy('sort_order')->get();
                     @endphp
                     @foreach($availablePrintColors as $color)
-                        <div class="col-md-3 mb-2">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="print_colors[]" 
-                                       value="{{ $color->name }}" id="print_color_{{ $color->id }}"
-                                       {{ in_array($color->name, old('print_colors', [])) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="print_color_{{ $color->id }}">
-                                    <span class="badge" style="background-color: {{ $color->hex_code }}; color: {{ $color->hex_code == '#FFFFFF' ? '#000' : '#FFF' }}">
+                        <div class="col-md-3 mb-2" id="print-color-item-{{ $color->id }}">
+                            <div class="d-flex align-items-center">
+                                <div class="form-check flex-grow-1">
+                                    <input class="form-check-input" type="checkbox" name="print_colors[]" 
+                                           value="{{ $color->name }}" id="print_color_{{ $color->id }}"
+                                           {{ in_array($color->name, old('print_colors', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label d-flex align-items-center" for="print_color_{{ $color->id }}">
+                                        <span class="badge me-2" style="background-color: {{ $color->hex_code }}; color: {{ $color->hex_code == '#FFFFFF' ? '#000' : '#FFF' }}; width: 20px; height: 20px; display: inline-block;"></span>
                                         {{ $color->name }}
-                                    </span>
-                                </label>
+                                    </label>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger ms-2" 
+                                        onclick="deletePrintColor({{ $color->id }}, '{{ $color->name }}')"
+                                        title="Eliminar color de impresión">
+                                    <i class="bi bi-trash" style="font-size: 0.75rem;"></i>
+                                </button>
                             </div>
                         </div>
                     @endforeach
@@ -291,14 +358,24 @@
                             $availableSizes = \App\Models\AvailableSize::where('active', true)->orderBy('sort_order')->get();
                         @endphp
                         @foreach($availableSizes as $size)
-                            <div class="col-md-2 mb-2">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="sizes[]" 
-                                           value="{{ $size->name }}" id="size_{{ $size->id }}"
-                                           {{ in_array($size->name, old('sizes', [])) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="size_{{ $size->id }}">
-                                        {{ $size->name }}
-                                    </label>
+                            <div class="col-md-2 mb-2" id="size-item-{{ $size->id }}">
+                                <div class="d-flex align-items-center">
+                                    <div class="form-check flex-grow-1">
+                                        <input class="form-check-input" type="checkbox" name="sizes[]" 
+                                               value="{{ $size->name }}" id="size_{{ $size->id }}"
+                                               {{ in_array($size->name, old('sizes', [])) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="size_{{ $size->id }}">
+                                            {{ $size->name }}
+                                            @if($size->code)
+                                                <small class="text-muted">({{ $size->code }})</small>
+                                            @endif
+                                        </label>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger ms-1" 
+                                            onclick="deleteSize({{ $size->id }}, '{{ $size->name }}')"
+                                            title="Eliminar tamaño">
+                                        <i class="bi bi-trash" style="font-size: 0.75rem;"></i>
+                                    </button>
                                 </div>
                             </div>
                         @endforeach
@@ -312,44 +389,61 @@
     </div>
 
     <!-- Precios -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Tabla de Precios</h5>
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-golden border-bottom-0 py-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
+                        <i class="bi bi-currency-euro"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0">Estructura de Precios</h5>
+                        <small>Configure los precios por cantidad</small>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-primary" id="add-price-row">
+                    <i class="bi bi-plus"></i> Agregar Rango
+                </button>
+            </div>
         </div>
         <div class="card-body">
-            <div id="pricing-table">
-                <table class="table">
-                    <thead>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead class="table-light">
                         <tr>
                             <th>Cantidad Desde</th>
                             <th>Cantidad Hasta</th>
-                            <th>Precio Total</th>
-                            <th>Precio Unitario</th>
-                            <th></th>
+                            <th>Precio Total (€)</th>
+                            <th>Precio Unitario (€)</th>
+                            <th width="100">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="pricing-rows">
+                    <tbody id="pricing-tbody">
                         @if(old('pricing'))
                             @foreach(old('pricing') as $index => $price)
                                 <tr>
                                     <td>
-                                        <input type="number" class="form-control" name="pricing[{{ $index }}][quantity_from]" 
+                                        <input type="number" name="pricing[{{ $index }}][quantity_from]" 
+                                               class="form-control form-control-sm" 
                                                value="{{ $price['quantity_from'] }}" min="1" required>
                                     </td>
                                     <td>
-                                        <input type="number" class="form-control" name="pricing[{{ $index }}][quantity_to]" 
+                                        <input type="number" name="pricing[{{ $index }}][quantity_to]" 
+                                               class="form-control form-control-sm" 
                                                value="{{ $price['quantity_to'] }}" min="1" required>
                                     </td>
                                     <td>
-                                        <input type="number" step="0.01" class="form-control" name="pricing[{{ $index }}][price]" 
+                                        <input type="number" step="0.01" name="pricing[{{ $index }}][price]" 
+                                               class="form-control form-control-sm" 
                                                value="{{ $price['price'] }}" min="0" required>
                                     </td>
                                     <td>
-                                        <input type="number" step="0.01" class="form-control" name="pricing[{{ $index }}][unit_price]" 
+                                        <input type="number" step="0.01" name="pricing[{{ $index }}][unit_price]" 
+                                               class="form-control form-control-sm" 
                                                value="{{ $price['unit_price'] }}" min="0" required>
                                     </td>
                                     <td>
-                                        <button type="button" class="btn btn-sm btn-danger" onclick="removePricingRow(this)">
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-price-row">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </td>
@@ -357,78 +451,122 @@
                             @endforeach
                         @else
                             <tr>
-                                <td><input type="number" class="form-control" name="pricing[0][quantity_from]" value="1" min="1" required></td>
-                                <td><input type="number" class="form-control" name="pricing[0][quantity_to]" value="10" min="1" required></td>
-                                <td><input type="number" step="0.01" class="form-control" name="pricing[0][price]" value="0" min="0" required></td>
-                                <td><input type="number" step="0.01" class="form-control" name="pricing[0][unit_price]" value="0" min="0" required></td>
                                 <td>
-                                    <button type="button" class="btn btn-sm btn-danger" onclick="removePricingRow(this)">
+                                    <input type="number" name="pricing[0][quantity_from]" 
+                                           class="form-control form-control-sm" 
+                                           value="1" min="1" required>
+                                </td>
+                                <td>
+                                    <input type="number" name="pricing[0][quantity_to]" 
+                                           class="form-control form-control-sm" 
+                                           value="10" min="1" required>
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" name="pricing[0][price]" 
+                                           class="form-control form-control-sm" 
+                                           value="0" min="0" required>
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" name="pricing[0][unit_price]" 
+                                           class="form-control form-control-sm" 
+                                           value="0" min="0" required>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-price-row">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </td>
                             </tr>
                         @endif
                     </tbody>
-                </table>
-                <button type="button" class="btn btn-sm btn-primary" onclick="addPricingRow()">
-                    <i class="bi bi-plus"></i> Agregar Rango de Precio
-                </button>
+                    </table>
+                </div>
+            @error('pricing')
+                <div class="text-danger">{{ $message }}</div>
+            @enderror
             </div>
         </div>
     </div>
 
     <!-- Imágenes y Archivos -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Imágenes y Archivos</h5>
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-golden border-bottom-0 py-3">
+            <div class="d-flex align-items-center">
+                <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
+                    <i class="bi bi-images"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0">Multimedia</h5>
+                    <small>Imágenes y modelos 3D del producto</small>
+                </div>
+            </div>
         </div>
         <div class="card-body">
-            <div class="mb-3">
-                <label for="images" class="form-label">Imágenes del Producto</label>
-                <input type="file" class="form-control @error('images.*') is-invalid @enderror" 
-                       id="images" name="images[]" multiple accept="image/*">
-                <small class="text-muted">Formatos permitidos: JPG, PNG, GIF. Máximo 2MB por imagen.</small>
-                @error('images.*')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="mb-3">
-                <label for="model_3d" class="form-label">Modelo 3D</label>
-                <input type="file" class="form-control @error('model_3d') is-invalid @enderror" 
-                       id="model_3d" name="model_3d" accept=".glb,.gltf">
-                <small class="text-muted">Formatos permitidos: GLB, GLTF. Máximo 10MB.</small>
-                @error('model_3d')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="images" class="form-label">Subir Imágenes</label>
+                        <input type="file" class="form-control @error('images.*') is-invalid @enderror" 
+                               id="images" name="images[]" multiple accept="image/*">
+                        <small class="text-muted">Formatos permitidos: JPG, PNG, GIF. Máximo 2MB por imagen.</small>
+                        @error('images.*')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="model_3d" class="form-label">Subir Modelo 3D</label>
+                        <input type="file" class="form-control @error('model_3d') is-invalid @enderror" 
+                               id="model_3d" name="model_3d" accept=".glb,.gltf">
+                        <small class="text-muted">Formatos permitidos: GLB, GLTF. Máximo 10MB.</small>
+                        @error('model_3d')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Estado -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Estado</h5>
+    <!-- Estado y Configuración -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-golden border-bottom-0 py-3">
+            <div class="d-flex align-items-center">
+                <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
+                    <i class="bi bi-toggles"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0">Estado y Configuración</h5>
+                    <small>Configuración de visibilidad y estado</small>
+                </div>
+            </div>
         </div>
         <div class="card-body">
             <div class="form-check form-switch">
+                <input type="hidden" name="active" value="0">
                 <input class="form-check-input" type="checkbox" id="active" name="active" value="1" 
                        {{ old('active', true) ? 'checked' : '' }}>
                 <label class="form-check-label" for="active">
-                    Producto activo
+                    <strong>Producto Activo</strong>
+                    <small class="text-muted d-block">El producto estará visible y disponible para pedidos</small>
                 </label>
             </div>
         </div>
     </div>
 
     <!-- Botones de Acción -->
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">
-            <i class="bi bi-save"></i> Guardar Producto
-        </button>
-        <a href="{{ route('admin.products.index') }}" class="btn btn-secondary">
-            <i class="bi bi-x-circle"></i> Cancelar
-        </a>
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Crear Producto
+                </button>
+            </div>
+        </div>
     </div>
 </form>
 
@@ -604,618 +742,5 @@
 @endsection
 
 @push('scripts')
-<script>
-// Declarar funciones globalmente
-let pricingIndex = {{ old('pricing') ? count(old('pricing')) : 1 }};
-
-// Función para actualizar información de sistemas de impresión
-function updateSystemsInfo() {
-    const checkboxes = document.querySelectorAll('.printing-system-checkbox');
-    const infoDiv = document.getElementById('printing-systems-info');
-    const infoText = document.getElementById('systems-info-text');
-    
-    if (!infoDiv || !infoText) {
-        return; // Salir si los elementos no existen
-    }
-    
-    const selectedSystems = [];
-    let maxColors = 0;
-    let minUnits = Infinity;
-    let avgPrice = 0;
-    let selectedCount = 0;
-    
-    checkboxes.forEach(checkbox => {
-        if (checkbox.checked) {
-            const label = checkbox.nextElementSibling;
-            const systemName = label.querySelector('strong')?.textContent || '';
-            const colors = parseInt(checkbox.getAttribute('data-colors') || 0);
-            const units = parseInt(checkbox.getAttribute('data-min-units') || 0);
-            const price = parseFloat(checkbox.getAttribute('data-price') || 0);
-            
-            if (systemName) {
-                selectedSystems.push({
-                    name: systemName,
-                    colors: colors,
-                    units: units,
-                    price: price
-                });
-                
-                maxColors = Math.max(maxColors, colors);
-                minUnits = Math.min(minUnits, units);
-                avgPrice += price;
-                selectedCount++;
-            }
-        }
-    });
-    
-    if (selectedCount > 0) {
-        avgPrice = avgPrice / selectedCount;
-        
-        let html = '<ul class="mb-0">';
-        selectedSystems.forEach(system => {
-            html += `<li>${system.name} (${system.colors} colores, €${system.price.toFixed(2)}/ud)</li>`;
-        });
-        html += '</ul>';
-        html += `<hr class="my-2">`;
-        html += `<small>`;
-        html += `• Máximo de colores disponible: ${maxColors}<br>`;
-        html += `• Cantidad mínima requerida: ${minUnits} unidades<br>`;
-        html += `• Precio promedio: €${avgPrice.toFixed(2)}/unidad`;
-        html += `</small>`;
-        
-        infoText.innerHTML = html;
-        infoDiv.style.display = 'block';
-        
-        // Actualizar el campo de colores de impresión si existe
-        const printColorsCount = document.getElementById('print_colors_count');
-        if (printColorsCount) {
-            printColorsCount.value = maxColors;
-        }
-    } else {
-        infoDiv.style.display = 'none';
-        const printColorsCount = document.getElementById('print_colors_count');
-        if (printColorsCount) {
-            printColorsCount.value = 1;
-        }
-    }
-}
-
-// Inicializar sistemas de impresión al cargar la página
-document.addEventListener('DOMContentLoaded', function() {
-    // Agregar event listeners a los checkboxes de sistemas de impresión
-    const checkboxes = document.querySelectorAll('.printing-system-checkbox');
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateSystemsInfo);
-    });
-    
-    // Ejecutar al cargar la página
-    updateSystemsInfo();
-    
-    // Filtrar subcategorías según categoría seleccionada
-    const categorySelect = document.getElementById('category_id');
-    if (categorySelect) {
-        categorySelect.addEventListener('change', function() {
-            const categoryId = this.value;
-            const subcategorySelect = document.getElementById('subcategory_id');
-            const subcategoryOptions = subcategorySelect.querySelectorAll('option');
-            
-            subcategoryOptions.forEach(option => {
-                if (option.value === '') {
-                    option.style.display = 'block';
-                } else if (option.dataset.category === categoryId || !categoryId) {
-                    option.style.display = 'block';
-                } else {
-                    option.style.display = 'none';
-                }
-            });
-            
-            // Reset subcategoría si la actual no pertenece a la categoría seleccionada
-            const currentSubcategory = subcategorySelect.value;
-            if (currentSubcategory && subcategorySelect.querySelector(`option[value="${currentSubcategory}"]`).style.display === 'none') {
-                subcategorySelect.value = '';
-            }
-        });
-        
-        // Ejecutar al cargar
-        const event = new Event('change');
-        categorySelect.dispatchEvent(event);
-    }
-    
-    // Sincronizar color pickers
-    const colorPicker = document.getElementById('color_picker');
-    const colorHex = document.getElementById('color_hex');
-    if (colorPicker && colorHex) {
-        colorPicker.addEventListener('input', function() {
-            colorHex.value = this.value;
-        });
-        
-        colorHex.addEventListener('input', function() {
-            if (this.value.match(/^#[0-9A-Fa-f]{6}$/)) {
-                colorPicker.value = this.value;
-            }
-        });
-    }
-    
-    // Sincronizar color picker de impresión
-    const printColorPicker = document.getElementById('print_color_picker');
-    const printColorHex = document.getElementById('print_color_hex');
-    if (printColorPicker && printColorHex) {
-        printColorPicker.addEventListener('input', function() {
-            printColorHex.value = this.value;
-        });
-        
-        printColorHex.addEventListener('input', function() {
-            if (this.value.match(/^#[0-9A-Fa-f]{6}$/)) {
-                printColorPicker.value = this.value;
-            }
-        });
-    }
-});
-
-// Funciones para tabla de precios
-function addPricingRow() {
-    const tbody = document.getElementById('pricing-rows');
-    const row = document.createElement('tr');
-    
-    row.innerHTML = `
-        <td><input type="number" class="form-control" name="pricing[${pricingIndex}][quantity_from]" min="1" required></td>
-        <td><input type="number" class="form-control" name="pricing[${pricingIndex}][quantity_to]" min="1" required></td>
-        <td><input type="number" step="0.01" class="form-control" name="pricing[${pricingIndex}][price]" min="0" required></td>
-        <td><input type="number" step="0.01" class="form-control" name="pricing[${pricingIndex}][unit_price]" min="0" required></td>
-        <td>
-            <button type="button" class="btn btn-sm btn-danger" onclick="removePricingRow(this)">
-                <i class="bi bi-trash"></i>
-            </button>
-        </td>
-    `;
-    
-    tbody.appendChild(row);
-    pricingIndex++;
-}
-
-function removePricingRow(button) {
-    const tbody = document.getElementById('pricing-rows');
-    if (tbody.children.length > 1) {
-        button.closest('tr').remove();
-    } else {
-        alert('Debe mantener al menos un rango de precio');
-    }
-}
-
-// Función para agregar material
-function addMaterial() {
-    const name = document.getElementById('material_name').value;
-    const description = document.getElementById('material_description').value;
-    
-    if (!name) {
-        alert('Por favor ingrese el nombre del material');
-        return;
-    }
-    
-    fetch('{{ route("admin.available-materials.store") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-            name: name,
-            description: description
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Agregar el nuevo material a la lista
-            const container = document.getElementById('materialsContainer').querySelector('.row');
-            const materialHtml = `
-                <div class="col-md-4 mb-2" id="material-item-${data.material.id}">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="materials[]" 
-                               value="${data.material.name}" id="material_${data.material.id}" checked>
-                        <label class="form-check-label" for="material_${data.material.id}">
-                            ${data.material.name}
-                        </label>
-                    </div>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', materialHtml);
-            
-            // Cerrar modal y limpiar formulario
-            bootstrap.Modal.getInstance(document.getElementById('addMaterialModal')).hide();
-            document.getElementById('addMaterialForm').reset();
-            
-            // Mostrar mensaje de éxito
-            if (typeof toastr !== 'undefined') {
-                toastr.success(data.message);
-            }
-        } else {
-            if (typeof toastr !== 'undefined') {
-                toastr.error(data.message);
-            } else {
-                alert(data.message);
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        if (typeof toastr !== 'undefined') {
-            toastr.error('Error al agregar el material');
-        } else {
-            alert('Error al agregar el material');
-        }
-    });
-}
-
-// Función para agregar color
-function addColor() {
-    const name = document.getElementById('color_name').value;
-    const hexCode = document.getElementById('color_hex').value;
-    
-    if (!name || !hexCode) {
-        alert('Por favor complete todos los campos');
-        return;
-    }
-    
-    fetch('{{ route("admin.available-colors.store") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-            name: name,
-            hex_code: hexCode
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Agregar el nuevo color a la lista
-            const container = document.getElementById('colorsContainer');
-            const colorHtml = `
-                <div class="col-md-3 mb-2" id="color-item-${data.color.id}">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="colors[]" 
-                               value="${data.color.name}" id="color_${data.color.id}" checked>
-                        <label class="form-check-label d-flex align-items-center" for="color_${data.color.id}">
-                            <span class="badge me-2" style="background-color: ${data.color.hex_code}; color: ${data.color.hex_code == '#FFFFFF' ? '#000' : '#FFF'}; width: 20px; height: 20px; display: inline-block;"></span>
-                            ${data.color.name}
-                        </label>
-                    </div>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', colorHtml);
-            
-            // Cerrar modal y limpiar formulario
-            bootstrap.Modal.getInstance(document.getElementById('addColorModal')).hide();
-            document.getElementById('addColorForm').reset();
-            document.getElementById('color_picker').value = '#000000';
-            
-            if (typeof toastr !== 'undefined') {
-                toastr.success(data.message);
-            }
-        } else {
-            if (typeof toastr !== 'undefined') {
-                toastr.error(data.message);
-            } else {
-                alert(data.message);
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        if (typeof toastr !== 'undefined') {
-            toastr.error('Error al agregar el color');
-        } else {
-            alert('Error al agregar el color');
-        }
-    });
-}
-
-// Función para agregar color de impresión
-function addPrintColor() {
-    const name = document.getElementById('print_color_name').value;
-    const hexCode = document.getElementById('print_color_hex').value;
-    
-    if (!name || !hexCode) {
-        alert('Por favor complete todos los campos');
-        return;
-    }
-    
-    fetch('{{ route("admin.available-print-colors.store") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-            name: name,
-            hex_code: hexCode
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Agregar el nuevo color a la lista
-            const container = document.getElementById('printColorsContainer');
-            const colorHtml = `
-                <div class="col-md-3 mb-2">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="print_colors[]" 
-                               value="${data.color.name}" id="print_color_${data.color.id}" checked>
-                        <label class="form-check-label" for="print_color_${data.color.id}">
-                            <span class="badge" style="background-color: ${data.color.hex_code}; color: ${data.color.hex_code == '#FFFFFF' ? '#000' : '#FFF'}">
-                                ${data.color.name}
-                            </span>
-                        </label>
-                    </div>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', colorHtml);
-            
-            // Cerrar modal y limpiar formulario
-            bootstrap.Modal.getInstance(document.getElementById('addPrintColorModal')).hide();
-            document.getElementById('addPrintColorForm').reset();
-            document.getElementById('print_color_picker').value = '#000000';
-            
-            if (typeof toastr !== 'undefined') {
-                toastr.success(data.message);
-            }
-        } else {
-            if (typeof toastr !== 'undefined') {
-                toastr.error(data.message);
-            } else {
-                alert(data.message);
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        if (typeof toastr !== 'undefined') {
-            toastr.error('Error al agregar el color de impresión');
-        } else {
-            alert('Error al agregar el color de impresión');
-        }
-    });
-}
-
-// Función para agregar tamaño
-function addSize() {
-    const name = document.getElementById('size_name').value;
-    const code = document.getElementById('size_code').value;
-    const description = document.getElementById('size_description').value;
-    
-    if (!name) {
-        alert('Por favor ingrese el nombre del tamaño');
-        return;
-    }
-    
-    fetch('{{ route("admin.available-sizes.store") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-            name: name,
-            code: code,
-            description: description
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Agregar el nuevo tamaño a la lista
-            const container = document.getElementById('sizesContainer').querySelector('.row');
-            const sizeHtml = `
-                <div class="col-md-2 mb-2">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="sizes[]" 
-                               value="${data.size.name}" id="size_${data.size.id}" checked>
-                        <label class="form-check-label" for="size_${data.size.id}">
-                            ${data.size.name}
-                        </label>
-                    </div>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', sizeHtml);
-            
-            // Cerrar modal y limpiar formulario
-            bootstrap.Modal.getInstance(document.getElementById('addSizeModal')).hide();
-            document.getElementById('addSizeForm').reset();
-            
-            if (typeof toastr !== 'undefined') {
-                toastr.success(data.message);
-            }
-        } else {
-            if (typeof toastr !== 'undefined') {
-                toastr.error(data.message);
-            } else {
-                alert(data.message);
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        if (typeof toastr !== 'undefined') {
-            toastr.error('Error al agregar el tamaño');
-        } else {
-            alert('Error al agregar el tamaño');
-        }
-    });
-}
-
-// Función para agregar sistema de impresión
-function addPrintingSystem() {
-    const name = document.getElementById('system_name').value;
-    const totalColors = document.getElementById('system_total_colors').value;
-    const minUnits = document.getElementById('system_min_units').value;
-    const pricePerUnit = document.getElementById('system_price_per_unit').value;
-    const description = document.getElementById('system_description').value;
-    
-    if (!name) {
-        alert('Por favor ingrese el nombre del sistema');
-        return;
-    }
-    
-    fetch('{{ route("admin.printing-systems.store") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-            name: name,
-            total_colors: totalColors,
-            min_units: minUnits,
-            price_per_unit: pricePerUnit,
-            description: description,
-            active: true
-        })
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            // Buscar el contenedor
-            const container = document.getElementById('printingSystemsContainer');
-            
-            if (container) {
-                const newDiv = document.createElement('div');
-                newDiv.className = 'col-12 mb-2';
-                newDiv.id = `printing-system-item-${data.printingSystem.id}`;
-                newDiv.innerHTML = `
-                    <div class="d-flex align-items-start">
-                        <div class="form-check flex-grow-1">
-                            <input class="form-check-input printing-system-checkbox" 
-                                   type="checkbox" 
-                                   name="printing_systems[]" 
-                                   value="${data.printingSystem.id}" 
-                                   id="printing_system_${data.printingSystem.id}"
-                                   data-colors="${data.printingSystem.total_colors}"
-                                   data-min-units="${data.printingSystem.min_units}"
-                                   data-price="${data.printingSystem.price_per_unit}"
-                                   checked>
-                            <label class="form-check-label" for="printing_system_${data.printingSystem.id}">
-                                <strong>${data.printingSystem.name}</strong>
-                                <small class="text-muted d-block">
-                                    ${data.printingSystem.total_colors} colores, mín. ${data.printingSystem.min_units} uds, €${parseFloat(data.printingSystem.price_per_unit).toFixed(2)}/ud
-                                </small>
-                            </label>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-outline-danger ms-2" 
-                                onclick="deletePrintingSystem(${data.printingSystem.id}, '${data.printingSystem.name}')"
-                                title="Eliminar sistema">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                `;
-                container.appendChild(newDiv);
-                
-                // Agregar event listener al nuevo checkbox
-                const newCheckbox = newDiv.querySelector('.printing-system-checkbox');
-                newCheckbox.addEventListener('change', updateSystemsInfo);
-                
-                // Actualizar la información
-                updateSystemsInfo();
-            } else {
-                // Si no hay contenedor, recargar la página
-                location.reload();
-            }
-            
-            // Cerrar modal y limpiar formulario
-            const modal = bootstrap.Modal.getInstance(document.getElementById('addPrintingSystemModal'));
-            if (modal) {
-                modal.hide();
-            }
-            document.getElementById('addPrintingSystemForm').reset();
-            
-            // Mostrar mensaje de éxito con toastr si está disponible
-            if (typeof toastr !== 'undefined') {
-                toastr.success(data.message);
-            }
-        } else {
-            if (typeof toastr !== 'undefined') {
-                toastr.error(data.message || 'Error al agregar el sistema de impresión');
-            } else {
-                alert(data.message || 'Error al agregar el sistema de impresión');
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
-}
-function deletePrintingSystem(systemId, systemName) {
-    if (!confirm(`¿Está seguro de eliminar el sistema "${systemName}"?\n\nEsta acción no se puede deshacer.`)) {
-        return;
-    }
-    
-    // Usar la ruta correcta generada por resource
-    fetch(`/admin/printing-systems/${systemId}`, {
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => {
-        // Primero verificar si la respuesta es JSON
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.indexOf("application/json") !== -1) {
-            return response.json();
-        } else {
-            throw new Error("La respuesta no es JSON");
-        }
-    })
-    .then(data => {
-        if (data.success) {
-            // Eliminar el elemento del DOM
-            const element = document.getElementById(`printing-system-item-${systemId}`);
-            if (element) {
-                element.remove();
-            }
-            
-            // Actualizar la información
-            updateSystemsInfo();
-            
-            // Mostrar mensaje de éxito
-            if (typeof toastr !== 'undefined') {
-                toastr.success(data.message || 'Sistema eliminado exitosamente');
-            }
-        } else {
-            if (typeof toastr !== 'undefined') {
-                toastr.error(data.message || 'Error al eliminar el sistema');
-            } else {
-                alert(data.message || 'Error al eliminar el sistema');
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        if (typeof toastr !== 'undefined') {
-            toastr.error('Error al eliminar el sistema de impresión');
-        } else {
-            alert('Error al eliminar el sistema de impresión');
-        }
-    });
-}
-</script>
+    @vite('resources/js/admin/products.js')
 @endpush

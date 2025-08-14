@@ -11,6 +11,7 @@ class Order extends Model
 
     protected $fillable = [
         'order_number',
+        'customer_id',
         'customer_name',
         'customer_email',
         'customer_phone',
@@ -33,6 +34,11 @@ class Order extends Model
     public function items()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function getRouteKeyName()

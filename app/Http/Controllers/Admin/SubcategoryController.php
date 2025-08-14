@@ -150,15 +150,54 @@ class SubcategoryController extends Controller
 
     public function destroy(Subcategory $subcategory)
     {
+        // Verificar dependencias
+        $productsCount = $subcategory->products()->count();
+        
+        if ($productsCount > 0) {
+            $products = $subcategory->products()->pluck('name')->take(5);
+            $productsList = $products->implode(', ');
+            
+            if ($productsCount > 5) {
+                $productsList .= " y " . ($productsCount - 5) . " más";
+            }
+            
+            $message = "No se puede eliminar la subcategoría '{$subcategory->name}' porque tiene {$productsCount} producto(s) asociado(s):\n\n";
+            $message .= "• {$productsList}\n\n";
+            $message .= "Primero debe eliminar o reasignar estos productos a otra subcategoría.";
+            
+            return redirect()->route('admin.subcategories.index')
+                            ->with('error', $message);
+        }
+
         try {
             $subcategory->deleteImage();
             $subcategory->delete();
+            
             return redirect()->route('admin.subcategories.index')
-                            ->with('success', 'Subcategoría eliminada exitosamente.');
+                            ->with('success', "Subcategoría '{$subcategory->name}' eliminada exitosamente.");
         } catch (\Exception $e) {
             return redirect()->route('admin.subcategories.index')
-                            ->with('error', 'No se puede eliminar la subcategoría porque tiene productos asociados.');
+                            ->with('error', 'Error al eliminar la subcategoría: ' . $e->getMessage());
         }
+    }
+    
+    /**
+     * Obtener información de dependencias para AJAX
+     */
+    public function dependencies(Subcategory $subcategory)
+    {
+        $products = $subcategory->products()->get(['id', 'name', 'sku']);
+        
+        return response()->json([
+            'can_delete' => $products->count() === 0,
+            'products_count' => $products->count(),
+            'products' => $products->map(function($product) {
+                return [
+                    'name' => $product->name,
+                    'sku' => $product->sku
+                ];
+            })
+        ]);
     }
 
     /**

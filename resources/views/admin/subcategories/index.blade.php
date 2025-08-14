@@ -129,8 +129,13 @@
             </div>
 
             <!-- Paginación -->
-            <div class="d-flex justify-content-center">
-                {{ $subcategories->withQueryString()->links() }}
+            <div class="pagination-wrapper">
+                <div class="pagination-info">
+                    Mostrando {{ $subcategories->firstItem() ?? 0 }} a {{ $subcategories->lastItem() ?? 0 }} de {{ $subcategories->total() }} resultados
+                </div>
+                <div>
+                    {{ $subcategories->withQueryString()->links('pagination::bootstrap-5') }}
+                </div>
             </div>
         @else
             <div class="text-center py-5">
@@ -145,3 +150,99 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar botones de eliminar con SweetAlert2
+    const deleteButtons = document.querySelectorAll('.btn-delete');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const subcategoryName = this.dataset.itemName;
+            const form = this.closest('form');
+            const subcategoryId = form.action.split('/').pop();
+            
+            // Mostrar loading mientras se verifica dependencias
+            Swal.fire({
+                title: 'Verificando dependencias...',
+                text: 'Por favor espere',
+                icon: 'info',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Verificar dependencias via AJAX
+            fetch(`{{ url('admin/subcategories') }}/${subcategoryId}/dependencies`)
+                .then(response => response.json())
+                .then(data => {
+                    let html = `¿Está seguro de eliminar la subcategoría <strong>"${subcategoryName}"</strong>?`;
+                    let canDelete = data.can_delete;
+                    
+                    if (!canDelete) {
+                        html += `<br><br><div class="alert alert-warning text-start mt-3 mb-0">`;
+                        html += `<strong><i class="bi bi-exclamation-triangle me-2"></i>¡Atención!</strong><br>`;
+                        html += `Esta subcategoría tiene <strong>${data.products_count} producto(s)</strong> asociados:<br><br>`;
+                        
+                        // Mostrar hasta 5 productos
+                        data.products.slice(0, 5).forEach(product => {
+                            html += `• ${product.name} (${product.sku})<br>`;
+                        });
+                        
+                        if (data.products_count > 5) {
+                            html += `• Y ${data.products_count - 5} producto(s) más<br>`;
+                        }
+                        
+                        html += `<br><small>Primero debe eliminar o reasignar estos productos.</small>`;
+                        html += `</div>`;
+                    }
+                    
+                    Swal.fire({
+                        title: canDelete ? '¿Eliminar Subcategoría?' : 'No se puede eliminar',
+                        html: html,
+                        icon: canDelete ? 'warning' : 'error',
+                        showCancelButton: true,
+                        confirmButtonColor: canDelete ? '#dc3545' : '#6c757d',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: canDelete ? '<i class="bi bi-trash me-2"></i>Sí, eliminar' : '<i class="bi bi-check me-2"></i>Entendido',
+                        cancelButtonText: '<i class="bi bi-x-circle me-2"></i>Cancelar',
+                        focusCancel: true,
+                        customClass: {
+                            icon: canDelete ? 'swal-icon-warning' : 'swal-icon-error'
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed && canDelete) {
+                            form.submit();
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error verificando dependencias:', error);
+                    Swal.fire({
+                        title: '¿Eliminar Subcategoría?',
+                        html: `¿Está seguro de eliminar la subcategoría <strong>"${subcategoryName}"</strong>?<br><small class="text-muted">No se pudieron verificar las dependencias</small>`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="bi bi-trash me-2"></i>Sí, eliminar',
+                        cancelButtonText: '<i class="bi bi-x-circle me-2"></i>Cancelar',
+                        focusCancel: true,
+                        customClass: {
+                            icon: 'swal-icon-warning'
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+        });
+    });
+});
+</script>
+@endpush
