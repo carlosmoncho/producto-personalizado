@@ -16,6 +16,7 @@ class Customer extends Model
         'company',
         'address',
         'city',
+        'state',
         'postal_code',
         'country',
         'tax_id',
@@ -37,6 +38,24 @@ class Customer extends Model
     public function orders()
     {
         return $this->hasMany(Order::class, 'customer_email', 'email');
+    }
+
+    // Relación con direcciones
+    public function addresses()
+    {
+        return $this->hasMany(Address::class);
+    }
+
+    // Obtener dirección de envío por defecto
+    public function defaultShippingAddress()
+    {
+        return $this->hasOne(Address::class)->where('type', 'shipping')->where('is_default', true);
+    }
+
+    // Obtener dirección de facturación por defecto
+    public function defaultBillingAddress()
+    {
+        return $this->hasOne(Address::class)->where('type', 'billing')->where('is_default', true);
     }
 
     // Scope para clientes activos

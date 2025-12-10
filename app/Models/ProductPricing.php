@@ -22,7 +22,7 @@ class ProductPricing extends Model
 
     protected $casts = [
         'price' => 'decimal:2',
-        'unit_price' => 'decimal:2',
+        'unit_price' => 'decimal:5', // 5 decimales para soportar precios por millar
     ];
 
     public function product()

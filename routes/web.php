@@ -12,12 +12,21 @@ use App\Http\Controllers\Admin\AvailablePrintColorController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AvailableMaterialController;
 use App\Http\Controllers\Admin\PrintingSystemController;
+use App\Http\Controllers\Admin\AttributeGroupController;
+use App\Http\Controllers\Admin\ProductAttributeController;
+use App\Http\Controllers\Admin\AttributeDependencyController;
+use App\Http\Controllers\Admin\PriceRuleController;
+use App\Http\Controllers\ProductConfiguratorController;
 
 Route::get('/', function () {
-    return Auth::check() 
-        ? redirect()->route('admin.dashboard') 
+    return Auth::check()
+        ? redirect()->route('admin.dashboard')
         : redirect()->route('login');
 });
+
+// ============ RUTAS DE DESARROLLO ============
+// Las rutas de testing y demos están en routes/dev.php
+// Solo se cargan en entorno local (ver bootstrap/app.php)
 
 Route::get('/dashboard', function () {
     return redirect()->route('admin.dashboard');
@@ -53,9 +62,26 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('products/subcategories/{category}', [ProductController::class, 'getSubcategories'])->name('products.subcategories');
     // Ruta AJAX para verificar dependencias
     Route::get('products/{product}/dependencies', [ProductController::class, 'dependencies'])->name('products.dependencies');
-    
+
+    // Imágenes de atributos del producto
+    Route::get('products/{product}/attribute-images', [ProductController::class, 'attributeImages'])->name('products.attribute-images');
+    Route::post('products/{product}/attribute-images/{attributeValue}', [ProductController::class, 'storeAttributeImages'])->name('products.attribute-images.store');
+    Route::delete('products/{product}/attribute-images/{attributeValue}/{imageIndex}', [ProductController::class, 'deleteAttributeImage'])->name('products.attribute-images.delete');
+
     // API para búsqueda de productos
     Route::get('api/products/search', [ProductController::class, 'search'])->name('api.products.search');
+    
+    // Configurador de productos
+    Route::get('configurator/{product}', [\App\Http\Controllers\ProductConfiguratorController::class, 'show'])->name('configurator.show');
+    
+    // APIs del configurador
+    Route::prefix('api/configurator')->name('api.configurator.')->group(function () {
+        Route::post('attributes', [\App\Http\Controllers\ProductConfiguratorController::class, 'getAvailableAttributes'])->name('attributes');
+        Route::post('inks/recommended', [\App\Http\Controllers\ProductConfiguratorController::class, 'getRecommendedInks'])->name('inks.recommended');
+        Route::post('price/calculate', [\App\Http\Controllers\ProductConfiguratorController::class, 'calculatePrice'])->name('price.calculate');
+        Route::post('configuration/update', [\App\Http\Controllers\ProductConfiguratorController::class, 'updateConfiguration'])->name('configuration.update');
+        Route::post('configuration/validate', [\App\Http\Controllers\ProductConfiguratorController::class, 'validateConfiguration'])->name('configuration.validate');
+    });
     
     // Pedidos - ruta export debe ir ANTES del resource para evitar conflictos
     Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');
@@ -94,6 +120,35 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     // Sistemas de impresión
     Route::resource('printing-systems', PrintingSystemController::class);
     Route::put('printing-systems/order', [PrintingSystemController::class, 'updateOrder'])->name('printing-systems.update-order');
+    
+    // Grupos de atributos
+    Route::resource('attribute-groups', AttributeGroupController::class);
+    Route::post('attribute-groups/reorder', [AttributeGroupController::class, 'reorder'])->name('attribute-groups.reorder');
+    Route::post('attribute-groups/{attributeGroup}/add-attribute', [AttributeGroupController::class, 'addAttribute'])->name('attribute-groups.add-attribute');
+    
+    // Atributos de productos (para configurador)
+    // Rutas específicas ANTES del resource para evitar conflictos
+    Route::post('product-attributes/{productAttribute}/duplicate', [\App\Http\Controllers\Admin\ProductAttributeController::class, 'duplicate'])->name('product-attributes.duplicate');
+    Route::put('product-attributes/order', [\App\Http\Controllers\Admin\ProductAttributeController::class, 'updateOrder'])->name('product-attributes.updateOrder');
+    Route::get('api/product-attributes/by-type', [\App\Http\Controllers\Admin\ProductAttributeController::class, 'getByType'])->name('api.product-attributes.by-type');
+    Route::resource('product-attributes', ProductAttributeController::class);
+    
+    // Rutas específicas ANTES del resource para evitar conflictos
+    Route::get('attribute-dependencies/create-individual', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'createIndividual'])->name('attribute-dependencies.create-individual');
+    Route::post('attribute-dependencies/store-individual', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'storeIndividual'])->name('attribute-dependencies.store-individual');
+    Route::get('attribute-dependencies/create-combination', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'createCombination'])->name('attribute-dependencies.create-combination');
+    Route::post('attribute-dependencies/store-combination', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'storeCombination'])->name('attribute-dependencies.store-combination');
+
+    // Dependencias de atributos - Resource route DESPUÉS de rutas específicas
+    Route::resource('attribute-dependencies', \App\Http\Controllers\Admin\AttributeDependencyController::class);
+    Route::post('attribute-dependencies/{attributeDependency}/duplicate', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'duplicate'])->name('attribute-dependencies.duplicate');
+    Route::get('api/attribute-dependencies/by-type', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'getAttributesByType'])->name('api.attribute-dependencies.by-type');
+    Route::get('api/attribute-dependencies/preview', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'previewDependencies'])->name('api.attribute-dependencies.preview');
+    Route::get('api/attribute-dependencies/validate', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'validateConfiguration'])->name('api.attribute-dependencies.validate');
+
+    // Reglas de precio (compatibilidad temporal)
+    Route::resource('price-rules', PriceRuleController::class);
+    Route::get('api/price-rules/by-type', [PriceRuleController::class, 'getByType'])->name('api.price-rules.by-type');
 });
 
 require __DIR__.'/auth.php';

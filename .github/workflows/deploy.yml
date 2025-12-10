@@ -1,0 +1,75 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Permite ejecutar manualmente
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    # Solo ejecutar si todos los tests pasaron
+    needs: []  # Descomentar y agregar: needs: [tests, code-quality, security] si se ejecuta con CI
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, mysql
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader --no-dev
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: Create deployment artifact
+        run: |
+          tar -czf deployment.tar.gz \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='tests' \
+            --exclude='.env' \
+            --exclude='storage/logs/*' \
+            .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: deployment-package
+          path: deployment.tar.gz
+          retention-days: 5
+
+      # Descomentar y configurar para deployment real
+      # - name: Deploy to server via SSH
+      #   uses: easingthemes/ssh-deploy@main
+      #   env:
+      #     SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+      #     REMOTE_USER: ${{ secrets.REMOTE_USER }}
+      #     TARGET: ${{ secrets.REMOTE_TARGET }}
+
+      - name: Deployment summary
+        run: |
+          echo "✅ Deployment package created successfully"
+          echo "📦 Artifact: deployment.tar.gz"
+          echo "🚀 Ready for deployment"
+          echo ""
+          echo "⚠️  Next steps:"
+          echo "  1. Configure SSH_PRIVATE_KEY secret"
+          echo "  2. Configure REMOTE_HOST secret"
+          echo "  3. Configure REMOTE_USER secret"
+          echo "  4. Configure REMOTE_TARGET secret"
+          echo "  5. Uncomment SSH deployment step"

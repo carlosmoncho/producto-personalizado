@@ -90,6 +90,14 @@
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <label for="has_attributes" class="form-label">Atributos</label>
+                    <select class="form-select" id="has_attributes" name="has_attributes">
+                        <option value="">Todos</option>
+                        <option value="1" {{ request('has_attributes') == '1' ? 'selected' : '' }}>Con Atributos</option>
+                        <option value="0" {{ request('has_attributes') == '0' ? 'selected' : '' }}>Sin Atributos</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <label class="form-label">&nbsp;</label>
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
@@ -126,8 +134,8 @@
                             <th>Imagen</th>
                             <th>Producto</th>
                             <th>Categoría</th>
-                            <th>Especificaciones</th>
-                            <th>Precio desde</th>
+                            <th>Atributos</th>
+                            <th>Precio Base</th>
                             <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
@@ -150,8 +158,13 @@
                                 </td>
                                 <td>
                                     <div>
-                                        <strong>{{ $product->name }}</strong>
-                                        <br><small class="text-muted">SKU: {{ $product->sku }}</small>
+                                        <div class="d-flex align-items-center">
+                                            <strong>{{ $product->name }}</strong>
+                                            <span class="badge bg-primary ms-2" title="Producto personalizable">
+                                                <i class="bi bi-gear-fill"></i> Personalizable
+                                            </span>
+                                        </div>
+                                        <small class="text-muted">SKU: {{ $product->sku }}</small>
                                         <br><small class="text-muted">{{ Str::limit($product->description, 50) }}</small>
                                     </div>
                                 </td>
@@ -161,22 +174,28 @@
                                 </td>
                                 <td>
                                     <div class="d-flex flex-wrap gap-1">
-                                        @if($product->colors && count($product->colors) > 0)
-                                            <span class="badge bg-info">{{ count($product->colors) }} colores</span>
+                                        @if($product->productAttributes->count() > 0)
+                                            @php
+                                                $groupCounts = $product->productAttributes->groupBy(function($attr) {
+                                                    return $attr->attributeGroup->name;
+                                                })->map(function($group) {
+                                                    return $group->count();
+                                                });
+                                            @endphp
+                                            @foreach($groupCounts as $groupName => $count)
+                                                <span class="badge bg-info">{{ $count }} {{ $groupName }}</span>
+                                            @endforeach
+                                        @else
+                                            <span class="text-muted">Sin atributos</span>
                                         @endif
-                                        @if($product->sizes && count($product->sizes) > 0)
-                                            <span class="badge bg-secondary">{{ count($product->sizes) }} tallas</span>
-                                        @endif
-                                        <br>
-                                        <small class="text-muted">{{ $product->materials ? implode(', ', $product->materials) : 'No especificado' }}</small>
                                         <br>
                                         <small class="text-muted">{{ $product->printingSystems->pluck('name')->implode(', ') ?: 'No especificado' }}</small>
                                     </div>
                                 </td>
                                 <td>
-                                    @if($product->pricing->count() > 0)
-                                        <strong>€{{ number_format($product->pricing->min('unit_price'), 2) }}</strong>
-                                        <br><small class="text-muted">desde {{ $product->pricing->min('quantity_from') }} uds</small>
+                                    @if($product->configurator_base_price)
+                                        <strong>€{{ number_format($product->configurator_base_price, 2) }}</strong>
+                                        <br><small class="text-muted">precio base</small>
                                     @else
                                         <span class="text-muted">Sin precio</span>
                                     @endif
@@ -190,19 +209,19 @@
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="{{ route('admin.products.show', $product) }}" 
+                                        <a href="{{ route('admin.products.show', $product) }}"
                                            class="btn btn-outline-primary btn-sm">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="{{ route('admin.products.edit', $product) }}" 
+                                        <a href="{{ route('admin.products.edit', $product) }}"
                                            class="btn btn-outline-secondary btn-sm">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <form method="POST" action="{{ route('admin.products.destroy', $product) }}" 
+                                        <form method="POST" action="{{ route('admin.products.destroy', $product) }}"
                                               class="d-inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-outline-danger btn-sm btn-delete" 
+                                            <button type="submit" class="btn btn-outline-danger btn-sm btn-delete"
                                                     data-item-name="{{ $product->name }}">
                                                 <i class="bi bi-trash"></i>
                                             </button>
@@ -330,6 +349,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('category_id').value = '';
             document.getElementById('subcategory_id').value = '';
             document.getElementById('status').value = '';
+            document.getElementById('has_attributes').value = '';
             
             // Enviar formulario limpio
             window.location.href = '{{ route("admin.products.index") }}';

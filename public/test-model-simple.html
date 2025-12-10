@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Model Viewer Simple</title>
+    <script type="module" src="https://unpkg.com/@google/model-viewer@3.4.0/dist/model-viewer.min.js"></script>
+    <style>
+        model-viewer {
+            width: 100%;
+            height: 400px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Simple Model Viewer</h1>
+
+        <h3>Tu archivo 1.1MB:</h3>
+        <model-viewer
+            src="/storage/3d-models/0LObUaFORglEuBnAK1k4NTgtAll1gP2jjoZ9BlYA.glb"
+            camera-controls
+            auto-rotate>
+        </model-viewer>
+
+        <h3>Modelo de prueba 118KB:</h3>
+        <model-viewer
+            src="/storage/3d-models/test-optimized.glb"
+            camera-controls
+            auto-rotate>
+        </model-viewer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const viewers = document.querySelectorAll('model-viewer');
+
+            viewers.forEach((viewer, index) => {
+                console.log(`Viewer ${index + 1}:`, viewer.src);
+
+                viewer.addEventListener('load', () => {
+                    console.log(`✅ Viewer ${index + 1} cargado`);
+                });
+
+                viewer.addEventListener('error', (e) => {
+                    console.log(`❌ Viewer ${index + 1} error:`, e.detail);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

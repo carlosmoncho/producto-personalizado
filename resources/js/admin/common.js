@@ -74,17 +74,27 @@ class AdminCommon {
 
     handleImagePreview(event) {
         const input = event.target;
-        const previewContainer = input.closest('.mb-3').querySelector('.image-preview');
-        
-        if (!previewContainer) {
+
+        // Skip inputs that are inside modals or have data-skip-preview attribute
+        if (input.closest('.modal') || input.hasAttribute('data-skip-preview')) {
+            return;
+        }
+
+        const parentContainer = input.closest('.mb-3');
+        if (!parentContainer) {
+            return; // No container found, skip preview
+        }
+
+        let container = parentContainer.querySelector('.image-preview');
+
+        if (!container) {
             // Create preview container if doesn't exist
-            const container = document.createElement('div');
+            container = document.createElement('div');
             container.className = 'image-preview mt-2';
             input.parentNode.appendChild(container);
         }
 
         const files = input.files;
-        const container = input.closest('.mb-3').querySelector('.image-preview');
         container.innerHTML = '';
 
         Array.from(files).forEach((file, index) => {

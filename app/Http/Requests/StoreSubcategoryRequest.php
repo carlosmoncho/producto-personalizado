@@ -11,7 +11,7 @@ class StoreSubcategoryRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return auth()->check();
     }
 
     /**
@@ -22,7 +22,21 @@ class StoreSubcategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|unique:subcategories,slug|max:255',
+            'description' => 'nullable|string|max:1000',
+            'category_id' => 'required|exists:categories,id',
+            'active' => 'boolean',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'El nombre de la subcategoría es obligatorio.',
+            'slug.required' => 'El slug es obligatorio.',
+            'slug.unique' => 'Este slug ya está en uso.',
+            'category_id.required' => 'Debe seleccionar una categoría.',
         ];
     }
 }

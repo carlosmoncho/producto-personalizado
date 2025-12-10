@@ -10,6 +10,11 @@
         <div class="col-12 d-flex justify-content-between align-items-center">
             <h1 class="h3">{{ $product->name }}</h1>
             <div>
+                @if($product->has_configurator && $product->productAttributeValues->count() > 0)
+                    <a href="{{ route('admin.products.attribute-images', $product) }}" class="btn btn-success me-2">
+                        <i class="bi bi-images"></i> Imágenes por Atributo
+                    </a>
+                @endif
                 <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-primary">
                     <i class="bi bi-pencil"></i> Editar
                 </a>
@@ -58,9 +63,51 @@
                 @endif
             </x-admin.card>
 
-            <x-admin.card title="Especificaciones">
+            <x-admin.card title="Especificaciones Técnicas" class="border-secondary">
+                <!-- Información del Configurador -->
+                <div class="row mb-4 p-3 bg-light rounded">
+                    <div class="col-12 mb-2">
+                        <h6 class="text-primary">
+                            <i class="bi bi-gear me-2"></i>Configuración del Producto
+                        </h6>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">Estado Configurador:</small><br>
+                        @if($product->has_configurator)
+                            <span class="badge bg-success">Habilitado</span>
+                        @else
+                            <span class="badge bg-warning">Deshabilitado</span>
+                        @endif
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">Precio Base:</small><br>
+                        <strong class="text-success">€{{ number_format($product->configurator_base_price ?? 0, 2) }}</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">Máx. Colores Impresión:</small><br>
+                        <span class="badge bg-info">{{ $product->max_print_colors ?? 1 }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">Subida de Archivos:</small><br>
+                        @if($product->allow_file_upload)
+                            <span class="badge bg-success">Permitida</span>
+                        @else
+                            <span class="badge bg-secondary">No permitida</span>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Especificaciones Legacy -->
+                <div class="row mb-4 p-3 bg-white rounded border-top mt-4">
+                    <div class="col-12 mb-3">
+                        <h6 class="text-secondary">
+                            <i class="bi bi-archive me-2"></i>Especificaciones Legacy
+                        </h6>
+                    </div>
+                </div>
+
                 <div class="row mb-3">
-                    <div class="col-md-4"><strong>Materiales:</strong></div>
+                    <div class="col-md-4"><strong>Materiales (Legacy):</strong></div>
                     <div class="col-md-8">{{ $product->materials ? implode(', ', $product->materials) : 'No especificado' }}</div>
                 </div>
 
@@ -74,74 +121,344 @@
                     <div class="col-md-8">{{ $product->face_count }}</div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-4"><strong>Colores de Impresión:</strong></div>
+                <div class="row mb-3">
+                    <div class="col-md-4"><strong>Colores de Impresión (Legacy):</strong></div>
                     <div class="col-md-8">{{ $product->print_colors_count }} colores</div>
                 </div>
-            </x-admin.card>
 
-            <x-admin.card title="Colores y Tallas">
-                <div class="mb-3">
-                    <strong>Colores Disponibles:</strong>
-                    <div class="mt-2">
-                        @php
-                            $availableColors = \App\Models\AvailableColor::whereIn('name', $product->colors ?? [])->get();
-                        @endphp
-                        @foreach($availableColors as $color)
-                            <span class="badge me-2 mb-2" 
-                                  style="background-color: {{ $color->hex_code }}; color: {{ $color->hex_code == '#FFFFFF' ? '#000' : '#FFF' }}">
-                                {{ $color->name }}
-                            </span>
-                        @endforeach
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <strong>Colores de Impresión:</strong>
-                    <div class="mt-2">
-                        @php
-                            $printColors = \App\Models\AvailablePrintColor::whereIn('name', $product->print_colors ?? [])->get();
-                        @endphp
-                        @foreach($printColors as $color)
-                            <span class="badge me-2 mb-2" 
-                                  style="background-color: {{ $color->hex_code }}; color: {{ $color->hex_code == '#FFFFFF' ? '#000' : '#FFF' }}">
-                                {{ $color->name }}
-                            </span>
-                        @endforeach
-                    </div>
-                </div>
-
-                <div>
-                    <strong>Tallas Disponibles:</strong>
-                    <div class="mt-2">
-                        @foreach($product->sizes ?? [] as $size)
-                            <span class="badge bg-secondary me-2">{{ $size }}</span>
-                        @endforeach
-                    </div>
-                </div>
-            </x-admin.card>
-
-            <x-admin.card title="Tabla de Precios">
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Cantidad</th>
-                                <th>Precio Total</th>
-                                <th>Precio Unitario</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($product->pricing->sortBy('quantity_from') as $price)
-                                <tr>
-                                    <td>{{ $price->quantity_from }} - {{ $price->quantity_to }}</td>
-                                    <td>€{{ number_format($price->price, 2) }}</td>
-                                    <td>€{{ number_format($price->unit_price, 2) }}</td>
-                                </tr>
+                <!-- Resumen del Sistema de Atributos -->
+                @if($product->productAttributes && $product->productAttributes->count() > 0)
+                    <div class="mt-4 p-3 border-top">
+                        <h6 class="text-info mb-3">
+                            <i class="bi bi-collection me-2"></i>Resumen del Sistema de Atributos
+                        </h6>
+                        <div class="row">
+                            @php
+                                $attributeSummary = $product->productAttributes->groupBy('type');
+                            @endphp
+                            @foreach($attributeSummary as $type => $attributes)
+                                <div class="col-md-4 mb-2">
+                                    <small class="text-muted">{{ ucfirst($type) }}s:</small><br>
+                                    <span class="badge bg-outline-secondary">{{ $attributes->count() }} disponibles</span>
+                                </div>
                             @endforeach
-                        </tbody>
-                    </table>
+                        </div>
+                    </div>
+                @endif
+            </x-admin.card>
+
+            <x-admin.card title="Grupos de Atributos del Configurador" class="border-info">
+                @if($product->productAttributes && $product->productAttributes->count() > 0)
+                    @php
+                        $attributesByGroup = $product->productAttributes->groupBy('attributeGroup.name');
+                        $totalAttributes = $product->productAttributes->count();
+                        $activeGroups = $attributesByGroup->count();
+                    @endphp
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-collection text-info me-3 fs-4"></i>
+                                <div>
+                                    <h6 class="mb-1">Total de Atributos Configurados</h6>
+                                    <span class="badge bg-info fs-6">{{ $totalAttributes }} atributos</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-folder text-primary me-3 fs-4"></i>
+                                <div>
+                                    <h6 class="mb-1">Grupos Activos</h6>
+                                    <span class="badge bg-primary fs-6">{{ $activeGroups }} grupos</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        @foreach($attributesByGroup as $groupName => $attributes)
+                            @php
+                                $group = $attributes->first()->attributeGroup;
+                                $groupIcon = match($group->type ?? 'default') {
+                                    'color' => 'palette-fill',
+                                    'material' => 'boxes',
+                                    'size' => 'rulers',
+                                    'ink' => 'droplet-fill',
+                                    'quantity' => 'hash',
+                                    'system' => 'gear-fill',
+                                    default => 'collection'
+                                };
+                                $groupColor = match($group->type ?? 'default') {
+                                    'color' => 'primary',
+                                    'material' => 'secondary',
+                                    'size' => 'info',
+                                    'ink' => 'warning',
+                                    'quantity' => 'success',
+                                    'system' => 'dark',
+                                    default => 'light'
+                                };
+                            @endphp
+                            
+                            <div class="col-lg-6 mb-4">
+                                <div class="card h-100 border-{{ $groupColor }}">
+                                    <div class="card-header bg-{{ $groupColor }} text-white">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">
+                                                <i class="bi bi-{{ $groupIcon }} me-2"></i>
+                                                {{ $groupName }}
+                                            </h6>
+                                            <div class="d-flex gap-1">
+                                                @if($group->is_required ?? false)
+                                                    <span class="badge bg-danger">Requerido</span>
+                                                @endif
+                                                @if($group->allow_multiple ?? false)
+                                                    <span class="badge bg-success">Múltiple</span>
+                                                @endif
+                                                <span class="badge bg-light text-dark">{{ $attributes->count() }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        @if($group->description)
+                                            <p class="text-muted small mb-3">{{ $group->description }}</p>
+                                        @endif
+                                        
+                                        <div class="d-flex flex-wrap gap-2">
+                                            @foreach($attributes->sortBy('name') as $attribute)
+                                                <div class="d-flex align-items-center bg-light rounded px-3 py-2">
+                                                    @if($attribute->type === 'color' && $attribute->hex_code)
+                                                        <span class="rounded-circle me-2" 
+                                                              style="width: 16px; height: 16px; background-color: {{ $attribute->hex_code }}; border: 1px solid #ddd;"></span>
+                                                    @endif
+                                                    
+                                                    <span class="me-2">{{ $attribute->name }}</span>
+                                                    
+                                                    @if($attribute->price_modifier != 0)
+                                                        <small class="badge bg-{{ $attribute->price_modifier > 0 ? 'danger' : 'success' }}">
+                                                            {{ $attribute->price_modifier > 0 ? '+' : '' }}€{{ number_format($attribute->price_modifier, 2) }}
+                                                        </small>
+                                                    @endif
+                                                    
+                                                    @if($attribute->pivot && $attribute->pivot->is_default)
+                                                        <i class="bi bi-star-fill text-warning ms-1" title="Por defecto"></i>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+
+                                        @if($group->min_selections || $group->max_selections)
+                                            <div class="mt-3 p-2 bg-light rounded">
+                                                <small class="text-muted">
+                                                    <i class="bi bi-info-circle me-1"></i>
+                                                    Selecciones: 
+                                                    @if($group->min_selections && $group->max_selections)
+                                                        {{ $group->min_selections }} - {{ $group->max_selections }}
+                                                    @elseif($group->min_selections)
+                                                        Mínimo {{ $group->min_selections }}
+                                                    @elseif($group->max_selections)
+                                                        Máximo {{ $group->max_selections }}
+                                                    @endif
+                                                </small>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="alert alert-warning d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle me-3"></i>
+                        <div>
+                            <strong>No hay atributos configurados</strong><br>
+                            <small>Configure los atributos del producto en la página de edición para habilitar el sistema de configurador.</small>
+                        </div>
+                        <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-warning btn-sm ms-auto">
+                            <i class="bi bi-gear"></i> Configurar
+                        </a>
+                    </div>
+                @endif
+            </x-admin.card>
+
+            @if($dependencies && $dependencies->count() > 0)
+                <x-admin.card title="Dependencias de Atributos" class="border-warning">
+                    <div class="alert alert-info mb-3">
+                        <i class="bi bi-diagram-3 me-2"></i>
+                        <strong>{{ $dependencies->count() }} dependencia(s) configurada(s)</strong> - 
+                        Las dependencias controlan la disponibilidad de atributos según otras selecciones
+                    </div>
+
+                    <div class="row">
+                        @foreach($dependencies->groupBy('condition_type') as $conditionType => $deps)
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-{{ $conditionType === 'allows' ? 'check-circle' : ($conditionType === 'blocks' ? 'x-circle' : ($conditionType === 'requires' ? 'exclamation-circle' : 'currency-euro')) }} me-2"></i>
+                                            {{ ucfirst($conditionType) }} ({{ $deps->count() }})
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        @foreach($deps as $dependency)
+                                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                                <div class="small">
+                                                    <strong>{{ $dependency->parentAttribute->name }}</strong>
+                                                    @if($dependency->dependentAttribute)
+                                                        <i class="bi bi-arrow-right mx-2 text-muted"></i>
+                                                        {{ $dependency->dependentAttribute->name }}
+                                                    @elseif($dependency->condition_type === 'price_modifier')
+                                                        <span class="text-muted ms-2">(Modificador de precio)</span>
+                                                    @else
+                                                        <span class="text-muted ms-2">(Regla de precio)</span>
+                                                    @endif
+                                                </div>
+                                                @if($dependency->price_impact != 0 || $dependency->price_modifier != 0)
+                                                    <span class="badge bg-{{ ($dependency->price_impact > 0 || $dependency->price_modifier > 0) ? 'danger' : 'success' }}">
+                                                        @if($dependency->price_modifier != 0)
+                                                            {{ $dependency->price_modifier > 0 ? '+' : '' }}{{ number_format($dependency->price_modifier, 2) }}%
+                                                        @else
+                                                            {{ $dependency->price_impact > 0 ? '+' : '' }}€{{ number_format($dependency->price_impact, 2) }}
+                                                        @endif
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </x-admin.card>
+            @endif
+
+            @if($priceRules && $priceRules->count() > 0)
+                <x-admin.card title="Reglas de Precio Dinámicas" class="border-danger">
+                    <div class="alert alert-warning mb-3">
+                        <i class="bi bi-calculator me-2"></i>
+                        <strong>{{ $priceRules->count() }} regla(s) de precio activa(s)</strong> - 
+                        Estas reglas modifican el precio final según las selecciones del usuario
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Tipo</th>
+                                    <th>Acción</th>
+                                    <th>Valor</th>
+                                    <th>Prioridad</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($priceRules->sortBy('priority') as $rule)
+                                    <tr>
+                                        <td>
+                                            <strong>{{ $rule->name }}</strong>
+                                            @if($rule->description)
+                                                <br><small class="text-muted">{{ Str::limit($rule->description, 50) }}</small>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ ucfirst($rule->rule_type) }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ ucfirst(str_replace('_', ' ', $rule->action_type)) }}</span>
+                                        </td>
+                                        <td>
+                                            @if(str_contains($rule->action_type, 'percentage'))
+                                                {{ $rule->action_value }}%
+                                            @else
+                                                €{{ number_format($rule->action_value, 2) }}
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-dark">{{ $rule->priority }}</span>
+                                        </td>
+                                        <td>
+                                            @if($rule->active)
+                                                <span class="badge bg-success">Activa</span>
+                                            @else
+                                                <span class="badge bg-secondary">Inactiva</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </x-admin.card>
+            @endif
+
+            <x-admin.card title="Sistema de Precios" class="border-primary">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-currency-euro text-primary me-3 fs-3"></i>
+                            <div>
+                                <h5 class="mb-1">Precio Base del Configurador</h5>
+                                <span class="text-success fs-4 fw-bold">€{{ number_format($product->configurator_base_price ?? 0, 2) }}</span>
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Este es el precio base antes de aplicar modificadores por atributos seleccionados
+                        </small>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="bg-light p-3 rounded">
+                            <h6 class="text-muted mb-2">
+                                <i class="bi bi-gear me-1"></i> Modificadores de Precio
+                            </h6>
+                            <div class="d-flex justify-content-between mb-2">
+                                <small>Por Atributos:</small>
+                                <small class="text-info">Variable según selección</small>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <small>Por Cantidad:</small>
+                                <small class="text-warning">Según reglas configuradas</small>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <small>Por Combinaciones:</small>
+                                <small class="text-success">Según dependencias</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                @if($product->pricing && $product->pricing->count() > 0)
+                    <div class="mt-3">
+                        <h6 class="text-muted mb-3">
+                            <i class="bi bi-table me-1"></i> Tabla de Precios por Cantidad (Sistema Legacy)
+                        </h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Cantidad</th>
+                                        <th>Precio Total</th>
+                                        <th>Precio Unitario</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($product->pricing->sortBy('quantity_from') as $price)
+                                        <tr>
+                                            <td>{{ $price->quantity_from }} - {{ $price->quantity_to }}</td>
+                                            <td>€{{ number_format($price->price, 2) }}</td>
+                                            <td>€{{ number_format($price->unit_price, 2) }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">
+                            <i class="bi bi-exclamation-triangle text-warning me-1"></i>
+                            Esta tabla es complementaria. El precio final se calcula con el sistema de configurador.
+                        </small>
+                    </div>
+                @endif
             </x-admin.card>
         </div>
 
@@ -173,31 +490,17 @@
 
             @if($product->model_3d_file)
                 <x-admin.card title="Modelo 3D">
-                    <div class="text-center mb-3 position-relative">
-                        <model-viewer 
-                            src="{{ $product->getModel3dUrl() }}" 
+                    <div class="mb-3" style="background-color: #f0f0f0; border-radius: 8px; overflow: hidden;">
+                        <model-viewer
+                            src="{{ $product->getModel3dUrl() }}"
                             alt="{{ $product->name }} - Modelo 3D"
-                            auto-rotate 
-                            camera-controls 
-                            shadow-intensity="1"
-                            exposure="1"
-                            ar 
-                            ar-modes="webxr scene-viewer quick-look"
-                            style="width: 100%; height: 400px; background: linear-gradient(to bottom, #ffffff, #f8f9fa); border-radius: 0.375rem; border: 1px solid #dee2e6;"
+                            camera-controls
+                            auto-rotate
+                            style="width: 100%; height: 400px; display: block; background-color: #e0e0e0;"
+                            id="product-model-viewer"
                             loading="eager"
-                            reveal="auto"
-                            poster="{{ $product->getFirstImageUrl() }}">
-                            <div class="slot">
-                                <div class="progress-bar hide" slot="progress-bar">
-                                    <div class="update-bar"></div>
-                                </div>
-                            </div>
+                            reveal="auto">
                         </model-viewer>
-                        <div class="position-absolute top-0 end-0 p-2">
-                            <span class="badge bg-info">
-                                <i class="bi bi-box"></i> 3D
-                            </span>
-                        </div>
                     </div>
                     <div class="d-flex justify-content-center gap-2">
                         <button class="btn btn-outline-secondary btn-sm" onclick="resetCamera()">
@@ -247,6 +550,9 @@
                 </form>
                 
                 <div>
+                    <a href="{{ route('admin.configurator.show', $product) }}" class="btn btn-success me-2">
+                        <i class="bi bi-gear-fill"></i> Abrir Configurador
+                    </a>
                     <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-primary">
                         <i class="bi bi-pencil"></i> Editar
                     </a>
@@ -262,17 +568,10 @@
 
 @push('styles')
 <style>
-    model-viewer {
+    #product-model-viewer {
         --poster-color: transparent;
-    }
-    
-    model-viewer::part(default-progress-bar) {
-        height: 4px;
-        background-color: #E3E3E3;
-    }
-    
-    model-viewer::part(default-progress-bar-bar) {
-        background-color: var(--primary-color);
+        border-radius: 8px;
+        background: #f8f9fa !important;
     }
     
     .progress-bar {
@@ -320,25 +619,55 @@ function resetCamera() {
     }
 }
 
-// Monitor model loading
 document.addEventListener('DOMContentLoaded', function() {
-    const modelViewer = document.querySelector('model-viewer');
-    if (modelViewer) {
-        modelViewer.addEventListener('load', () => {
-            console.log('3D model loaded successfully');
-        });
-        
-        modelViewer.addEventListener('error', (event) => {
-            console.error('Error loading 3D model:', event);
-        });
-        
-        modelViewer.addEventListener('model-visibility', (event) => {
-            console.log('Model visibility:', event.detail.visible);
-        });
-    }
-});
+    console.log('🎨 [3D Viewer] DOMContentLoaded');
 
-document.addEventListener('DOMContentLoaded', function() {
+    // Check if model-viewer script is loaded
+    if (customElements.get('model-viewer')) {
+        console.log('✅ [3D Viewer] model-viewer web component is registered');
+    } else {
+        console.error('❌ [3D Viewer] model-viewer web component NOT registered');
+    }
+
+    // Wait a bit for model-viewer to load
+    setTimeout(() => {
+        const modelViewer = document.querySelector('#product-model-viewer');
+        console.log('🔍 [3D Viewer] Looking for model viewer...');
+
+        if (modelViewer) {
+            console.log('✅ [3D Viewer] Model viewer element found!');
+            console.log('📦 [3D Viewer] Source URL:', modelViewer.src);
+            console.log('📐 [3D Viewer] Element dimensions:', {
+                width: modelViewer.offsetWidth,
+                height: modelViewer.offsetHeight,
+                display: window.getComputedStyle(modelViewer).display
+            });
+
+            modelViewer.addEventListener('load', () => {
+                console.log('✅ [3D Viewer] Model loaded successfully!');
+            });
+
+            modelViewer.addEventListener('error', (event) => {
+                console.error('❌ [3D Viewer] Model load error:', event);
+                console.error('❌ [3D Viewer] Error details:', event.detail);
+            });
+
+            modelViewer.addEventListener('progress', (event) => {
+                const percent = event.detail.totalProgress * 100;
+                console.log(`📊 [3D Viewer] Loading: ${percent.toFixed(0)}%`);
+            });
+        } else {
+            console.error('❌ [3D Viewer] Model viewer element NOT found in DOM');
+            console.log('🔍 [3D Viewer] Checking if condition passed...');
+            @if($product->model_3d_file)
+                console.log('🔍 [3D Viewer] Product has model_3d_file: YES');
+            @else
+                console.log('🔍 [3D Viewer] Product has model_3d_file: NO');
+            @endif
+        }
+    }, 500);
+
+    // Existing code for delete button...
     // Manejar botón de eliminar producto con SweetAlert2
     const deleteButton = document.querySelector('.btn-delete');
     if (deleteButton) {

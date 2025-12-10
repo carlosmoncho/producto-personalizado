@@ -1,0 +1,97 @@
+name: Database Backup
+
+on:
+  schedule:
+    # Ejecutar diariamente a las 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # Permite ejecutar manualmente
+
+jobs:
+  backup:
+    name: Backup Database
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, mysql
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Create backup directory
+        run: mkdir -p storage/backups
+
+      # Opción 1: Backup usando mysqldump (si tienes acceso SSH al servidor)
+      # - name: Database Backup via SSH
+      #   uses: appleboy/ssh-action@master
+      #   with:
+      #     host: ${{ secrets.REMOTE_HOST }}
+      #     username: ${{ secrets.REMOTE_USER }}
+      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     script: |
+      #       DATE=$(date +%Y%m%d_%H%M%S)
+      #       mysqldump -u ${{ secrets.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} ${{ secrets.DB_DATABASE }} > /backups/backup_${DATE}.sql
+      #       gzip /backups/backup_${DATE}.sql
+      #       # Mantener solo los últimos 30 días
+      #       find /backups -name "backup_*.sql.gz" -mtime +30 -delete
+
+      # Opción 2: Backup usando Laravel Backup package (recomendado)
+      # Primero instalar: composer require spatie/laravel-backup
+      # - name: Run Laravel Backup
+      #   run: php artisan backup:run --only-db
+      #   env:
+      #     DB_HOST: ${{ secrets.DB_HOST }}
+      #     DB_DATABASE: ${{ secrets.DB_DATABASE }}
+      #     DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      #     DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
+      # Opción 3: Upload backup to S3
+      # - name: Upload to S3
+      #   uses: aws-actions/configure-aws-credentials@v2
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: us-east-1
+      # - name: Sync backups to S3
+      #   run: aws s3 sync storage/backups s3://${{ secrets.S3_BACKUP_BUCKET }}/database/
+
+      - name: Backup instructions
+        run: |
+          echo "📦 Database Backup Workflow"
+          echo ""
+          echo "⚠️  Configuration needed:"
+          echo ""
+          echo "Option 1: SSH + mysqldump"
+          echo "  Secrets needed:"
+          echo "    - REMOTE_HOST: IP del servidor"
+          echo "    - REMOTE_USER: Usuario SSH"
+          echo "    - SSH_PRIVATE_KEY: Clave SSH privada"
+          echo "    - DB_USERNAME: Usuario MySQL"
+          echo "    - DB_PASSWORD: Contraseña MySQL"
+          echo "    - DB_DATABASE: Nombre de la base de datos"
+          echo ""
+          echo "Option 2: Laravel Backup (recommended)"
+          echo "  1. composer require spatie/laravel-backup"
+          echo "  2. php artisan vendor:publish --provider=\"Spatie\\Backup\\BackupServiceProvider\""
+          echo "  3. Configure config/backup.php"
+          echo "  4. Uncomment Laravel Backup step above"
+          echo ""
+          echo "Option 3: AWS S3"
+          echo "  Secrets needed:"
+          echo "    - AWS_ACCESS_KEY_ID"
+          echo "    - AWS_SECRET_ACCESS_KEY"
+          echo "    - S3_BACKUP_BUCKET"
+          echo ""
+          echo "✅ Choose one option and configure accordingly"
+
+      - name: Notification on failure
+        if: failure()
+        run: |
+          echo "❌ Backup failed!"
+          # Aquí puedes agregar notificaciones (Slack, email, etc.)

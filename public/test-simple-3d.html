@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Simple 3D</title>
+    <script type="module" src="https://unpkg.com/@google/model-viewer@3.4.0/dist/model-viewer.min.js"></script>
+</head>
+<body style="margin: 20px; font-family: Arial;">
+    <h1>Test Simple - Modelo 3D</h1>
+    <p>Si ves el modelo aquí, la librería funciona y el problema está en la vista admin.</p>
+
+    <model-viewer
+        src="http://192.168.18.40/storage/3d-models/feqaHTyzlidXCaswWoxY8lBJ3SBgXqjGGKKGW7JX.glb"
+        alt="Test"
+        camera-controls
+        auto-rotate
+        style="width: 600px; height: 400px; background-color: #ddd;">
+    </model-viewer>
+
+    <div id="status" style="margin-top: 20px; padding: 10px; background: #f0f0f0;"></div>
+
+    <script>
+        const viewer = document.querySelector('model-viewer');
+        const status = document.getElementById('status');
+
+        viewer.addEventListener('load', () => {
+            status.innerHTML = '✅ <strong>MODELO CARGADO CORRECTAMENTE</strong>';
+            status.style.background = '#d4edda';
+            console.log('✅ Modelo cargado');
+        });
+
+        viewer.addEventListener('error', (e) => {
+            status.innerHTML = '❌ <strong>ERROR:</strong> ' + (e.detail?.message || 'Error desconocido');
+            status.style.background = '#f8d7da';
+            console.error('❌ Error:', e);
+        });
+
+        console.log('Iniciando carga desde:', viewer.src);
+    </script>
+</body>
+</html>

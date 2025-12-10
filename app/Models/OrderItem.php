@@ -20,11 +20,16 @@ class OrderItem extends Model
         'selected_color',
         'selected_print_colors',
         'design_image',
+        'preview_3d', // Captura del modelo 3D personalizado
+        'model_3d_config', // Configuración para recrear el modelo 3D (JSON)
         'design_comments',
+        'configuration', // Configuración de atributos personalizados (nuevo sistema)
     ];
 
     protected $casts = [
         'selected_print_colors' => 'array',
+        'configuration' => 'array', // JSON con configuración de atributos
+        'model_3d_config' => 'array', // JSON con configuración del modelo 3D
         'unit_price' => 'decimal:2',
         'total_price' => 'decimal:2',
     ];
@@ -41,9 +46,17 @@ class OrderItem extends Model
 
     public function getDesignImageUrl()
     {
-        return $this->design_image 
-            ? Storage::disk('public')->url($this->design_image)
-            : null;
+        if (!$this->design_image) {
+            return null;
+        }
+
+        // Si la imagen ya está en base64, devolverla directamente
+        if (str_starts_with($this->design_image, 'data:image')) {
+            return $this->design_image;
+        }
+
+        // Si es una ruta de archivo, devolver la URL del storage
+        return Storage::disk('public')->url($this->design_image);
     }
 
     public function deleteDesignImage()

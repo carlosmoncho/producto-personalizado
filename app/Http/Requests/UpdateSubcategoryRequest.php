@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateSubcategoryRequest extends FormRequest
 {
@@ -11,7 +12,7 @@ class UpdateSubcategoryRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return auth()->check();
     }
 
     /**
@@ -21,8 +22,29 @@ class UpdateSubcategoryRequest extends FormRequest
      */
     public function rules(): array
     {
+        $subcategoryId = $this->route('subcategory')->id ?? $this->route('subcategory');
+
         return [
-            //
+            'name' => 'required|string|max:255',
+            'slug' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('subcategories', 'slug')->ignore($subcategoryId)
+            ],
+            'description' => 'nullable|string|max:1000',
+            'category_id' => 'required|exists:categories,id',
+            'active' => 'boolean',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'El nombre de la subcategoría es obligatorio.',
+            'slug.required' => 'El slug es obligatorio.',
+            'slug.unique' => 'Este slug ya está en uso.',
+            'category_id.required' => 'Debe seleccionar una categoría.',
         ];
     }
 }

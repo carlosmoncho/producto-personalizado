@@ -150,9 +150,10 @@
                 <h5 class="mb-0">Información del Cliente</h5>
             </div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <strong>Nombre:</strong> 
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <h6 class="text-primary mb-2"><i class="bi bi-person-fill me-2"></i>Datos de Contacto</h6>
+                        <strong>Nombre:</strong>
                         @if($order->customer_id && $order->customer)
                             <a href="{{ route('admin.customers.show', $order->customer) }}" class="text-decoration-none">
                                 {{ $order->customer_name }}
@@ -165,23 +166,69 @@
                         <strong>Email:</strong> {{ $order->customer_email }}<br>
                         <strong>Teléfono:</strong> {{ $order->customer_phone }}
                     </div>
-                    <div class="col-md-6">
-                        <strong>Dirección:</strong><br>
-                        {{ $order->customer_address }}
-                        
-                        @if($order->customer_id && $order->customer)
-                            <div class="mt-2">
-                                <a href="{{ route('admin.customers.show', $order->customer) }}" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-person me-1"></i>Ver Ficha Cliente
-                                </a>
-                            </div>
-                        @endif
-                    </div>
                 </div>
+
+                <div class="row">
+                    @if($order->shipping_address)
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-primary mb-2"><i class="bi bi-truck me-2"></i>Dirección de Envío</h6>
+                            <div class="border rounded p-3 bg-light">
+                                {{ $order->shipping_address }}
+                            </div>
+                        </div>
+                    @endif
+
+                    @if($order->billing_address)
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-primary mb-2"><i class="bi bi-receipt me-2"></i>Dirección de Facturación</h6>
+                            <div class="border rounded p-3 bg-light">
+                                {{ $order->billing_address }}
+                            </div>
+                        </div>
+                    @endif
+
+                    @if(!$order->shipping_address && !$order->billing_address && $order->customer_address)
+                        <div class="col-md-12 mb-3">
+                            <h6 class="text-primary mb-2"><i class="bi bi-geo-alt-fill me-2"></i>Dirección</h6>
+                            <div class="border rounded p-3 bg-light">
+                                {{ $order->customer_address }}
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                @if($order->company_name || $order->nif_cif)
+                    <div class="row mt-2">
+                        <div class="col-md-12">
+                            <h6 class="text-primary mb-2"><i class="bi bi-building me-2"></i>Datos de Facturación</h6>
+                            <div class="border rounded p-3 bg-warning bg-opacity-10">
+                                @if($order->company_name)
+                                    <div class="mb-1">
+                                        <strong>Empresa/Autónomo:</strong> {{ $order->company_name }}
+                                    </div>
+                                @endif
+                                @if($order->nif_cif)
+                                    <div>
+                                        <strong>NIF/CIF:</strong> <span class="badge bg-dark">{{ $order->nif_cif }}</span>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                @if($order->customer_id && $order->customer)
+                    <div class="mt-3">
+                        <a href="{{ route('admin.customers.show', $order->customer) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-person me-1"></i>Ver Ficha Cliente
+                        </a>
+                    </div>
+                @endif
+
                 @if($order->notes)
                     <div class="mt-3">
-                        <strong>Notas:</strong><br>
-                        <div class="alert alert-info">{{ $order->notes }}</div>
+                        <h6 class="text-primary"><i class="bi bi-sticky me-2"></i>Notas del Pedido</h6>
+                        <div class="alert alert-info mb-0" style="white-space: pre-line;">{{ $order->notes }}</div>
                     </div>
                 @endif
             </div>
@@ -216,31 +263,188 @@
                                             <i class="bi bi-external-link ms-1"></i>
                                         </a>
                                     </h6>
-                                    <p class="text-muted mb-1">SKU: {{ $item->product->sku }}</p>
-                                    <p class="mb-1"><strong>Tamaño:</strong> {{ $item->selected_size }}</p>
-                                    <p class="mb-1"><strong>Cantidad:</strong> {{ $item->quantity }}</p>
-                                    
+                                    <p class="text-muted mb-2">SKU: {{ $item->product->sku }}</p>
+                                    <p class="mb-2"><strong><i class="bi bi-box-seam me-1"></i>Cantidad:</strong> {{ number_format($item->quantity) }} uds</p>
+
+                                    @if($item->configuration && is_array($item->configuration))
+                                        <div class="mb-2">
+                                            <strong><i class="bi bi-sliders me-1"></i>Configuración Personalizada:</strong>
+                                            <div class="mt-1 p-2 bg-light rounded border">
+                                                @php
+                                                    $attributeNames = [
+                                                        'material' => 'Material',
+                                                        'color' => 'Color',
+                                                        'size' => 'Tamaño',
+                                                        'system' => 'Sistema de Impresión',
+                                                        'quantity' => 'Cantidad de Impresión'
+                                                    ];
+                                                @endphp
+                                                @foreach($item->configuration as $key => $attributeId)
+                                                    @php
+                                                        $displayName = $attributeNames[$key] ?? ucfirst($key);
+                                                        if (is_array($attributeId)) {
+                                                            $attributes = \App\Models\ProductAttribute::whereIn('id', $attributeId)->get();
+                                                            $attributeValue = $attributes->pluck('name')->implode(', ');
+                                                        } else {
+                                                            $attribute = \App\Models\ProductAttribute::find($attributeId);
+                                                            $attributeValue = $attribute ? $attribute->name : $attributeId;
+                                                        }
+                                                    @endphp
+                                                    <small class="d-block">
+                                                        <strong>{{ $displayName }}:</strong>
+                                                        {{ $attributeValue }}
+                                                    </small>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @else
+                                        @if($item->selected_size)
+                                            <p class="mb-1"><strong>Tamaño:</strong> {{ $item->selected_size }}</p>
+                                        @endif
+                                        @if($item->selected_color)
+                                            <p class="mb-1"><strong>Color:</strong> {{ $item->selected_color }}</p>
+                                        @endif
+                                    @endif
+
                                     <div class="mt-2">
                                         <a href="{{ route('admin.products.show', $item->product) }}" class="btn btn-outline-info btn-sm">
                                             <i class="bi bi-box me-1"></i>Ver Producto
                                         </a>
                                     </div>
-                                    
+
                                     @if($item->design_comments)
                                         <p class="mb-1 mt-2"><strong>Comentarios:</strong> {{ $item->design_comments }}</p>
                                     @endif
                                 </div>
                                 <div class="col-md-2 text-center">
                                     @if($item->getDesignImageUrl())
-                                        <img src="{{ $item->getDesignImageUrl() }}" 
-                                             alt="Diseño" class="img-fluid rounded">
-                                        <small class="d-block mt-1">Diseño</small>
+                                        <div class="mb-2">
+                                            <img src="{{ $item->getDesignImageUrl() }}"
+                                                 alt="Diseño"
+                                                 class="img-fluid rounded border"
+                                                 style="cursor: pointer; max-height: 120px;"
+                                                 data-bs-toggle="modal"
+                                                 data-bs-target="#designModal{{ $item->id }}">
+                                            <small class="d-block mt-1"><i class="bi bi-image-fill text-primary"></i> Diseño</small>
+                                        </div>
+                                        <a href="{{ $item->getDesignImageUrl() }}"
+                                           download="diseño-{{ $item->product->sku }}.png"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-download me-1"></i>Descargar
+                                        </a>
+
+                                        <!-- Modal para ver diseño en grande -->
+                                        <div class="modal fade" id="designModal{{ $item->id }}" tabindex="-1">
+                                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Diseño - {{ $item->product->name }}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body text-center">
+                                                        <img src="{{ $item->getDesignImageUrl() }}"
+                                                             alt="Diseño"
+                                                             class="img-fluid"
+                                                             style="max-height: 70vh;">
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <a href="{{ $item->getDesignImageUrl() }}"
+                                                           download="diseño-{{ $item->product->sku }}.png"
+                                                           class="btn btn-primary">
+                                                            <i class="bi bi-download me-2"></i>Descargar Diseño
+                                                        </a>
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     @else
-                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center"
                                              style="width: 100%; height: 80px;">
                                             <i class="bi bi-image text-muted"></i>
                                         </div>
                                         <small class="d-block mt-1 text-muted">Sin diseño</small>
+                                    @endif
+
+                                    @if($item->preview_3d)
+                                        <div class="mt-3 mb-2">
+                                            <img src="{{ $item->preview_3d }}"
+                                                 alt="Preview 3D"
+                                                 class="img-fluid rounded border"
+                                                 style="cursor: pointer; max-height: 120px;"
+                                                 data-bs-toggle="modal"
+                                                 data-bs-target="#preview3dModal{{ $item->id }}">
+                                            <small class="d-block mt-1"><i class="bi bi-box text-success"></i> Vista 3D</small>
+                                        </div>
+                                        <a href="{{ $item->preview_3d }}"
+                                           download="preview-3d-{{ $item->product->sku }}.png"
+                                           class="btn btn-sm btn-outline-success mb-1">
+                                            <i class="bi bi-download me-1"></i>Descargar
+                                        </a>
+
+                                        @if($item->model_3d_config)
+                                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#viewer3dModal{{ $item->id }}">
+                                                <i class="bi bi-badge-3d me-1"></i>Ver 3D
+                                            </button>
+                                        @endif
+
+                                        <!-- Modal para ver preview 3D en grande -->
+                                        <div class="modal fade" id="preview3dModal{{ $item->id }}" tabindex="-1">
+                                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title"><i class="bi bi-box me-2"></i>Vista 3D Personalizada - {{ $item->product->name }}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body text-center">
+                                                        <img src="{{ $item->preview_3d }}"
+                                                             alt="Preview 3D"
+                                                             class="img-fluid"
+                                                             style="max-height: 70vh;">
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <a href="{{ $item->preview_3d }}"
+                                                           download="preview-3d-{{ $item->product->sku }}.png"
+                                                           class="btn btn-success">
+                                                            <i class="bi bi-download me-2"></i>Descargar Preview 3D
+                                                        </a>
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        @if($item->model_3d_config)
+                                            <!-- Modal para visor 3D interactivo -->
+                                            <div class="modal fade" id="viewer3dModal{{ $item->id }}" tabindex="-1">
+                                                <div class="modal-dialog modal-xl modal-dialog-centered">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-dark text-white">
+                                                            <h5 class="modal-title">
+                                                                <i class="bi bi-badge-3d me-2"></i>Visor 3D Interactivo - {{ $item->product->name }}
+                                                            </h5>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body p-0">
+                                                            @include('admin.partials.three-model-viewer', [
+                                                                'modelUrl' => $item->model_3d_config['model_url'] ?? null,
+                                                                'colorHex' => $item->model_3d_config['color_hex'] ?? null,
+                                                                'logoUrl' => $item->design_image ?? null,
+                                                                'logoTransform' => $item->model_3d_config['logo_transform'] ?? null,
+                                                                'viewerId' => 'viewer-item-' . $item->id
+                                                            ])
+                                                        </div>
+                                                        <div class="modal-footer bg-light">
+                                                            <div class="me-auto text-muted small">
+                                                                <i class="bi bi-mouse me-1"></i>Arrastra para rotar |
+                                                                <i class="bi bi-zoom-in me-1"></i>Scroll para zoom
+                                                            </div>
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
                                     @endif
                                 </div>
                                 <div class="col-md-2 text-end">

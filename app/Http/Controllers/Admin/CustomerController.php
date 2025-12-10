@@ -80,8 +80,11 @@ class CustomerController extends Controller
      */
     public function show(Customer $customer)
     {
-        $customer->load('orders');
-        
+        // Eager load orders with items to prevent N+1 queries in the view
+        $customer->load(['orders' => function($query) {
+            $query->with('items')->orderBy('created_at', 'desc');
+        }]);
+
         return view('admin.customers.show', compact('customer'));
     }
 
@@ -189,15 +192,7 @@ class CustomerController extends Controller
 
             $customers = $query->orderBy('created_at', 'desc')->get();
 
-            // Crear el archivo CSV con BOM para UTF-8
-            $filename = 'clientes_' . date('Y-m-d_H-i-s') . '.csv';
-            
-            $handle = fopen('php://temp', 'r+');
-            
-            // Agregar BOM UTF-8
-            fwrite($handle, "\xEF\xBB\xBF");
-            
-            // Cabeceras
+            // Definir cabeceras del CSV
             $headers = [
                 'ID',
                 'Nombre',
@@ -216,45 +211,39 @@ class CustomerController extends Controller
                 'Fecha de Registro',
                 'Notas'
             ];
-            fputcsv($handle, $headers, ';');
 
-            // Datos
-            foreach ($customers as $customer) {
-                $row = [
-                    $customer->id,
-                    $customer->name,
-                    $customer->email,
-                    $customer->phone ?? '',
-                    $customer->company ?? '',
-                    $customer->address ?? '',
-                    $customer->city ?? '',
-                    $customer->postal_code ?? '',
-                    $customer->country ?? '',
-                    $customer->tax_id ?? '',
-                    $customer->active ? 'Activo' : 'Inactivo',
-                    $customer->total_orders_count,
-                    number_format($customer->total_orders_amount, 2, ',', '.'),
-                    $customer->last_order_at ? $customer->last_order_at->format('d/m/Y H:i') : '',
-                    $customer->created_at->format('d/m/Y H:i'),
-                    $customer->notes ?? ''
-                ];
-                fputcsv($handle, $row, ';');
-            }
-            
-            rewind($handle);
-            $csv = stream_get_contents($handle);
-            fclose($handle);
+            // Usar CsvExportService para generar el CSV
+            $csvService = new \App\Services\Export\CsvExportService();
 
-            return response($csv, 200)
-                ->header('Content-Type', 'text/csv; charset=UTF-8')
-                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
-                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-                ->header('Pragma', 'no-cache')
-                ->header('Expires', '0');
+            return $csvService->export(
+                $customers,
+                $headers,
+                function ($customer) {
+                    return [
+                        $customer->id,
+                        $customer->name,
+                        $customer->email,
+                        $customer->phone ?? '',
+                        $customer->company ?? '',
+                        $customer->address ?? '',
+                        $customer->city ?? '',
+                        $customer->postal_code ?? '',
+                        $customer->country ?? '',
+                        $customer->tax_id ?? '',
+                        $customer->active ? 'Activo' : 'Inactivo',
+                        $customer->total_orders_count,
+                        \App\Services\Export\CsvExportService::formatNumber($customer->total_orders_amount),
+                        \App\Services\Export\CsvExportService::formatDate($customer->last_order_at),
+                        \App\Services\Export\CsvExportService::formatDate($customer->created_at),
+                        $customer->notes ?? ''
+                    ];
+                },
+                'clientes'
+            );
 
         } catch (\Exception $e) {
             \Log::error('Error exporting customers: ' . $e->getMessage());
-            
+
             return redirect()->back()
                 ->with('error', 'Error al exportar clientes: ' . $e->getMessage());
         }

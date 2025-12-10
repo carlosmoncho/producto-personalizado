@@ -10,28 +10,10 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::with(['items.product']);
+        $orderService = new \App\Services\Order\OrderService();
 
-        // Filtros
-        if ($request->has('status') && $request->status) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->has('search') && $request->search) {
-            $query->where(function($q) use ($request) {
-                $q->where('order_number', 'like', '%' . $request->search . '%')
-                  ->orWhere('customer_name', 'like', '%' . $request->search . '%')
-                  ->orWhere('customer_email', 'like', '%' . $request->search . '%');
-            });
-        }
-
-        if ($request->has('date_from') && $request->date_from) {
-            $query->whereDate('created_at', '>=', $request->date_from);
-        }
-
-        if ($request->has('date_to') && $request->date_to) {
-            $query->whereDate('created_at', '<=', $request->date_to);
-        }
+        // Construir query con filtros usando OrderService
+        $query = $orderService->buildOrderQuery($request);
 
         $orders = $query->orderBy('created_at', 'desc')->paginate(15);
 
@@ -68,79 +50,28 @@ class OrderController extends Controller
         ]);
 
         \DB::beginTransaction();
-        
+
         try {
-            // Si se seleccionó un cliente existente, usar su información
-            if ($request->customer_id) {
-                $customer = \App\Models\Customer::find($request->customer_id);
-                $customerData = [
-                    'customer_id' => $customer->id,
-                    'customer_name' => $customer->name,
-                    'customer_email' => $customer->email,
-                    'customer_phone' => $customer->phone,
-                    'customer_address' => $customer->address,
-                ];
-            } else {
-                // Crear o buscar cliente
-                $customer = \App\Models\Customer::firstOrCreate(
-                    ['email' => $request->customer_email],
-                    [
-                        'name' => $request->customer_name,
-                        'phone' => $request->customer_phone,
-                        'address' => $request->customer_address,
-                    ]
-                );
-                
-                $customerData = [
-                    'customer_id' => $customer->id,
-                    'customer_name' => $request->customer_name,
-                    'customer_email' => $request->customer_email,
-                    'customer_phone' => $request->customer_phone,
-                    'customer_address' => $request->customer_address,
-                ];
-            }
+            $orderService = new \App\Services\Order\OrderService();
 
-            // Calcular el total del pedido
-            $totalAmount = 0;
-            foreach ($request->products as $productData) {
-                $subtotal = $productData['quantity'] * $productData['price'];
-                $totalAmount += $subtotal;
-            }
+            // Preparar datos del cliente usando OrderService
+            $customerData = $orderService->prepareCustomerData($request, $request->customer_id);
 
-            // Crear el pedido
-            $orderData = array_merge($customerData, [
-                'order_number' => Order::generateOrderNumber(),
-                'status' => 'pending',
-                'total_amount' => $totalAmount,
-                'notes' => $request->notes
-            ]);
-
-            $order = Order::create($orderData);
-
-            // Agregar los productos al pedido
-            foreach ($request->products as $productData) {
-                $product = \App\Models\Product::find($productData['id']);
-                
-                $order->items()->create([
-                    'product_id' => $product->id,
-                    'quantity' => $productData['quantity'],
-                    'unit_price' => $productData['price'],
-                    'total_price' => $productData['quantity'] * $productData['price'],
-                    'selected_size' => $product->sizes ? $product->sizes[0] : null,
-                    'selected_color' => $product->colors ? $product->colors[0] : null,
-                    'selected_print_colors' => $product->print_colors ?? [],
-                    'design_comments' => null
-                ]);
-            }
+            // Crear orden completa con items usando OrderService
+            $order = $orderService->createOrder(
+                $customerData,
+                $request->products,
+                $request->notes
+            );
 
             \DB::commit();
 
             return redirect()->route('admin.orders.show', $order)
                             ->with('success', 'Pedido creado exitosamente con ' . count($request->products) . ' producto(s).');
-                            
+
         } catch (\Exception $e) {
             \DB::rollBack();
-            
+
             return redirect()->back()
                             ->withInput()
                             ->with('error', 'Error al crear el pedido: ' . $e->getMessage());
@@ -176,7 +107,8 @@ class OrderController extends Controller
             'customer_name' => 'required|string|max:255',
             'customer_email' => 'required|email|max:255',
             'customer_phone' => 'required|string|max:20',
-            'customer_address' => 'required|string',
+            'shipping_address' => 'nullable|string',
+            'billing_address' => 'nullable|string',
             'notes' => 'nullable|string'
         ]);
 
@@ -184,7 +116,8 @@ class OrderController extends Controller
             'customer_name' => $request->customer_name,
             'customer_email' => $request->customer_email,
             'customer_phone' => $request->customer_phone,
-            'customer_address' => $request->customer_address,
+            'shipping_address' => $request->shipping_address,
+            'billing_address' => $request->billing_address,
             'notes' => $request->notes
         ]);
 
@@ -198,20 +131,10 @@ class OrderController extends Controller
             'status' => 'required|in:pending,processing,approved,in_production,shipped,delivered,cancelled'
         ]);
 
-        $orderData = ['status' => $request->status];
+        $orderService = new \App\Services\Order\OrderService();
 
-        // Actualizar timestamps según el estado
-        switch ($request->status) {
-            case 'approved':
-                $orderData['approved_at'] = now();
-                break;
-            case 'shipped':
-                $orderData['shipped_at'] = now();
-                break;
-            case 'delivered':
-                $orderData['delivered_at'] = now();
-                break;
-        }
+        // Preparar datos de actualización usando OrderService
+        $orderData = $orderService->updateOrderStatus($order, $request->status);
 
         $order->update($orderData);
 
@@ -221,11 +144,15 @@ class OrderController extends Controller
 
     public function destroy(Order $order)
     {
-        // Verificar si el pedido se puede eliminar según políticas del negocio
-        if ($order->status === 'completed' || $order->status === 'shipped') {
+        $orderService = new \App\Services\Order\OrderService();
+
+        // Validar si el pedido puede eliminarse usando OrderService
+        $validation = $orderService->canDelete($order);
+
+        if (!$validation['can_delete']) {
             $message = "No se puede eliminar el pedido '{$order->order_number}' porque está en estado '{$order->status}'.\n\n";
-            $message .= "Los pedidos completados o enviados no pueden eliminarse para mantener el historial de transacciones.";
-            
+            $message .= $validation['details']['message'];
+
             return redirect()->route('admin.orders.index')
                             ->with('error', $message);
         }
@@ -235,7 +162,7 @@ class OrderController extends Controller
             foreach ($order->items as $item) {
                 $item->deleteDesignImage();
             }
-            
+
             $order->delete();
             return redirect()->route('admin.orders.index')
                             ->with('success', "Pedido '{$order->order_number}' eliminado exitosamente.");
@@ -248,40 +175,14 @@ class OrderController extends Controller
     public function export(Request $request)
     {
         try {
-            $query = Order::with(['items.product']);
+            $orderService = new \App\Services\Order\OrderService();
 
-            // Aplicar los mismos filtros que en la vista principal
-            if ($request->has('status') && $request->status) {
-                $query->where('status', $request->status);
-            }
-
-            if ($request->has('search') && $request->search) {
-                $query->where(function($q) use ($request) {
-                    $q->where('order_number', 'like', '%' . $request->search . '%')
-                      ->orWhere('customer_name', 'like', '%' . $request->search . '%')
-                      ->orWhere('customer_email', 'like', '%' . $request->search . '%');
-                });
-            }
-
-            if ($request->has('date_from') && $request->date_from) {
-                $query->whereDate('created_at', '>=', $request->date_from);
-            }
-
-            if ($request->has('date_to') && $request->date_to) {
-                $query->whereDate('created_at', '<=', $request->date_to);
-            }
+            // Construir query con filtros usando OrderService (mismo que en index)
+            $query = $orderService->buildOrderQuery($request);
 
             $orders = $query->orderBy('created_at', 'desc')->get();
 
-            // Crear el archivo CSV con BOM para UTF-8
-            $filename = 'pedidos_' . date('Y-m-d_H-i-s') . '.csv';
-            
-            $handle = fopen('php://temp', 'r+');
-            
-            // Agregar BOM UTF-8
-            fwrite($handle, "\xEF\xBB\xBF");
-            
-            // Cabeceras
+            // Definir cabeceras del CSV
             $headers = [
                 'Número de Pedido',
                 'Cliente',
@@ -297,42 +198,36 @@ class OrderController extends Controller
                 'Fecha de Entrega',
                 'Notas'
             ];
-            fputcsv($handle, $headers, ';');
 
-            // Datos
-            foreach ($orders as $order) {
-                $row = [
-                    $order->order_number,
-                    $order->customer_name,
-                    $order->customer_email,
-                    $order->customer_phone ?? '',
-                    $order->customer_address ?? '',
-                    $order->status_label,
-                    number_format($order->total_amount, 2, ',', '.'),
-                    $order->items->count(),
-                    $order->created_at->format('d/m/Y H:i'),
-                    $order->approved_at ? $order->approved_at->format('d/m/Y H:i') : '',
-                    $order->shipped_at ? $order->shipped_at->format('d/m/Y H:i') : '',
-                    $order->delivered_at ? $order->delivered_at->format('d/m/Y H:i') : '',
-                    $order->notes ?? ''
-                ];
-                fputcsv($handle, $row, ';');
-            }
-            
-            rewind($handle);
-            $csv = stream_get_contents($handle);
-            fclose($handle);
+            // Usar CsvExportService para generar el CSV
+            $csvService = new \App\Services\Export\CsvExportService();
 
-            return response($csv, 200)
-                ->header('Content-Type', 'text/csv; charset=UTF-8')
-                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
-                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-                ->header('Pragma', 'no-cache')
-                ->header('Expires', '0');
+            return $csvService->export(
+                $orders,
+                $headers,
+                function ($order) {
+                    return [
+                        $order->order_number,
+                        $order->customer_name,
+                        $order->customer_email,
+                        $order->customer_phone ?? '',
+                        $order->customer_address ?? '',
+                        $order->status_label,
+                        \App\Services\Export\CsvExportService::formatNumber($order->total_amount),
+                        $order->items->count(),
+                        \App\Services\Export\CsvExportService::formatDate($order->created_at),
+                        \App\Services\Export\CsvExportService::formatDate($order->approved_at),
+                        \App\Services\Export\CsvExportService::formatDate($order->shipped_at),
+                        \App\Services\Export\CsvExportService::formatDate($order->delivered_at),
+                        $order->notes ?? ''
+                    ];
+                },
+                'pedidos'
+            );
 
         } catch (\Exception $e) {
             \Log::error('Error exporting orders: ' . $e->getMessage());
-            
+
             return redirect()->back()
                 ->with('error', 'Error al exportar pedidos: ' . $e->getMessage());
         }
@@ -343,11 +238,15 @@ class OrderController extends Controller
      */
     public function dependencies(Order $order)
     {
-        $canDelete = !in_array($order->status, ['completed', 'shipped']);
+        $orderService = new \App\Services\Order\OrderService();
+
+        // Validar si puede eliminarse usando OrderService
+        $validation = $orderService->canDelete($order);
+
         $items = $order->items()->with('product')->get();
-        
+
         return response()->json([
-            'can_delete' => $canDelete,
+            'can_delete' => $validation['can_delete'],
             'status' => $order->status,
             'items_count' => $items->count(),
             'total_amount' => $order->total_amount,
@@ -358,7 +257,7 @@ class OrderController extends Controller
                     'price' => $item->price
                 ];
             }),
-            'restriction_reason' => $canDelete ? null : 'Los pedidos completados o enviados no pueden eliminarse'
+            'restriction_reason' => $validation['can_delete'] ? null : $validation['reason']
         ]);
     }
 }

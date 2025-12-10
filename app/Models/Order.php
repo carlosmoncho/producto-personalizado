@@ -16,6 +16,10 @@ class Order extends Model
         'customer_email',
         'customer_phone',
         'customer_address',
+        'shipping_address', // Dirección de envío separada
+        'billing_address',  // Dirección de facturación separada
+        'company_name',     // Nombre de empresa para factura
+        'nif_cif',          // NIF/CIF para factura
         'status',
         'total_amount',
         'notes',
@@ -48,7 +52,23 @@ class Order extends Model
 
     public static function generateOrderNumber()
     {
-        return 'ORD-' . date('Y') . '-' . str_pad(static::count() + 1, 6, '0', STR_PAD_LEFT);
+        $year = date('Y');
+        $prefix = 'ORD-' . $year . '-';
+
+        // Obtener el último número de orden del año actual
+        $lastOrder = static::where('order_number', 'LIKE', $prefix . '%')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if ($lastOrder) {
+            // Extraer el número del último pedido
+            $lastNumber = (int) substr($lastOrder->order_number, strlen($prefix));
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return $prefix . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
     public function getStatusLabelAttribute()

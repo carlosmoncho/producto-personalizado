@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Model Viewer</title>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <style>
+        model-viewer {
+            width: 100%;
+            height: 500px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Model Viewer GLB</h1>
+
+        <model-viewer
+            src="/storage/3d-models/test-cube.glb"
+            alt="Modelo 3D de prueba"
+            camera-controls
+            auto-rotate
+            ar
+            shadow-intensity="1"
+            exposure="1"
+            loading="eager"
+            reveal="auto">
+            <div class="progress-bar" slot="progress-bar">
+                <div class="update-bar"></div>
+            </div>
+        </model-viewer>
+
+        <div style="margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+            <h3>Información de depuración:</h3>
+            <p><strong>URL del modelo:</strong> /storage/3d-models/test-cube.glb</p>
+            <p><strong>Estado:</strong> <span id="status">Cargando...</span></p>
+            <div id="console" style="margin-top: 10px; padding: 10px; background: #333; color: #0f0; font-family: monospace; font-size: 12px; min-height: 100px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <script>
+        const modelViewer = document.querySelector('model-viewer');
+        const status = document.getElementById('status');
+        const consoleDiv = document.getElementById('console');
+
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            consoleDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            console.log(message);
+        }
+
+        log('Iniciando carga del modelo...');
+
+        modelViewer.addEventListener('load', () => {
+            status.textContent = '✅ Modelo cargado correctamente';
+            status.style.color = 'green';
+            log('✅ Modelo cargado y renderizado');
+        });
+
+        modelViewer.addEventListener('error', (event) => {
+            status.textContent = '❌ Error al cargar el modelo';
+            status.style.color = 'red';
+            log('❌ Error: ' + event.detail.message);
+        });
+
+        modelViewer.addEventListener('progress', (event) => {
+            const progress = event.detail.totalProgress * 100;
+            log(`Progreso: ${progress.toFixed(0)}%`);
+        });
+
+        // Verificar si el archivo existe
+        fetch('/storage/3d-models/test-cube.glb', { method: 'HEAD' })
+            .then(response => {
+                if (response.ok) {
+                    log('✅ Archivo GLB accesible por HTTP');
+                    log('Content-Type: ' + response.headers.get('Content-Type'));
+                } else {
+                    log('❌ Error HTTP: ' + response.status);
+                }
+            })
+            .catch(error => {
+                log('❌ Error de red: ' + error.message);
+            });
+    </script>
+</body>
+</html>

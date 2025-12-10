@@ -17,13 +17,5 @@ class AdminUserSeeder extends Seeder
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
         ]);
-
-        // Crear usuario de prueba
-        User::create([
-            'name' => 'Usuario Demo',
-            'email' => 'demo@example.com',
-            'email_verified_at' => now(),
-            'password' => Hash::make('password'),
-        ]);
     }
 }

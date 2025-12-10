@@ -11,7 +11,7 @@ class StoreCustomFieldRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return auth()->check();
     }
 
     /**
@@ -21,8 +21,11 @@ class StoreCustomFieldRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Placeholder - Implementar cuando se use este FormRequest
         return [
-            //
+            'name' => 'required|string|max:255',
+            'value' => 'nullable|string',
+            'type' => 'nullable|string|in:text,number,date,boolean',
         ];
     }
 }

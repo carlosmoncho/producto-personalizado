@@ -73,6 +73,15 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'security' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/security.log'),
+            'level' => 'info',
+            'days' => 90, // Mantener logs de seguridad por 90 días
+            'replace_placeholders' => true,
+            'permission' => 0640, // Permisos restrictivos
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

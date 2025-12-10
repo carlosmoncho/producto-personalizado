@@ -58,6 +58,9 @@ class CategoryController extends Controller
 
         Category::create($categoryData);
 
+        // Invalidar caché de categorías
+        app(\App\Services\Cache\CatalogCacheService::class)->invalidateCategoriesCache();
+
         return redirect()->route('admin.categories.index')
                         ->with('success', 'Categoría creada exitosamente.');
     }
@@ -113,6 +116,9 @@ class CategoryController extends Controller
 
         $category->update($categoryData);
 
+        // Invalidar caché de categorías
+        app(\App\Services\Cache\CatalogCacheService::class)->invalidateCategoriesCache();
+
         return redirect()->route('admin.categories.index')
                         ->with('success', 'Categoría actualizada exitosamente.');
     }
@@ -143,7 +149,10 @@ class CategoryController extends Controller
         try {
             $category->deleteImage();
             $category->delete();
-            
+
+            // Invalidar caché de categorías
+            app(\App\Services\Cache\CatalogCacheService::class)->invalidateCategoriesCache();
+
             return redirect()->route('admin.categories.index')
                             ->with('success', "Categoría '{$category->name}' eliminada exitosamente.");
         } catch (\Exception $e) {

@@ -64,6 +64,28 @@
                             </a>
                         </li>
                         
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.attribute-groups.*') ? 'active' : '' }}" 
+                               href="{{ route('admin.attribute-groups.index') }}">
+                                <i class="bi bi-collection-fill"></i> Grupos de Atributos
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.product-attributes.*') ? 'active' : '' }}" 
+                               href="{{ route('admin.product-attributes.index') }}">
+                                <i class="bi bi-palette-fill"></i> Atributos
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.attribute-dependencies.*') ? 'active' : '' }}" 
+                               href="{{ route('admin.attribute-dependencies.index') }}">
+                                <i class="bi bi-diagram-3"></i> Dependencias & Precios
+                            </a>
+                        </li>
+                        
+                        
                         @if(Route::has('admin.orders.index'))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}" 
@@ -141,7 +163,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <!-- Model Viewer for 3D models -->
-    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <script type="module" src="https://unpkg.com/@google/model-viewer@3.4.0/dist/model-viewer.min.js"></script>
+    <script nomodule src="https://unpkg.com/@google/model-viewer@3.4.0/dist/model-viewer-legacy.js"></script>
     
     <!-- Toastr Configuration -->
     <script>

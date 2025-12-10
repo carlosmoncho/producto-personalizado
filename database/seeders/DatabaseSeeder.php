@@ -10,14 +10,6 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AdminUserSeeder::class,
-            CategorySeeder::class,
-            SubcategorySeeder::class,
-            AvailableColorSeeder::class,
-            AvailablePrintColorSeeder::class,
-            AvailableSizeSeeder::class,
-            ProductSeeder::class,
-            CustomerSeeder::class, // Crear clientes antes de pedidos
-            OrderSeeder::class,
         ]);
     }
 }

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test 3D Viewer</title>
+    <script type="module" src="https://unpkg.com/@google/model-viewer@3.4.0/dist/model-viewer.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        model-viewer {
+            width: 100%;
+            height: 500px;
+            background-color: #f0f0f0;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Test 3D Model Viewer</h1>
+        <p>Probando el visor de modelos 3D con el producto "Bolsas sin asas"</p>
+
+        <hr>
+
+        <h2>Modelo 3D:</h2>
+        <model-viewer
+            src="/storage/3d-models/feqaHTyzlidXCaswWoxY8lBJ3SBgXqjGGKKGW7JX.glb"
+            alt="Bolsas sin asas - Modelo 3D"
+            camera-controls
+            auto-rotate
+            style="width: 100%; height: 500px; display: block; background-color: #e0e0e0;"
+            id="test-model-viewer">
+        </model-viewer>
+
+        <div id="status" class="status info">
+            ⏳ Cargando modelo...
+        </div>
+
+        <hr>
+
+        <h3>Información del modelo:</h3>
+        <ul>
+            <li><strong>URL:</strong> <code id="model-url"></code></li>
+            <li><strong>Estado:</strong> <span id="load-status">Esperando...</span></li>
+            <li><strong>Errores:</strong> <span id="errors">Ninguno</span></li>
+        </ul>
+
+        <div style="margin-top: 20px;">
+            <button onclick="resetView()" style="padding: 10px 20px; cursor: pointer;">
+                🔄 Resetear Vista
+            </button>
+            <a href="/storage/3d-models/feqaHTyzlidXCaswWoxY8lBJ3SBgXqjGGKKGW7JX.glb"
+               download
+               style="padding: 10px 20px; margin-left: 10px; text-decoration: none; background: #007bff; color: white; border-radius: 4px;">
+                📥 Descargar GLB
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const modelViewer = document.querySelector('#test-model-viewer');
+        const statusDiv = document.getElementById('status');
+        const loadStatus = document.getElementById('load-status');
+        const errorsSpan = document.getElementById('errors');
+        const modelUrl = document.getElementById('model-url');
+
+        // Mostrar URL
+        modelUrl.textContent = modelViewer.src;
+
+        // Evento: Modelo cargado exitosamente
+        modelViewer.addEventListener('load', () => {
+            console.log('✅ Modelo cargado exitosamente');
+            statusDiv.className = 'status success';
+            statusDiv.innerHTML = '✅ <strong>Modelo cargado correctamente</strong>';
+            loadStatus.textContent = 'Cargado ✅';
+        });
+
+        // Evento: Error al cargar
+        modelViewer.addEventListener('error', (event) => {
+            console.error('❌ Error al cargar el modelo:', event);
+            statusDiv.className = 'status error';
+            statusDiv.innerHTML = '❌ <strong>Error al cargar el modelo</strong><br>Revisa la consola del navegador (F12)';
+            loadStatus.textContent = 'Error ❌';
+            errorsSpan.textContent = event.detail?.message || 'Error desconocido';
+        });
+
+        // Evento: Progreso de carga
+        modelViewer.addEventListener('progress', (event) => {
+            const percent = event.detail.totalProgress * 100;
+            console.log(`📊 Cargando: ${percent.toFixed(0)}%`);
+            loadStatus.textContent = `Cargando ${percent.toFixed(0)}%...`;
+        });
+
+        // Función para resetear la vista
+        function resetView() {
+            modelViewer.resetTurntableRotation();
+            modelViewer.cameraOrbit = '0deg 75deg 105%';
+            modelViewer.fieldOfView = '45deg';
+            console.log('🔄 Vista reseteada');
+        }
+
+        // Log inicial
+        console.log('🎨 Test 3D Viewer iniciado');
+        console.log('📦 Modelo:', modelViewer.src);
+
+        // Verificar si model-viewer se cargó correctamente
+        if (customElements.get('model-viewer')) {
+            console.log('✅ model-viewer web component registrado');
+        } else {
+            console.error('❌ model-viewer web component NO registrado');
+        }
+    </script>
+</body>
+</html>

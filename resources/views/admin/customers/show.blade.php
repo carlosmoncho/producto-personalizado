@@ -209,7 +209,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($customer->orders()->orderBy('created_at', 'desc')->get() as $order)
+                    @foreach($customer->orders as $order)
                         <tr>
                             <td>
                                 <strong>{{ $order->order_number }}</strong>

@@ -23,3 +23,6 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# CORS is handled by Laravel middleware (CorsMiddleware) and routes
+# Storage files are served via route with CORS headers (see routes/web.php)

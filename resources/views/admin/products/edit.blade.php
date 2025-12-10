@@ -128,353 +128,7 @@
         </div>
     </div>
 
-    <!-- Especificaciones -->
-    <div class="card shadow-sm mb-4 border-0">
-        <div class="card-header bg-golden border-bottom-0 py-3">
-            <div class="d-flex align-items-center">
-                <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
-                    <i class="bi bi-gear-fill"></i>
-                </div>
-                <div>
-                    <h5 class="mb-0">Especificaciones Técnicas</h5>
-                    <small>Características y especificaciones del producto</small>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="face_count" class="form-label">Número de Caras <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control @error('face_count') is-invalid @enderror" 
-                               id="face_count" name="face_count" value="{{ old('face_count', $product->face_count) }}" min="1" required>
-                        @error('face_count')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="print_colors_count" class="form-label">Número de Colores de Impresión <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control @error('print_colors_count') is-invalid @enderror" 
-                               id="print_colors_count" name="print_colors_count" value="{{ old('print_colors_count', $product->print_colors_count) }}" min="1" required>
-                        @error('print_colors_count')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Materiales y Sistemas -->
-    <div class="card shadow-sm mb-4 border-0">
-        <div class="card-header bg-golden border-bottom-0 py-3">
-            <div class="d-flex align-items-center">
-                <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
-                    <i class="bi bi-tools"></i>
-                </div>
-                <div>
-                    <h5 class="mb-0">Materiales y Sistemas</h5>
-                    <small>Materiales disponibles y sistemas de impresión</small>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <!-- Materiales -->
-            <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="form-label mb-0">Materiales Disponibles <span class="text-danger">*</span></label>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addMaterialModal">
-                        <i class="bi bi-plus"></i> Agregar Material
-                    </button>
-                </div>
-                <div class="row" id="materialsContainer">
-                    @php
-                        $availableMaterials = $availableMaterials ?? \App\Models\AvailableMaterial::where('active', true)->orderBy('sort_order')->get();
-                        $selectedMaterials = old('materials', $product->materials ?? []);
-                    @endphp
-                    @foreach($availableMaterials as $material)
-                        <div class="col-md-4 mb-2" id="material-item-{{ $material->id }}">
-                            <div class="d-flex align-items-center">
-                                <div class="form-check flex-grow-1">
-                                    <input class="form-check-input" type="checkbox" name="materials[]" 
-                                           value="{{ $material->name }}" id="material_{{ $material->id }}"
-                                           {{ in_array($material->name, $selectedMaterials) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="material_{{ $material->id }}">
-                                        {{ $material->name }}
-                                        @if($material->description)
-                                            <small class="text-muted d-block">{{ $material->description }}</small>
-                                        @endif
-                                    </label>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-danger ms-2" 
-                                        onclick="deleteMaterial({{ $material->id }}, '{{ $material->name }}')"
-                                        title="Eliminar material">
-                                    <i class="bi bi-trash" style="font-size: 0.75rem;"></i>
-                                </button>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-                @error('materials')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <!-- Sistemas de Impresión -->
-            <div class="mb-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="form-label mb-0">Sistemas de Impresión <span class="text-danger">*</span></label>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addPrintingSystemModal">
-                        <i class="bi bi-plus"></i> Agregar Sistema
-                    </button>
-                </div>
-                <div class="row" id="printingSystemsContainer">
-                    @php
-                        $selectedPrintingSystems = old('printing_systems', $product->printingSystems->pluck('id')->toArray() ?? []);
-                    @endphp
-                    @foreach($printingSystems as $system)
-                        <div class="col-md-4 mb-2" id="printing-system-item-{{ $system->id }}">
-                            <div class="d-flex align-items-start">
-                                <div class="form-check flex-grow-1">
-                                    <input class="form-check-input printing-system-checkbox" type="checkbox" name="printing_systems[]" 
-                                           value="{{ $system->id }}" id="printing_system_{{ $system->id }}"
-                                           data-colors="{{ $system->total_colors }}"
-                                           data-min-units="{{ $system->min_units }}"
-                                           data-price="{{ $system->price_per_unit }}"
-                                           {{ in_array($system->id, $selectedPrintingSystems) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="printing_system_{{ $system->id }}">
-                                        <strong>{{ $system->name }}</strong>
-                                        @if($system->description)
-                                            <small class="text-muted d-block">{{ $system->description }}</small>
-                                        @endif
-                                        <small class="text-muted d-block">
-                                            {{ $system->total_colors }} colores, mín. {{ $system->min_units }} uds, €{{ number_format($system->price_per_unit, 2) }}/ud
-                                        </small>
-                                    </label>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-danger ms-2" 
-                                        onclick="deletePrintingSystem({{ $system->id }}, '{{ $system->name }}')"
-                                        title="Eliminar sistema">
-                                    <i class="bi bi-trash" style="font-size: 0.75rem;"></i>
-                                </button>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-                @error('printing_systems')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-        </div>
-    </div>
-
-    <!-- Colores y Tamaños -->
-    <div class="card shadow-sm mb-4 border-0">
-        <div class="card-header bg-golden border-bottom-0 py-3">
-            <div class="d-flex align-items-center">
-                <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
-                    <i class="bi bi-palette-fill"></i>
-                </div>
-                <div>
-                    <h5 class="mb-0">Colores y Tamaños</h5>
-                    <small>Opciones de personalización disponibles</small>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <!-- Colores Disponibles -->
-            <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="form-label mb-0">Colores Disponibles <span class="text-danger">*</span></label>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addColorModal">
-                        <i class="bi bi-plus"></i> Agregar Color
-                    </button>
-                </div>
-                <div class="row" id="colorsContainer">
-                    @php
-                        $selectedColors = old('colors', $product->colors ?? []);
-                    @endphp
-                    @foreach($availableColors as $color)
-                        <div class="col-md-3 mb-2" id="color-item-{{ $color->id }}">
-                            <div class="d-flex align-items-center">
-                                <div class="form-check flex-grow-1">
-                                    <input class="form-check-input" type="checkbox" name="colors[]" 
-                                           value="{{ $color->name }}" id="color_{{ $color->id }}"
-                                           {{ in_array($color->name, $selectedColors) ? 'checked' : '' }}>
-                                    <label class="form-check-label d-flex align-items-center" for="color_{{ $color->id }}">
-                                        <span class="badge me-2" style="background-color: {{ $color->hex_code }}; color: {{ $color->hex_code == '#FFFFFF' ? '#000' : '#FFF' }}; width: 20px; height: 20px; display: inline-block;"></span>
-                                        {{ $color->name }}
-                                    </label>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-danger ms-2" 
-                                        onclick="deleteColor({{ $color->id }}, '{{ $color->name }}')"
-                                        title="Eliminar color">
-                                    <i class="bi bi-trash" style="font-size: 0.75rem;"></i>
-                                </button>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-                @error('colors')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <!-- Colores de Impresión -->
-            <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="form-label mb-0">Colores de Impresión <span class="text-danger">*</span></label>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addPrintColorModal">
-                        <i class="bi bi-plus"></i> Agregar Color de Impresión
-                    </button>
-                </div>
-                <div class="row" id="printColorsContainer">
-                    @php
-                        $selectedPrintColors = old('print_colors', $product->print_colors ?? []);
-                    @endphp
-                    @foreach($availablePrintColors as $color)
-                        <div class="col-md-3 mb-2" id="print-color-item-{{ $color->id }}">
-                            <div class="d-flex align-items-center">
-                                <div class="form-check flex-grow-1">
-                                    <input class="form-check-input" type="checkbox" name="print_colors[]" 
-                                           value="{{ $color->name }}" id="print_color_{{ $color->id }}"
-                                           {{ in_array($color->name, $selectedPrintColors) ? 'checked' : '' }}>
-                                    <label class="form-check-label d-flex align-items-center" for="print_color_{{ $color->id }}">
-                                        <span class="badge me-2" style="background-color: {{ $color->hex_code }}; color: {{ $color->hex_code == '#FFFFFF' ? '#000' : '#FFF' }}; width: 20px; height: 20px; display: inline-block;"></span>
-                                        {{ $color->name }}
-                                    </label>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-danger ms-2" 
-                                        onclick="deletePrintColor({{ $color->id }}, '{{ $color->name }}')"
-                                        title="Eliminar color de impresión">
-                                    <i class="bi bi-trash" style="font-size: 0.75rem;"></i>
-                                </button>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-                @error('print_colors')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <!-- Tamaños Disponibles -->
-            <div class="mb-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="form-label mb-0">Tamaños Disponibles <span class="text-danger">*</span></label>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addSizeModal">
-                        <i class="bi bi-plus"></i> Agregar Tamaño
-                    </button>
-                </div>
-                <div id="sizesContainer">
-                    <div class="row">
-                        @php
-                            $selectedSizes = old('sizes', $product->sizes ?? []);
-                        @endphp
-                        @foreach($availableSizes as $size)
-                            <div class="col-md-2 mb-2" id="size-item-{{ $size->id }}">
-                                <div class="d-flex align-items-center">
-                                    <div class="form-check flex-grow-1">
-                                        <input class="form-check-input" type="checkbox" name="sizes[]" 
-                                               value="{{ $size->name }}" id="size_{{ $size->id }}"
-                                               {{ in_array($size->name, $selectedSizes) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="size_{{ $size->id }}">
-                                            {{ $size->name }}
-                                            @if($size->code)
-                                                <small class="text-muted">({{ $size->code }})</small>
-                                            @endif
-                                        </label>
-                                    </div>
-                                    <button type="button" class="btn btn-sm btn-outline-danger ms-1" 
-                                            onclick="deleteSize({{ $size->id }}, '{{ $size->name }}')"
-                                            title="Eliminar tamaño">
-                                        <i class="bi bi-trash" style="font-size: 0.75rem;"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-                @error('sizes')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-        </div>
-    </div>
-
-    <!-- Precios -->
-    <div class="card shadow-sm mb-4 border-0">
-        <div class="card-header bg-golden border-bottom-0 py-3">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center">
-                    <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
-                        <i class="bi bi-currency-euro"></i>
-                    </div>
-                    <div>
-                        <h5 class="mb-0">Estructura de Precios</h5>
-                        <small>Configure los precios por cantidad</small>
-                    </div>
-                </div>
-                <button type="button" class="btn btn-sm btn-primary" id="add-price-row">
-                    <i class="bi bi-plus"></i> Agregar Rango
-                </button>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-sm">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Cantidad Desde</th>
-                            <th>Cantidad Hasta</th>
-                            <th>Precio Total (€)</th>
-                            <th>Precio Unitario (€)</th>
-                            <th width="100">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="pricing-tbody">
-                        @php
-                            $pricing = old('pricing', $product->pricing->toArray());
-                        @endphp
-                        @foreach($pricing as $index => $price)
-                            <tr>
-                                <td>
-                                    <input type="number" name="pricing[{{ $index }}][quantity_from]" 
-                                           class="form-control form-control-sm" 
-                                           value="{{ $price['quantity_from'] }}" min="1" required>
-                                </td>
-                                <td>
-                                    <input type="number" name="pricing[{{ $index }}][quantity_to]" 
-                                           class="form-control form-control-sm" 
-                                           value="{{ $price['quantity_to'] }}" min="1" required>
-                                </td>
-                                <td>
-                                    <input type="number" step="0.01" name="pricing[{{ $index }}][price]" 
-                                           class="form-control form-control-sm" 
-                                           value="{{ $price['price'] }}" min="0" required>
-                                </td>
-                                <td>
-                                    <input type="number" step="0.01" name="pricing[{{ $index }}][unit_price]" 
-                                           class="form-control form-control-sm" 
-                                           value="{{ $price['unit_price'] }}" min="0" required>
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-outline-danger remove-price-row">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-            @error('pricing')
-                <div class="text-danger">{{ $message }}</div>
-            @enderror
-        </div>
-    </div>
 
     <!-- Imágenes y Archivos -->
     <div class="card shadow-sm mb-4 border-0">
@@ -578,6 +232,402 @@
         </div>
     </div>
 
+    <!-- Configurador de Producto -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-golden border-bottom-0 py-3">
+            <div class="d-flex align-items-center">
+                <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
+                    <i class="bi bi-sliders"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0">Configurador de Producto</h5>
+                    <small>Sistema avanzado de configuración de productos</small>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Configurador Habilitado -->
+            <div class="alert alert-info d-flex align-items-center mb-4">
+                <input type="hidden" name="has_configurator" value="1">
+                <i class="bi bi-gear-fill text-primary me-2"></i>
+                <div>
+                    <strong>Configurador de Producto Habilitado</strong>
+                    <div class="small">Los clientes podrán personalizar este producto seleccionando atributos</div>
+                </div>
+            </div>
+
+            <!-- Opciones del Configurador -->
+            <div id="configuratorOptions">
+                
+                <!-- Configuración básica -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="configurator_base_price" class="form-label">
+                                Precio Base <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">€</span>
+                                <input type="number" step="0.0001" 
+                                       class="form-control @error('configurator_base_price') is-invalid @enderror" 
+                                       id="configurator_base_price" name="configurator_base_price" 
+                                       value="{{ old('configurator_base_price', $product->configurator_base_price) }}">
+                            </div>
+                            @error('configurator_base_price')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">
+                                Precio base antes de aplicar modificadores de atributos
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="max_print_colors" class="form-label">
+                                Máximo Colores de Impresión
+                            </label>
+                            <select class="form-select @error('max_print_colors') is-invalid @enderror" 
+                                    id="max_print_colors" name="max_print_colors">
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <option value="{{ $i }}" {{ old('max_print_colors', $product->max_print_colors ?? 1) == $i ? 'selected' : '' }}>
+                                        {{ $i }} {{ $i == 1 ? 'color' : 'colores' }}
+                                    </option>
+                                @endfor
+                            </select>
+                            @error('max_print_colors')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Unidad de Precio -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="pricing_unit" class="form-label">
+                                Unidad de Precio
+                            </label>
+                            <select class="form-select @error('pricing_unit') is-invalid @enderror"
+                                    id="pricing_unit" name="pricing_unit">
+                                <option value="unit" {{ old('pricing_unit', $product->pricing_unit ?? 'unit') == 'unit' ? 'selected' : '' }}>
+                                    Por Unidad (precio/ud)
+                                </option>
+                                <option value="thousand" {{ old('pricing_unit', $product->pricing_unit ?? 'unit') == 'thousand' ? 'selected' : '' }}>
+                                    Por Millar (precio/1000 uds)
+                                </option>
+                            </select>
+                            @error('pricing_unit')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">
+                                <strong>Por Unidad:</strong> El precio base es por cada unidad individual.<br>
+                                <strong>Por Millar:</strong> El precio base es por cada 1000 unidades.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NUEVO SISTEMA: Gestión de atributos por grupos -->
+                <div class="row">
+                    @forelse($attributeGroups ?? [] as $group)
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-{{ $group->active ? 'primary' : 'secondary' }}">
+                                <div class="card-header bg-{{ $group->active ? 'primary' : 'secondary' }} bg-opacity-10 d-flex justify-content-between align-items-center py-2">
+                                    <div class="d-flex align-items-center">
+                                        <h6 class="mb-0 me-2">{{ $group->name }}</h6>
+                                        @if($group->is_required)
+                                            <span class="badge bg-danger badge-sm">Requerido</span>
+                                        @endif
+                                        @if($group->affects_price)
+                                            <span class="badge bg-warning badge-sm ms-1">€</span>
+                                        @endif
+                                        @if($group->affects_stock)
+                                            <span class="badge bg-info badge-sm ms-1">📦</span>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <a href="{{ route('admin.attribute-groups.show', $group) }}" 
+                                           class="btn btn-sm btn-outline-primary me-1" title="Gestionar grupo">
+                                            <i class="bi bi-gear"></i>
+                                        </a>
+                                        <a href="{{ route('admin.product-attributes.create', ['group_id' => $group->id]) }}"
+                                           class="btn btn-sm btn-primary"
+                                           title="Crear nuevo atributo">
+                                            <i class="bi bi-plus"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="card-body p-2">
+                                    @if($group->description)
+                                        <div class="small text-muted mb-2">{{ $group->description }}</div>
+                                    @endif
+                                    
+                                    <div class="attributes-container" style="max-height: 200px; overflow-y: auto;">
+                                        @forelse($group->attributes as $attribute)
+                                            <div class="form-check mb-1" id="attr_{{ $attribute->id }}">
+                                                <input class="form-check-input" 
+                                                       type="{{ $group->allow_multiple ? 'checkbox' : 'radio' }}" 
+                                                       id="attribute_{{ $attribute->id }}" 
+                                                       name="{{ $group->allow_multiple ? "selected_attributes[{$group->id}][]" : "selected_attributes[{$group->id}]" }}" 
+                                                       value="{{ $attribute->id }}"
+                                                       {{ in_array($attribute->id, old("selected_attributes.{$group->id}", $selectedAttributes[$group->id] ?? [])) ? 'checked' : '' }}
+                                                       onchange="updateConfiguratorPreview()"
+                                                       data-group-id="{{ $group->id }}"
+                                                       data-group-type="{{ $group->type }}"
+                                                       data-price-modifier="{{ $attribute->price_modifier }}"
+                                                       data-price-percentage="{{ $attribute->price_percentage }}">
+                                                <label class="form-check-label d-flex align-items-center justify-content-between w-100" 
+                                                       for="attribute_{{ $attribute->id }}">
+                                                    <div class="d-flex align-items-center">
+                                                        @if(in_array($group->type, ['color', 'ink', 'ink_color']) && $attribute->hex_code)
+                                                            <span class="me-2"
+                                                                  style="width: 18px; height: 18px; background-color: {{ $attribute->hex_code }};
+                                                                         border-radius: {{ $group->type === 'color' ? '50%' : '3px' }};
+                                                                         border: 1px solid #ddd; display: inline-block;"></span>
+                                                        @endif
+                                                        @if($attribute->image_path)
+                                                            <img src="{{ Storage::url($attribute->image_path) }}" 
+                                                                 alt="{{ $attribute->name }}" 
+                                                                 class="me-2" 
+                                                                 style="width: 24px; height: 24px; object-fit: cover; border-radius: 3px;">
+                                                        @endif
+                                                        <div>
+                                                            <span class="fw-medium">{{ $attribute->name }}</span>
+                                                            @if($attribute->price_modifier != 0)
+                                                                <small class="badge bg-{{ $attribute->price_modifier > 0 ? 'warning' : 'success' }} ms-1">
+                                                                    {{ $attribute->price_modifier > 0 ? '+' : '' }}€{{ number_format($attribute->price_modifier, 2) }}
+                                                                </small>
+                                                            @endif
+                                                            @if($attribute->price_percentage != 0)
+                                                                <small class="badge bg-info ms-1">
+                                                                    {{ $attribute->price_percentage > 0 ? '+' : '' }}{{ $attribute->price_percentage }}%
+                                                                </small>
+                                                            @endif
+                                                            @if($attribute->is_recommended)
+                                                                <small class="badge bg-primary ms-1">★</small>
+                                                            @endif
+                                                            @if($attribute->pantone_code)
+                                                                <small class="text-muted d-block">{{ $attribute->pantone_code }}</small>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex align-items-center">
+                                                        @if($attribute->stock_quantity !== null)
+                                                            <small class="badge bg-{{ $attribute->stock_quantity > 0 ? 'success' : 'danger' }}">
+                                                                {{ $attribute->stock_quantity }}
+                                                            </small>
+                                                        @endif
+                                                        @php
+                                                            $attrImgData = $attributeImages[$attribute->id] ?? null;
+                                                            $imgCount = $attrImgData ? count($attrImgData['images']) : 0;
+                                                        @endphp
+                                                        <button type="button"
+                                                                class="btn {{ $imgCount > 0 ? 'btn-success' : 'btn-outline-secondary' }} ms-2 attr-images-btn d-flex align-items-center gap-1"
+                                                                style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                                                data-attribute-id="{{ $attribute->id }}"
+                                                                data-attribute-name="{{ $attribute->name }}"
+                                                                data-pivot-id="{{ $attrImgData['pivot_id'] ?? '' }}"
+                                                                data-images="{{ json_encode($attrImgData['images'] ?? []) }}"
+                                                                title="Gestionar imágenes">
+                                                            <i class="bi bi-images"></i>
+                                                            @if($imgCount > 0)
+                                                                <span class="badge bg-white text-success">{{ $imgCount }}</span>
+                                                            @endif
+                                                        </button>
+                                                        <a href="{{ route('admin.product-attributes.edit', $attribute) }}"
+                                                           class="btn btn-sm btn-outline-secondary ms-1" title="Editar">
+                                                            <i class="bi bi-pencil" style="font-size: 0.6rem;"></i>
+                                                        </a>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        @empty
+                                            <div class="text-muted small text-center py-3">
+                                                <i class="bi bi-inbox d-block mb-2" style="font-size: 1.5rem; opacity: 0.5;"></i>
+                                                No hay atributos en este grupo
+                                                <div class="mt-2">
+                                                    <a href="{{ route('admin.product-attributes.create', ['group_id' => $group->id]) }}"
+                                                       class="btn btn-sm btn-primary">
+                                                        Añadir primer atributo
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        @endforelse
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-info-circle me-3 fs-4"></i>
+                                    <div>
+                                        <h6 class="mb-1">No hay grupos de atributos configurados</h6>
+                                        <p class="mb-2">Los grupos de atributos te permiten organizar colores, tamaños, materiales, etc.</p>
+                                        <a href="{{ route('admin.attribute-groups.create') }}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-plus-circle me-1"></i>Crear primer grupo
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforelse
+                </div>
+
+                <!-- Opciones adicionales -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input type="hidden" name="allow_file_upload" value="0">
+                            <input class="form-check-input" type="checkbox" 
+                                   id="allow_file_upload" name="allow_file_upload" value="1" 
+                                   {{ old('allow_file_upload', $product->allow_file_upload) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="allow_file_upload">
+                                <strong>Permitir subida de archivos</strong>
+                                <div class="form-text">Los clientes pueden subir logos, imágenes, etc.</div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="file_upload_types" class="form-label">Tipos de archivo permitidos</label>
+                        <select class="form-select" id="file_upload_types" name="file_upload_types[]" multiple>
+                            @php
+                                $selectedTypes = old('file_upload_types', $product->file_upload_types ?? []);
+                            @endphp
+                            <option value="jpg" {{ in_array('jpg', $selectedTypes) ? 'selected' : '' }}>JPG</option>
+                            <option value="png" {{ in_array('png', $selectedTypes) ? 'selected' : '' }}>PNG</option>
+                            <option value="svg" {{ in_array('svg', $selectedTypes) ? 'selected' : '' }}>SVG</option>
+                            <option value="pdf" {{ in_array('pdf', $selectedTypes) ? 'selected' : '' }}>PDF</option>
+                            <option value="ai" {{ in_array('ai', $selectedTypes) ? 'selected' : '' }}>AI</option>
+                        </select>
+                        <div class="form-text">Mantén presionado Ctrl/Cmd para seleccionar múltiples</div>
+                    </div>
+                </div>
+
+                <!-- Descripción del configurador -->
+                <div class="mb-3">
+                    <label for="configurator_description" class="form-label">Descripción del Configurador</label>
+                    <textarea class="form-control @error('configurator_description') is-invalid @enderror" 
+                              id="configurator_description" name="configurator_description" rows="3"
+                              placeholder="Descripción que verán los clientes sobre las opciones de personalización...">{{ old('configurator_description', $product->configurator_description) }}</textarea>
+                    @error('configurator_description')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <!-- Vista previa y validación -->
+                <div class="alert alert-info">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Vista previa:</strong> <span id="configuratorSummary">Selecciona atributos para ver un resumen</span>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="previewConfigurator()">
+                            <i class="bi bi-eye me-1"></i>Vista Previa
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dependencias entre Atributos -->
+    <div class="card shadow-sm mb-4 border-0" id="dependenciesSection">
+        <div class="card-header bg-golden border-bottom-0 py-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
+                        <i class="bi bi-diagram-3"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0">Dependencias entre Atributos</h5>
+                        <small>Configura relaciones entre atributos (permite/bloquea/requiere)</small>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-primary" onclick="showCreateDependencyModal()">
+                    <i class="bi bi-plus"></i> Crear Dependencia
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table class="table table-sm" id="dependenciesTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Atributo Principal</th>
+                                    <th>Relación</th>
+                                    <th>Atributo Dependiente</th>
+                                    <th>Descripción</th>
+                                    <th width="120">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dependenciesTableBody">
+                                <tr id="noDependenciesRow">
+                                    <td colspan="5" class="text-center text-muted py-3">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        No hay dependencias configuradas. Crea dependencias para controlar qué atributos están disponibles según la selección.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reglas de Precios Dinámicos -->
+    <div class="card shadow-sm mb-4 border-0" id="priceRulesSection">
+        <div class="card-header bg-golden border-bottom-0 py-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
+                        <i class="bi bi-calculator"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0">Reglas de Precios Dinámicos</h5>
+                        <small>Configura reglas automáticas de precios basadas en combinaciones</small>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-primary" onclick="showCreatePriceRuleModal()">
+                    <i class="bi bi-plus"></i> Crear Regla
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table class="table table-sm" id="priceRulesTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Tipo</th>
+                                    <th>Condiciones</th>
+                                    <th>Acción</th>
+                                    <th>Vigencia</th>
+                                    <th width="120">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="priceRulesTableBody">
+                                <tr id="noPriceRulesRow">
+                                    <td colspan="6" class="text-center text-muted py-3">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        No hay reglas de precios configuradas. Crea reglas para aplicar descuentos o recargos automáticos.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Botones de Acción -->
     <div class="card shadow-sm border-0">
         <div class="card-body">
@@ -598,178 +648,9 @@
     </div>
 </form>
 
-<!-- Modal Agregar Color -->
-<div class="modal fade" id="addColorModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Agregar Nuevo Color</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addColorForm">
-                    <div class="mb-3">
-                        <label for="color_name" class="form-label">Nombre del Color <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="color_name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="color_hex" class="form-label">Código Hexadecimal <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <input type="color" class="form-control form-control-color" id="color_picker" value="#000000">
-                            <input type="text" class="form-control" id="color_hex" value="#000000" pattern="^#[0-9A-Fa-f]{6}$" required>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="addColor()">Agregar Color</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Agregar Color de Impresión -->
-<div class="modal fade" id="addPrintColorModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Agregar Nuevo Color de Impresión</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addPrintColorForm">
-                    <div class="mb-3">
-                        <label for="print_color_name" class="form-label">Nombre del Color <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="print_color_name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="print_color_hex" class="form-label">Código Hexadecimal <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <input type="color" class="form-control form-control-color" id="print_color_picker" value="#000000">
-                            <input type="text" class="form-control" id="print_color_hex" value="#000000" pattern="^#[0-9A-Fa-f]{6}$" required>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="addPrintColor()">Agregar Color</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Agregar Tamaño -->
-<div class="modal fade" id="addSizeModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Agregar Nuevo Tamaño</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addSizeForm">
-                    <div class="mb-3">
-                        <label for="size_name" class="form-label">Nombre del Tamaño <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="size_name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="size_code" class="form-label">Código (opcional)</label>
-                        <input type="text" class="form-control" id="size_code" placeholder="Ej: S, M, L, XL">
-                    </div>
-                    <div class="mb-3">
-                        <label for="size_description" class="form-label">Descripción</label>
-                        <textarea class="form-control" id="size_description" rows="2"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="addSize()">Agregar Tamaño</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Agregar Sistema de Impresión -->
-<div class="modal fade" id="addPrintingSystemModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Agregar Nuevo Sistema de Impresión</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addPrintingSystemForm">
-                    <div class="mb-3">
-                        <label for="system_name" class="form-label">Nombre del Sistema <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="system_name" required>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="system_total_colors" class="form-label">Total de Colores <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="system_total_colors" value="1" min="1" required>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="system_min_units" class="form-label">Unidades Mínimas <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="system_min_units" value="1" min="1" required>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="system_price_per_unit" class="form-label">Precio/Unidad (€) <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" class="form-control" id="system_price_per_unit" value="0" min="0" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="system_description" class="form-label">Descripción</label>
-                        <textarea class="form-control" id="system_description" rows="2"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="addPrintingSystem()">Agregar Sistema</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Agregar Material -->
-<div class="modal fade" id="addMaterialModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Agregar Nuevo Material</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addMaterialForm">
-                    <div class="mb-3">
-                        <label for="material_name" class="form-label">Nombre del Material <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="material_name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="material_description" class="form-label">Descripción</label>
-                        <textarea class="form-control" id="material_description" rows="2"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="addMaterial()">Agregar Material</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 @push('scripts')
-<script src="{{ asset('js/admin/products.js') }}"></script>
+@vite('resources/js/admin/products.js')
 <script>
 // Configuración específica para editar producto
 window.productConfig = {
@@ -791,139 +672,293 @@ function removeImage(imagePath) {
     }
 }
 
-// Funciones de modales hardcodeadas (sin API)
-function addColor() {
-    const colorName = document.getElementById('color_name').value;
-    const colorHex = document.getElementById('color_hex').value;
+// Funciones del Configurador
+function updateConfiguratorPreview() {
+    const summarySpan = document.getElementById('configuratorSummary');
+    const basePrice = document.getElementById('configurator_base_price')?.value || '0';
+    const maxColors = document.getElementById('max_print_colors')?.value || '1';
+    const allowFiles = document.getElementById('allow_file_upload')?.checked || false;
     
-    if (colorName && colorHex) {
-        const container = document.getElementById('colorsContainer');
-        const newColorDiv = document.createElement('div');
-        newColorDiv.className = 'col-md-3 mb-2';
-        newColorDiv.innerHTML = `
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="colors[]" 
-                       value="${colorName}" id="color_${Date.now()}" checked>
-                <label class="form-check-label" for="color_${Date.now()}">
-                    <span class="badge" style="background-color: ${colorHex}; color: ${colorHex == '#FFFFFF' ? '#000' : '#FFF'}">
-                        ${colorName}
-                    </span>
-                </label>
+    // Contar atributos seleccionados
+    const selectedAttributes = document.querySelectorAll('input[name^="selected_attributes"]:checked').length;
+    
+    let summary = `Precio base: €${basePrice}, Max. colores: ${maxColors}, Atributos: ${selectedAttributes}`;
+    if (allowFiles) {
+        summary += ', Archivos: Sí';
+    }
+    
+    summarySpan.textContent = summary;
+}
+
+function previewConfigurator() {
+    alert('Vista previa del configurador - Esta funcionalidad se implementará próximamente');
+}
+
+// Funciones para dependencias y reglas de precios
+function showCreateDependencyModal() {
+    alert('Crear dependencia - Esta funcionalidad se implementará próximamente');
+}
+
+function showCreatePriceRuleModal() {
+    alert('Crear regla de precio - Esta funcionalidad se implementará próximamente');
+}
+
+// Funciones para grupos de atributos
+function setCurrentGroup(groupId, groupName, groupType) {
+    console.log('Configurando grupo:', groupId, groupName, groupType);
+}
+
+// Inicializar al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar vista previa del configurador
+    updateConfiguratorPreview();
+
+    // Agregar listeners a los campos de configuración
+    const basePriceInput = document.getElementById('configurator_base_price');
+    const maxColorsInput = document.getElementById('max_print_colors');
+    const allowFilesInput = document.getElementById('allow_file_upload');
+
+    if (basePriceInput) basePriceInput.addEventListener('input', updateConfiguratorPreview);
+    if (maxColorsInput) maxColorsInput.addEventListener('change', updateConfiguratorPreview);
+    if (allowFilesInput) allowFilesInput.addEventListener('change', updateConfiguratorPreview);
+
+    // Agregar listeners a checkboxes/radios de atributos
+    const attributeInputs = document.querySelectorAll('input[name^="selected_attributes"]');
+    attributeInputs.forEach(input => {
+        input.addEventListener('change', updateConfiguratorPreview);
+    });
+});
+
+// ========== GESTIÓN DE IMÁGENES POR ATRIBUTO ==========
+document.querySelectorAll('.attr-images-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const attributeId = this.dataset.attributeId;
+        const attributeName = this.dataset.attributeName;
+        const pivotId = this.dataset.pivotId;
+        const images = JSON.parse(this.dataset.images || '[]');
+
+        // Actualizar modal
+        document.getElementById('attrImagesModalLabel').textContent = `Imágenes - ${attributeName}`;
+        document.getElementById('modalAttributeId').value = attributeId;
+        document.getElementById('modalPivotId').value = pivotId;
+
+        // Renderizar galería
+        renderAttrImagesGallery(images, pivotId);
+
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('attrImagesModal'));
+        modal.show();
+    });
+});
+
+function renderAttrImagesGallery(images, pivotId) {
+    const gallery = document.getElementById('attrImagesGallery');
+
+    if (!images || images.length === 0) {
+        gallery.innerHTML = `
+            <div class="text-center text-muted py-5 bg-light rounded">
+                <i class="bi bi-images" style="font-size: 3rem; opacity: 0.3;"></i>
+                <p class="mt-2 mb-0">Sin imágenes asignadas</p>
+                <small class="text-muted">Sube imágenes para mostrar cuando se seleccione este atributo</small>
             </div>
         `;
-        container.appendChild(newColorDiv);
-        
-        // Cerrar modal y limpiar
-        const modal = bootstrap.Modal.getInstance(document.getElementById('addColorModal'));
-        modal.hide();
-        document.getElementById('addColorForm').reset();
+        return;
+    }
+
+    let html = '<div class="row g-3">';
+    images.forEach((image, index) => {
+        html += `
+            <div class="col-6 col-md-4">
+                <div class="position-relative border rounded overflow-hidden shadow-sm">
+                    <img src="/storage/${image}" alt="Imagen ${index + 1}"
+                         class="img-fluid" style="aspect-ratio: 1; object-fit: cover; width: 100%;">
+                    <button type="button" class="btn btn-danger position-absolute top-0 end-0 m-1 delete-attr-img-btn"
+                            data-pivot-id="${pivotId}" data-image-index="${index}"
+                            style="padding: 0.25rem 0.5rem; font-size: 0.875rem; border-radius: 50%;">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    gallery.innerHTML = html;
+
+    // Añadir event listeners para eliminar
+    gallery.querySelectorAll('.delete-attr-img-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            if (!confirm('¿Eliminar esta imagen?')) return;
+
+            const pivotId = this.dataset.pivotId;
+            const imageIndex = this.dataset.imageIndex;
+
+            try {
+                const response = await fetch(`/admin/products/{{ $product->slug }}/attribute-images/${pivotId}/${imageIndex}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    renderAttrImagesGallery(data.images, pivotId);
+                    updateAttrImageButton(document.getElementById('modalAttributeId').value, data.images);
+                } else {
+                    alert(data.message || 'Error al eliminar');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al eliminar la imagen');
+            }
+        });
+    });
+}
+
+function updateAttrImageButton(attributeId, images) {
+    const btn = document.querySelector(`.attr-images-btn[data-attribute-id="${attributeId}"]`);
+    if (!btn) return;
+
+    const count = images ? images.length : 0;
+    btn.dataset.images = JSON.stringify(images || []);
+    btn.className = `btn ${count > 0 ? 'btn-success' : 'btn-outline-secondary'} ms-2 attr-images-btn d-flex align-items-center gap-1`;
+    btn.title = 'Gestionar imágenes';
+
+    // Actualizar badge
+    let badge = btn.querySelector('.badge');
+    if (count > 0) {
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'badge bg-white text-success';
+            btn.appendChild(badge);
+        }
+        badge.textContent = count;
+    } else if (badge) {
+        badge.remove();
     }
 }
 
-function addPrintColor() {
-    const colorName = document.getElementById('print_color_name').value;
-    const colorHex = document.getElementById('print_color_hex').value;
-    
-    if (colorName && colorHex) {
-        const container = document.getElementById('printColorsContainer');
-        const newColorDiv = document.createElement('div');
-        newColorDiv.className = 'col-md-3 mb-2';
-        newColorDiv.innerHTML = `
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="print_colors[]" 
-                       value="${colorName}" id="print_color_${Date.now()}" checked>
-                <label class="form-check-label" for="print_color_${Date.now()}">
-                    <span class="badge" style="background-color: ${colorHex}; color: ${colorHex == '#FFFFFF' ? '#000' : '#FFF'}">
-                        ${colorName}
-                    </span>
-                </label>
-            </div>
-        `;
-        container.appendChild(newColorDiv);
-        
-        const modal = bootstrap.Modal.getInstance(document.getElementById('addPrintColorModal'));
-        modal.hide();
-        document.getElementById('addPrintColorForm').reset();
-    }
+// Subir imágenes
+console.log('Buscando formulario attrImagesUploadForm...');
+const uploadForm = document.getElementById('attrImagesUploadForm');
+console.log('Formulario encontrado:', uploadForm);
+
+if (uploadForm) {
+    uploadForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        console.log('Formulario submit triggered');
+
+        const pivotId = document.getElementById('modalPivotId').value;
+        const attributeId = document.getElementById('modalAttributeId').value;
+        const fileInput = document.getElementById('attrImagesInput');
+        const submitBtn = this.querySelector('button[type="submit"]');
+
+        console.log('pivotId:', pivotId, 'attributeId:', attributeId, 'files:', fileInput?.files?.length);
+
+        if (!fileInput.files.length) {
+            alert('Selecciona al menos una imagen');
+            return;
+        }
+
+        if (!pivotId) {
+            alert('Debes guardar el producto primero antes de subir imágenes para este atributo');
+            return;
+        }
+
+        const formData = new FormData();
+        for (let file of fileInput.files) {
+            formData.append('images[]', file);
+        }
+        formData.append('_token', '{{ csrf_token() }}');
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        const url = `/admin/products/{{ $product->slug }}/attribute-images/${pivotId}`;
+        console.log('Enviando a URL:', url);
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData
+            });
+
+            console.log('Response status:', response.status);
+            const data = await response.json();
+            console.log('Response data:', data);
+
+            if (data.success) {
+                renderAttrImagesGallery(data.images, pivotId);
+                updateAttrImageButton(attributeId, data.images);
+                fileInput.value = '';
+            } else {
+                alert(data.message || 'Error al subir las imágenes');
+            }
+        } catch (error) {
+            console.error('Error completo:', error);
+            alert('Error al subir las imágenes: ' + error.message);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-upload"></i> Subir';
+        }
+    });
+} else {
+    console.error('No se encontró el formulario attrImagesUploadForm');
 }
 
-function addSize() {
-    const sizeName = document.getElementById('size_name').value;
-    const sizeCode = document.getElementById('size_code').value;
-    
-    if (sizeName) {
-        const container = document.getElementById('sizesContainer').querySelector('.row');
-        const newSizeDiv = document.createElement('div');
-        newSizeDiv.className = 'col-md-2 mb-2';
-        newSizeDiv.innerHTML = `
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="sizes[]" 
-                       value="${sizeName}" id="size_${Date.now()}" checked>
-                <label class="form-check-label" for="size_${Date.now()}">
-                    ${sizeName}
-                    ${sizeCode ? `<small class="text-muted">(${sizeCode})</small>` : ''}
-                </label>
-            </div>
-        `;
-        container.appendChild(newSizeDiv);
-        
-        const modal = bootstrap.Modal.getInstance(document.getElementById('addSizeModal'));
-        modal.hide();
-        document.getElementById('addSizeForm').reset();
-    }
-}
-
-function addPrintingSystem() {
-    const systemName = document.getElementById('system_name').value;
-    const systemDescription = document.getElementById('system_description').value;
-    
-    if (systemName) {
-        const container = document.getElementById('printingSystemsContainer');
-        const newSystemDiv = document.createElement('div');
-        newSystemDiv.className = 'col-md-4 mb-2';
-        newSystemDiv.innerHTML = `
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="printing_systems[]" 
-                       value="${Date.now()}" id="printing_system_${Date.now()}" checked>
-                <label class="form-check-label" for="printing_system_${Date.now()}">
-                    ${systemName}
-                    ${systemDescription ? `<small class="text-muted d-block">${systemDescription}</small>` : ''}
-                </label>
-            </div>
-        `;
-        container.appendChild(newSystemDiv);
-        
-        const modal = bootstrap.Modal.getInstance(document.getElementById('addPrintingSystemModal'));
-        modal.hide();
-        document.getElementById('addPrintingSystemForm').reset();
-    }
-}
-
-function addMaterial() {
-    const materialName = document.getElementById('material_name').value;
-    const materialDescription = document.getElementById('material_description').value;
-    
-    if (materialName) {
-        const container = document.getElementById('materialsContainer');
-        const newMaterialDiv = document.createElement('div');
-        newMaterialDiv.className = 'col-md-4 mb-2';
-        newMaterialDiv.innerHTML = `
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="materials[]" 
-                       value="${materialName}" id="material_${Date.now()}" checked>
-                <label class="form-check-label" for="material_${Date.now()}">
-                    ${materialName}
-                    ${materialDescription ? `<small class="text-muted d-block">${materialDescription}</small>` : ''}
-                </label>
-            </div>
-        `;
-        container.appendChild(newMaterialDiv);
-        
-        const modal = bootstrap.Modal.getInstance(document.getElementById('addMaterialModal'));
-        modal.hide();
-        document.getElementById('addMaterialForm').reset();
-    }
-}
 </script>
 @endpush
+
+<!-- Modal para imágenes de atributo -->
+<div class="modal fade" id="attrImagesModal" tabindex="-1" aria-labelledby="attrImagesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="attrImagesModalLabel">
+                    <i class="bi bi-images me-2"></i>Imágenes del Atributo
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalAttributeId">
+                <input type="hidden" id="modalPivotId">
+
+                <div class="alert alert-info py-2 mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <small>Estas imágenes se mostrarán en el configurador cuando el cliente seleccione este atributo.</small>
+                </div>
+
+                <!-- Galería de imágenes -->
+                <div id="attrImagesGallery" class="mb-4">
+                    <div class="text-center text-muted py-5 bg-light rounded">
+                        <i class="bi bi-images" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <p class="mt-2 mb-0">Sin imágenes asignadas</p>
+                    </div>
+                </div>
+
+                <!-- Formulario de subida -->
+                <form id="attrImagesUploadForm" class="bg-light p-3 rounded">
+                    <label class="form-label fw-bold"><i class="bi bi-cloud-upload me-1"></i>Subir nuevas imágenes</label>
+                    <div class="input-group">
+                        <input type="file" class="form-control" id="attrImagesInput" name="images[]" multiple accept="image/*">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-upload me-1"></i> Subir
+                        </button>
+                    </div>
+                    <div class="form-text">Formatos: JPG, PNG, GIF, WebP. Puedes seleccionar múltiples archivos.</div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-1"></i>Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection

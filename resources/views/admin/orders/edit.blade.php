@@ -47,13 +47,36 @@
                         @enderror
                     </div>
 
-                    <div class="mb-3">
-                        <label for="customer_address" class="form-label">Dirección <span class="text-danger">*</span></label>
-                        <textarea class="form-control @error('customer_address') is-invalid @enderror" 
-                                  id="customer_address" name="customer_address" rows="3" required>{{ old('customer_address', $order->customer_address) }}</textarea>
-                        @error('customer_address')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                    <div class="mb-4">
+                        <h6 class="text-primary"><i class="bi bi-geo-alt-fill me-2"></i>Direcciones</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="shipping_address" class="form-label">Dirección de Envío</label>
+                                    <textarea class="form-control @error('shipping_address') is-invalid @enderror"
+                                              id="shipping_address" name="shipping_address" rows="3">{{ old('shipping_address', $order->shipping_address) }}</textarea>
+                                    @error('shipping_address')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="billing_address" class="form-label">Dirección de Facturación</label>
+                                    <textarea class="form-control @error('billing_address') is-invalid @enderror"
+                                              id="billing_address" name="billing_address" rows="3">{{ old('billing_address', $order->billing_address) }}</textarea>
+                                    @error('billing_address')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        @if($order->customer_address && !$order->shipping_address && !$order->billing_address)
+                            <div class="alert alert-info">
+                                <small><strong>Dirección original:</strong> {{ $order->customer_address }}</small>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="mb-3">
