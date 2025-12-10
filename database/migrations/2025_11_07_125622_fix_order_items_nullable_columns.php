@@ -11,9 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Usar raw SQL para asegurar que las columnas sean nullable
-        \DB::statement('ALTER TABLE order_items MODIFY COLUMN selected_size VARCHAR(255) NULL');
-        \DB::statement('ALTER TABLE order_items MODIFY COLUMN selected_color VARCHAR(255) NULL');
+        $driver = Schema::getConnection()->getDriverName();
+
+        if ($driver === 'pgsql') {
+            \DB::statement('ALTER TABLE order_items ALTER COLUMN selected_size DROP NOT NULL');
+            \DB::statement('ALTER TABLE order_items ALTER COLUMN selected_color DROP NOT NULL');
+        } else {
+            \DB::statement('ALTER TABLE order_items MODIFY COLUMN selected_size VARCHAR(255) NULL');
+            \DB::statement('ALTER TABLE order_items MODIFY COLUMN selected_color VARCHAR(255) NULL');
+        }
     }
 
     /**
