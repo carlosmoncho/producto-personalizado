@@ -1,0 +1,72 @@
+[
+    {
+        "id": 1,
+        "name": "Administrador",
+        "email": "admin@example.com",
+        "email_verified_at": "2025-11-05 10:43:00",
+        "password": "$2y$12$0RD6s44vKCwSkOoCZyzTk.d2yUwUR3EcJ8EhRAZpa2r7ssA3xmycm",
+        "remember_token": "bOrvR5VqSrIbgvPVk9RJiYUdWCjzoPTciEQAT3KsFa6BdHN2Gy7iPXbhypLN",
+        "created_at": "2025-11-05 10:43:00",
+        "updated_at": "2025-11-17 07:31:32"
+    },
+    {
+        "id": 3,
+        "name": "Test",
+        "email": "test@test.com",
+        "email_verified_at": null,
+        "password": "$2y$12$.pcWT15IaYLkGQz\/JRYcZ.rtNisBif588C4nh8TogWQGVrm29JuuO",
+        "remember_token": null,
+        "created_at": "2025-11-17 08:23:46",
+        "updated_at": "2025-11-17 08:23:46"
+    },
+    {
+        "id": 4,
+        "name": "carlos moncho molla",
+        "email": "carlosmoncho2002@gmail.com",
+        "email_verified_at": null,
+        "password": "$2y$12$LLLlz5\/uK6Lt1ju1RdEuCOv9STvuF7t0O.L.TiK\/\/Rek4G\/GGsVuy",
+        "remember_token": null,
+        "created_at": "2025-11-17 08:24:56",
+        "updated_at": "2025-11-17 08:24:56"
+    },
+    {
+        "id": 5,
+        "name": "carlos moncho molla",
+        "email": "cmoncho@beewall.es",
+        "email_verified_at": null,
+        "password": "$2y$12$UAs.KsGK1njauJZrHX0DSOCDhTcfp4jnWLtc.bLDjYSzZLOiBv34O",
+        "remember_token": null,
+        "created_at": "2025-11-17 08:25:59",
+        "updated_at": "2025-11-17 08:25:59"
+    },
+    {
+        "id": 6,
+        "name": "carlos moncho molla",
+        "email": "cmoncho2@beewall.es",
+        "email_verified_at": null,
+        "password": "$2y$12$pnxVrbGOH\/qntfpmQog35uBxhNw61BGe35\/jGQRX\/xDMKFycqGdSq",
+        "remember_token": null,
+        "created_at": "2025-11-17 08:30:02",
+        "updated_at": "2025-11-17 08:30:02"
+    },
+    {
+        "id": 7,
+        "name": "Cliente Prueba",
+        "email": "cliente@prueba.com",
+        "email_verified_at": null,
+        "password": "$2y$12$\/n5iBUT2FmuzRVaRg9YRv.bWT5\/waX6zF4w8EqRJ9im1ZPoVWjZnW",
+        "remember_token": null,
+        "created_at": "2025-11-17 08:32:13",
+        "updated_at": "2025-11-17 08:32:13"
+    },
+    {
+        "id": 8,
+        "name": "Joan Sanchez Gonzalez",
+        "email": "jsanchez@beewall.es",
+        "email_verified_at": null,
+        "password": "$2y$12$h8hifuDVl5xDHFBXnTfMtOOny5C7WevJ52padiAw6ax636KZgJc.W",
+        "remember_token": null,
+        "created_at": "2025-11-17 08:35:14",
+        "updated_at": "2025-11-17 08:35:14"
+    }
+]

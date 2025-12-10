@@ -1,0 +1,226 @@
+[
+    {
+        "id": 1,
+        "name": "view products",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 2,
+        "name": "create products",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 3,
+        "name": "edit products",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 4,
+        "name": "delete products",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 5,
+        "name": "view orders",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 6,
+        "name": "create orders",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 7,
+        "name": "edit orders",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 8,
+        "name": "delete orders",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 9,
+        "name": "update order status",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 10,
+        "name": "view customers",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 11,
+        "name": "create customers",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 12,
+        "name": "edit customers",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 13,
+        "name": "delete customers",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 14,
+        "name": "view categories",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 15,
+        "name": "create categories",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 16,
+        "name": "edit categories",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 17,
+        "name": "delete categories",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 18,
+        "name": "view attributes",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 19,
+        "name": "create attributes",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 20,
+        "name": "edit attributes",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 21,
+        "name": "delete attributes",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 22,
+        "name": "view dependencies",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 23,
+        "name": "create dependencies",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 24,
+        "name": "edit dependencies",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 25,
+        "name": "delete dependencies",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 26,
+        "name": "view price rules",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 27,
+        "name": "create price rules",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 28,
+        "name": "edit price rules",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 29,
+        "name": "delete price rules",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 30,
+        "name": "view dashboard",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 31,
+        "name": "export orders",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    },
+    {
+        "id": 32,
+        "name": "export customers",
+        "guard_name": "web",
+        "created_at": "2025-11-17 07:31:26",
+        "updated_at": "2025-11-17 07:31:26"
+    }
+]
