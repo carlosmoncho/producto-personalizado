@@ -13,8 +13,8 @@ use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\Api\PerformanceController;
 
 // ============ HEALTH CHECK ENDPOINTS ============
-// Sin rate limiting para permitir monitoreo continuo
-Route::prefix('health')->name('health.')->group(function () {
+// Con rate limiting alto para permitir monitoreo pero proteger contra abuso
+Route::prefix('health')->middleware('throttle:health-check')->name('health.')->group(function () {
     Route::get('/', [HealthCheckController::class, 'index'])->name('index');
     Route::get('/detailed', [HealthCheckController::class, 'detailed'])->name('detailed');
     Route::get('/metrics', [HealthCheckController::class, 'metrics'])->name('metrics');

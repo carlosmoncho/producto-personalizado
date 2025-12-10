@@ -5,6 +5,8 @@ namespace App\Services\Order;
 use App\Models\Order;
 use App\Models\Customer;
 use App\Models\Product;
+use App\Jobs\SendOrderConfirmationEmail;
+use App\Jobs\NotifyAdminNewOrder;
 use Illuminate\Http\Request;
 
 /**
@@ -145,6 +147,10 @@ class OrderService
                 $customer->update(['last_order_at' => now()]);
             }
         }
+
+        // Dispatch jobs en segundo plano (no bloquean la respuesta)
+        SendOrderConfirmationEmail::dispatch($order);
+        NotifyAdminNewOrder::dispatch($order);
 
         return $order;
     }

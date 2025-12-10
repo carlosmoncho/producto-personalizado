@@ -123,5 +123,11 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perHour(300)->by($request->ip()),
             ];
         });
+
+        // Health Check - Alto límite para monitoreo pero con protección anti-abuso
+        // 1000 req/min para permitir monitoreo intensivo pero evitar DoS
+        RateLimiter::for('health-check', function (Request $request) {
+            return Limit::perMinute(1000)->by($request->ip());
+        });
     }
 }
