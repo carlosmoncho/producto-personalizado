@@ -58,14 +58,40 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // Storage files endpoint (for CORS-enabled access to 3D models and images)
-Route::get('/storage/{path}', function ($path) {
+// Sirve automáticamente WebP si existe y el navegador lo soporta
+Route::get('/storage/{path}', function ($path, Request $request) {
     $filePath = storage_path('app/public/' . $path);
+    $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+    // Para imágenes PNG/JPG, intentar servir WebP si existe y es soportado
+    if (in_array($extension, ['png', 'jpg', 'jpeg'])) {
+        $acceptHeader = $request->header('Accept', '');
+        $supportsWebp = str_contains($acceptHeader, 'image/webp');
+
+        if ($supportsWebp) {
+            $webpPath = preg_replace('/\.(png|jpg|jpeg)$/i', '.webp', $path);
+            $webpFilePath = storage_path('app/public/' . $webpPath);
+
+            if (file_exists($webpFilePath)) {
+                return response()->file($webpFilePath, [
+                    'Content-Type' => 'image/webp',
+                    'Cache-Control' => 'public, max-age=31536000, immutable',
+                ]);
+            }
+        }
+    }
 
     if (!file_exists($filePath)) {
         abort(404);
     }
 
-    return response()->file($filePath);
+    // Cache largo para assets estáticos
+    $cacheableExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'glb', 'gltf'];
+    $headers = in_array($extension, $cacheableExtensions)
+        ? ['Cache-Control' => 'public, max-age=31536000, immutable']
+        : [];
+
+    return response()->file($filePath, $headers);
 })->where('path', '.*');
 
 // Rutas públicas (para el frontend) con rate limiting
