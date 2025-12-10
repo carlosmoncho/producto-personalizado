@@ -22,10 +22,9 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        // Producción
-        'https://tudominio.com',
-        'https://www.tudominio.com',
+    'allowed_origins' => array_filter([
+        // Producción (desde variable de entorno)
+        env('FRONTEND_URL'),
 
         // Desarrollo local
         'http://localhost:3000',       // React/Vue dev server
@@ -34,9 +33,14 @@ return [
         'http://127.0.0.1:3000',
         'http://127.0.0.1:5173',
         'http://127.0.0.1:8080',
-    ],
+    ]),
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        // Permitir cualquier subdominio de Vercel para preview deployments
+        '#^https://.*\.vercel\.app$#',
+        // Permitir cualquier subdominio de Render
+        '#^https://.*\.onrender\.com$#',
+    ],
 
     'allowed_headers' => ['*'],
 

@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -21,12 +22,17 @@ return Application::configure(basePath: dirname(__DIR__))
         }
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Confiar en todos los proxies (necesario para Render, Vercel, etc.)
+        // Esto permite que Laravel detecte correctamente HTTPS detrás del proxy
+        $middleware->trustProxies(at: '*');
+
         $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);
         $middleware->append(\App\Http\Middleware\CorsMiddleware::class);
 
-        // Excluir rutas de autenticación API de la verificación CSRF
+        // Excluir todas las rutas API de la verificación CSRF
+        // Las rutas API usan tokens de autenticación, no sesiones
         $middleware->validateCsrfTokens(except: [
-            'api/auth/*',
+            'api/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
