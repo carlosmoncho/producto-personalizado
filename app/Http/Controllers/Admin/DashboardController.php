@@ -10,9 +10,43 @@ use App\Models\OrderItem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
+    /**
+     * Get database-specific year extraction SQL
+     */
+    private function yearSql(string $column): string
+    {
+        $driver = Schema::getConnection()->getDriverName();
+        return $driver === 'pgsql'
+            ? "EXTRACT(YEAR FROM {$column})"
+            : "YEAR({$column})";
+    }
+
+    /**
+     * Get database-specific month extraction SQL
+     */
+    private function monthSql(string $column): string
+    {
+        $driver = Schema::getConnection()->getDriverName();
+        return $driver === 'pgsql'
+            ? "EXTRACT(MONTH FROM {$column})"
+            : "MONTH({$column})";
+    }
+
+    /**
+     * Get database-specific date extraction SQL
+     */
+    private function dateSql(string $column): string
+    {
+        $driver = Schema::getConnection()->getDriverName();
+        return $driver === 'pgsql'
+            ? "{$column}::date"
+            : "DATE({$column})";
+    }
+
     public function index()
     {
         // Estadísticas generales
@@ -42,19 +76,22 @@ class DashboardController extends Controller
             ->get();
 
         // Ventas por mes (últimos 12 meses)
+        $yearSql = $this->yearSql('created_at');
+        $monthSql = $this->monthSql('created_at');
+
         $salesByMonth = Order::select(
-                DB::raw('YEAR(created_at) as year'),
-                DB::raw('MONTH(created_at) as month'),
+                DB::raw("{$yearSql} as year"),
+                DB::raw("{$monthSql} as month"),
                 DB::raw('SUM(total_amount) as total')
             )
             ->where('created_at', '>=', Carbon::now()->subMonths(12))
-            ->groupBy('year', 'month')
-            ->orderBy('year', 'desc')
-            ->orderBy('month', 'desc')
+            ->groupBy(DB::raw($yearSql), DB::raw($monthSql))
+            ->orderBy(DB::raw($yearSql), 'desc')
+            ->orderBy(DB::raw($monthSql), 'desc')
             ->get()
             ->map(function ($item) {
                 return [
-                    'month' => Carbon::create($item->year, $item->month)->format('M Y'),
+                    'month' => Carbon::create((int)$item->year, (int)$item->month)->format('M Y'),
                     'total' => $item->total
                 ];
             });
@@ -121,36 +158,40 @@ class DashboardController extends Controller
             
             // Definir fechas según el período
             $endDate = Carbon::now();
+            $yearSql = $this->yearSql('created_at');
+            $monthSql = $this->monthSql('created_at');
+            $dateSql = $this->dateSql('created_at');
+
             switch ($period) {
                 case '7d':
                     $startDate = Carbon::now()->subDays(7);
                     $format = 'M d';
-                    $groupByClause = 'DATE(created_at)';
-                    $orderByClause = 'DATE(created_at)';
+                    $groupByClause = $dateSql;
+                    $orderByClause = $dateSql;
                     break;
                 case '30d':
                     $startDate = Carbon::now()->subDays(30);
                     $format = 'M d';
-                    $groupByClause = 'DATE(created_at)';
-                    $orderByClause = 'DATE(created_at)';
+                    $groupByClause = $dateSql;
+                    $orderByClause = $dateSql;
                     break;
                 case '6m':
                     $startDate = Carbon::now()->subMonths(6);
                     $format = 'M Y';
-                    $groupByClause = 'YEAR(created_at), MONTH(created_at)';
-                    $orderByClause = 'YEAR(created_at), MONTH(created_at)';
+                    $groupByClause = "{$yearSql}, {$monthSql}";
+                    $orderByClause = "{$yearSql}, {$monthSql}";
                     break;
                 case '1y':
                     $startDate = Carbon::now()->subYear();
                     $format = 'M Y';
-                    $groupByClause = 'YEAR(created_at), MONTH(created_at)';
-                    $orderByClause = 'YEAR(created_at), MONTH(created_at)';
+                    $groupByClause = "{$yearSql}, {$monthSql}";
+                    $orderByClause = "{$yearSql}, {$monthSql}";
                     break;
                 default:
                     $startDate = Carbon::now()->subDays(30);
                     $format = 'M d';
-                    $groupByClause = 'DATE(created_at)';
-                    $orderByClause = 'DATE(created_at)';
+                    $groupByClause = $dateSql;
+                    $orderByClause = $dateSql;
             }
             
             \Log::info('Date range', [
@@ -168,27 +209,27 @@ class DashboardController extends Controller
                 });
             }
             
-            // Obtener datos de ventas agrupados - CORREGIDO para MySQL strict mode
+            // Obtener datos de ventas agrupados - Compatible con MySQL y PostgreSQL
             if ($period === '6m' || $period === '1y') {
                 $salesData = $query->select(
-                        DB::raw('YEAR(created_at) as year'),
-                        DB::raw('MONTH(created_at) as month'),
+                        DB::raw("{$yearSql} as year"),
+                        DB::raw("{$monthSql} as month"),
                         DB::raw('SUM(total_amount) as total'),
                         DB::raw('COUNT(*) as orders_count'),
-                        DB::raw('MIN(DATE(created_at)) as date')
+                        DB::raw("MIN({$dateSql}) as date")
                     )
-                    ->groupBy('year', 'month')
-                    ->orderBy('year', 'asc')
-                    ->orderBy('month', 'asc')
+                    ->groupBy(DB::raw($yearSql), DB::raw($monthSql))
+                    ->orderBy(DB::raw($yearSql), 'asc')
+                    ->orderBy(DB::raw($monthSql), 'asc')
                     ->get();
             } else {
                 $salesData = $query->select(
-                        DB::raw('DATE(created_at) as date'),
+                        DB::raw("{$dateSql} as date"),
                         DB::raw('SUM(total_amount) as total'),
                         DB::raw('COUNT(*) as orders_count')
                     )
-                    ->groupBy(DB::raw('DATE(created_at)'))
-                    ->orderBy(DB::raw('DATE(created_at)'), 'asc')
+                    ->groupBy(DB::raw($dateSql))
+                    ->orderBy(DB::raw($dateSql), 'asc')
                     ->get();
             }
 
@@ -222,7 +263,8 @@ class DashboardController extends Controller
             
             foreach ($salesData as $item) {
                 if ($period === '6m' || $period === '1y') {
-                    $date = Carbon::create($item->year, $item->month, 1);
+                    // EXTRACT returns numeric in PostgreSQL, ensure integers
+                    $date = Carbon::create((int)$item->year, (int)$item->month, 1);
                     $labels[] = $date->format($format);
                 } else {
                     $labels[] = Carbon::parse($item->date)->format($format);
