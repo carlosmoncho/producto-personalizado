@@ -4,6 +4,7 @@ namespace App\Http\Resources\V1;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Product API Resource
@@ -12,6 +13,30 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class ProductResource extends JsonResource
 {
+    /**
+     * Get the storage URL for a file path
+     * Returns full S3 URL in production, /api/storage/ proxy in local
+     */
+    protected function getStorageUrl(?string $path): ?string
+    {
+        if (!$path) return null;
+
+        // Si ya es una URL absoluta, devolverla tal cual
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        $disk = config('filesystems.default', 'public');
+
+        // En S3, devolver URL completa de S3
+        if ($disk === 's3') {
+            return Storage::disk('s3')->url($path);
+        }
+
+        // En local, usar el proxy /api/storage/
+        return '/api/storage/' . $path;
+    }
+
     /**
      * Transform the resource into an array.
      *
@@ -26,20 +51,16 @@ class ProductResource extends JsonResource
             'sku' => $this->sku,
             'description' => $this->description,
 
-            // Imágenes (using API endpoint for CORS support)
-            'images' => collect($this->images ?? [])->map(fn($img) => '/api/storage/' . $img)->toArray(),
-            'main_image' => isset($this->images[0]) ? '/api/storage/' . $this->images[0] : null,
+            // Imágenes
+            'images' => collect($this->images ?? [])->map(fn($img) => $this->getStorageUrl($img))->toArray(),
+            'main_image' => isset($this->images[0]) ? $this->getStorageUrl($this->images[0]) : null,
 
-            // Modelo 3D (using API endpoint for CORS support)
+            // Modelo 3D
             'model_3d' => $this->when($this->model_3d_file, function() {
                 $file = $this->model_3d_file;
-                // Si empieza con / o http, es una URL externa/absoluta
-                $url = (str_starts_with($file, '/') || str_starts_with($file, 'http'))
-                    ? $file
-                    : '/api/storage/' . $file;
                 return [
                     'file' => $file,
-                    'url' => $url,
+                    'url' => $this->getStorageUrl($file),
                 ];
             }),
 
@@ -79,7 +100,7 @@ class ProductResource extends JsonResource
                     $productAttr = $this->productAttributes->firstWhere('id', $attrId);
                     $images = $productAttr?->pivot->images ?? [];
                     if (empty($images)) return [];
-                    return collect($images)->map(fn($img) => '/api/storage/' . $img)->toArray();
+                    return collect($images)->map(fn($img) => $this->getStorageUrl($img))->toArray();
                 };
 
                 return [

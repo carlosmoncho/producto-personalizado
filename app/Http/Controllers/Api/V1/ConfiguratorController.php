@@ -9,6 +9,7 @@ use App\Models\AttributeDependency;
 use App\Models\ProductConfiguration;
 use App\Models\PriceRule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 /**
@@ -21,6 +22,30 @@ use Illuminate\Support\Facades\Validator;
  */
 class ConfiguratorController extends Controller
 {
+    /**
+     * Get the storage URL for a file path
+     * Returns full S3 URL in production, /api/storage/ proxy in local
+     */
+    protected function getStorageUrl(?string $path): ?string
+    {
+        if (!$path) return null;
+
+        // Si ya es una URL absoluta, devolverla tal cual
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        $disk = config('filesystems.default', 'public');
+
+        // En S3, devolver URL completa de S3
+        if ($disk === 's3') {
+            return Storage::disk('s3')->url($path);
+        }
+
+        // En local, usar el proxy /api/storage/
+        return url('/api/storage/' . $path);
+    }
+
     /**
      * Get configurator initial data
      *
@@ -140,7 +165,7 @@ class ConfiguratorController extends Controller
                     'name' => $product->name,
                     'slug' => $product->slug,
                     'description' => $product->description,
-                    'model_3d_url' => $product->model_3d_file ? url('/api/storage/' . $product->model_3d_file) : null,
+                    'model_3d_url' => $product->model_3d_file ? $this->getStorageUrl($product->model_3d_file) : null,
                     'configurator_base_price' => (float) $product->configurator_base_price,
                     'max_print_colors' => $product->max_print_colors,
                     'allow_file_upload' => (bool) $product->allow_file_upload,
@@ -156,7 +181,7 @@ class ConfiguratorController extends Controller
                         $imageUrls = [];
                         if (!empty($images) && is_array($images)) {
                             foreach ($images as $img) {
-                                $imageUrls[] = '/api/storage/' . $img;
+                                $imageUrls[] = $this->getStorageUrl($img);
                             }
                         }
 
