@@ -70,10 +70,27 @@ class FileUploadService
                 }
 
                 // Guardar imagen
-                $path = $image->store($directory, $this->getDisk());
+                $disk = $this->getDisk();
+                \Log::info('Intentando guardar imagen', [
+                    'disk' => $disk,
+                    'directory' => $directory,
+                    'original_name' => $image->getClientOriginalName(),
+                    'size' => $image->getSize()
+                ]);
+
+                try {
+                    $path = $image->store($directory, $disk);
+                } catch (\Exception $storeException) {
+                    \Log::error('Error específico al guardar en storage', [
+                        'disk' => $disk,
+                        'error' => $storeException->getMessage(),
+                        'trace' => $storeException->getTraceAsString()
+                    ]);
+                    throw new \Exception('Error al guardar en ' . $disk . ': ' . $storeException->getMessage());
+                }
 
                 if (!$path) {
-                    throw new \Exception('Error al guardar la imagen');
+                    throw new \Exception('Error al guardar la imagen - path vacío');
                 }
 
                 // Verificar que se guardó

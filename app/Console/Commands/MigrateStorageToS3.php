@@ -79,8 +79,8 @@ class MigrateStorageToS3 extends Command
                         continue;
                     }
 
-                    // Subir a S3
-                    $uploaded = Storage::disk('s3')->put($file, $contents, 'public');
+                    // Subir a S3 (sin ACL, usamos bucket policy para acceso público)
+                    $uploaded = Storage::disk('s3')->put($file, $contents);
 
                     if ($uploaded) {
                         $migratedFiles++;
