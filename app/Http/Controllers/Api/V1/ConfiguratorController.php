@@ -35,10 +35,8 @@ class ConfiguratorController extends Controller
             return $path;
         }
 
-        $disk = config('filesystems.default', 'public');
-
-        // En S3, devolver URL completa de S3
-        if ($disk === 's3') {
+        // En producción, usar S3 directamente
+        if (app()->environment('production') || config('filesystems.default') === 's3') {
             return Storage::disk('s3')->url($path);
         }
 
