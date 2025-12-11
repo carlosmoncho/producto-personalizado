@@ -422,8 +422,8 @@ class ProductController extends Controller
                     $product->name
                 );
 
-                // Validar tamaño mínimo (al menos 5KB para un modelo válido)
-                if ($request->file('model_3d')->getSize() < 5000) {
+                // Validar tamaño mínimo (al menos 1KB para un modelo válido)
+                if ($request->file('model_3d')->getSize() < 1000) {
                     $fileService->deleteFile($productData['model_3d_file']);
                     throw new \Exception('El archivo 3D es demasiado pequeño. Asegúrese de que es un modelo válido.');
                 }
