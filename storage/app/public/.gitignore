@@ -1,2 +1,6 @@
 *
+!products/
+!categories/
+!subcategories/
+!3d-models/
 !.gitignore

@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+echo "Creating storage symlink..."
+php artisan storage:link || true
+
 echo "Clearing all caches..."
 php artisan config:clear
 php artisan route:clear
