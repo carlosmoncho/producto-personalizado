@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\ProductAttributeController;
 use App\Http\Controllers\Admin\AttributeDependencyController;
 use App\Http\Controllers\Admin\PriceRuleController;
 use App\Http\Controllers\ProductConfiguratorController;
+use App\Http\Controllers\Admin\DataImportController;
 
 Route::get('/', function () {
     return Auth::check()
@@ -149,6 +150,11 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     // Reglas de precio (compatibilidad temporal)
     Route::resource('price-rules', PriceRuleController::class);
     Route::get('api/price-rules/by-type', [PriceRuleController::class, 'getByType'])->name('api.price-rules.by-type');
+
+    // Importar/Exportar datos
+    Route::get('data-import', [DataImportController::class, 'index'])->name('data-import.index');
+    Route::get('data-import/export', [DataImportController::class, 'export'])->name('data-import.export');
+    Route::post('data-import/import', [DataImportController::class, 'import'])->name('data-import.import');
 });
 
 require __DIR__.'/auth.php';

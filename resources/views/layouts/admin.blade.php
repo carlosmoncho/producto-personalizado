@@ -96,12 +96,21 @@
                         @endif
                         
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}" 
+                            <a class="nav-link {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}"
                                href="{{ route('admin.customers.index') }}">
                                 <i class="bi bi-people"></i> Clientes
                             </a>
                         </li>
-                        
+
+                        <hr>
+
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.data-import.*') ? 'active' : '' }}"
+                               href="{{ route('admin.data-import.index') }}">
+                                <i class="bi bi-database"></i> Importar/Exportar
+                            </a>
+                        </li>
+
                         <hr>
                         
                         <li class="nav-item">
