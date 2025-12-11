@@ -215,11 +215,11 @@ class ProductController extends Controller
             // Limpiar archivos subidos si hay error
             if (isset($imagePaths)) {
                 foreach ($imagePaths as $path) {
-                    Storage::disk('public')->delete($path);
+                    Storage::disk(config('filesystems.default', 'public'))->delete($path);
                 }
             }
             if (isset($productData['model_3d_file'])) {
-                Storage::disk('public')->delete($productData['model_3d_file']);
+                Storage::disk(config('filesystems.default', 'public'))->delete($productData['model_3d_file']);
             }
 
             return redirect()->back()
@@ -533,7 +533,7 @@ class ProductController extends Controller
         // Buscar y eliminar la imagen
         $key = array_search($imageToDelete, $images);
         if ($key !== false) {
-            Storage::disk('public')->delete($imageToDelete);
+            Storage::disk(config('filesystems.default', 'public'))->delete($imageToDelete);
             unset($images[$key]);
             $product->images = array_values($images); // Reindexar el array
             $product->save();
@@ -735,7 +735,7 @@ class ProductController extends Controller
             }
 
             // Eliminar archivo físico
-            \Storage::disk('public')->delete($images[$imageIndex]);
+            \Storage::disk(config('filesystems.default', 'public'))->delete($images[$imageIndex]);
 
             // Eliminar del array
             unset($images[$imageIndex]);

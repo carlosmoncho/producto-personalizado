@@ -17,9 +17,13 @@ use Illuminate\Support\Str;
 class FileUploadService
 {
     /**
-     * Disco de almacenamiento por defecto
+     * Obtener el disco de almacenamiento configurado
+     * En producción usa S3, en desarrollo usa local (public)
      */
-    private const DEFAULT_DISK = 'public';
+    private function getDisk(): string
+    {
+        return config('filesystems.default', 'public');
+    }
 
     /**
      * Extensiones permitidas para imágenes
@@ -66,14 +70,14 @@ class FileUploadService
                 }
 
                 // Guardar imagen
-                $path = $image->store($directory, self::DEFAULT_DISK);
+                $path = $image->store($directory, $this->getDisk());
 
                 if (!$path) {
                     throw new \Exception('Error al guardar la imagen');
                 }
 
                 // Verificar que se guardó
-                if (!Storage::disk(self::DEFAULT_DISK)->exists($path)) {
+                if (!Storage::disk($this->getDisk())->exists($path)) {
                     throw new \Exception('Error: el archivo no existe después de guardar');
                 }
 
@@ -143,14 +147,14 @@ class FileUploadService
             $fileName = Str::random(40) . '.' . $extension;
 
             // Guardar archivo
-            $path = $file->storeAs($directory, $fileName, self::DEFAULT_DISK);
+            $path = $file->storeAs($directory, $fileName, $this->getDisk());
 
             if (!$path) {
                 throw new \Exception('Error al guardar el archivo 3D');
             }
 
             // Verificar que se guardó correctamente
-            if (!Storage::disk(self::DEFAULT_DISK)->exists($path)) {
+            if (!Storage::disk($this->getDisk())->exists($path)) {
                 throw new \Exception('Error al verificar el archivo 3D guardado');
             }
 
@@ -180,11 +184,12 @@ class FileUploadService
      * Eliminar archivo único de forma segura
      *
      * @param string|null $filePath Path del archivo a eliminar
-     * @param string $disk Disco de almacenamiento (default: 'public')
+     * @param string|null $disk Disco de almacenamiento (null = usar configurado)
      * @return bool True si se eliminó, false si no existía
      */
-    public function deleteFile(?string $filePath, string $disk = self::DEFAULT_DISK): bool
+    public function deleteFile(?string $filePath, ?string $disk = null): bool
     {
+        $disk = $disk ?? $this->getDisk();
         if (!$filePath) {
             return false;
         }
@@ -225,11 +230,12 @@ class FileUploadService
      * Eliminar múltiples archivos
      *
      * @param array $filePaths Array de paths
-     * @param string $disk Disco de almacenamiento
+     * @param string|null $disk Disco de almacenamiento (null = usar configurado)
      * @return int Cantidad de archivos eliminados
      */
-    public function deleteFiles(array $filePaths, string $disk = self::DEFAULT_DISK): int
+    public function deleteFiles(array $filePaths, ?string $disk = null): int
     {
+        $disk = $disk ?? $this->getDisk();
         $deleted = 0;
 
         foreach ($filePaths as $filePath) {
@@ -259,11 +265,12 @@ class FileUploadService
      * Obtener información de un archivo
      *
      * @param string $filePath
-     * @param string $disk
+     * @param string|null $disk
      * @return array|null Array con info del archivo o null si no existe
      */
-    public function getFileInfo(string $filePath, string $disk = self::DEFAULT_DISK): ?array
+    public function getFileInfo(string $filePath, ?string $disk = null): ?array
     {
+        $disk = $disk ?? $this->getDisk();
         try {
             if (!Storage::disk($disk)->exists($filePath)) {
                 return null;
@@ -285,6 +292,42 @@ class FileUploadService
 
             return null;
         }
+    }
+
+    /**
+     * Obtener URL pública de un archivo
+     *
+     * @param string|null $filePath Path del archivo
+     * @return string|null URL pública o null si no existe
+     */
+    public function getPublicUrl(?string $filePath): ?string
+    {
+        if (!$filePath) {
+            return null;
+        }
+
+        $disk = $this->getDisk();
+
+        try {
+            return Storage::disk($disk)->url($filePath);
+        } catch (\Exception $e) {
+            \Log::error('Error al obtener URL de archivo', [
+                'path' => $filePath,
+                'disk' => $disk,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Obtener el disco de almacenamiento actual
+     *
+     * @return string
+     */
+    public function getCurrentDisk(): string
+    {
+        return $this->getDisk();
     }
 
     /**

@@ -210,7 +210,7 @@ class Product extends Model
         }
 
         return array_map(function($image) {
-            return Storage::disk('public')->url($image);
+            return Storage::disk(config('filesystems.default', 'public'))->url($image);
         }, $this->images);
     }
 
@@ -228,7 +228,7 @@ class Product extends Model
 
         // Usar Storage URL directamente ya que está en disco público
         // Esto genera: /storage/3d-models/archivo.glb
-        return \Illuminate\Support\Facades\Storage::disk('public')->url($this->model_3d_file);
+        return \Illuminate\Support\Facades\Storage::disk(config('filesystems.default', 'public'))->url($this->model_3d_file);
     }
 
     /**

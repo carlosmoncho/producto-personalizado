@@ -19,7 +19,7 @@ class ConvertImagesToWebp extends Command
 
         $this->info('Buscando imágenes grandes en storage/app/public/products...');
 
-        $files = Storage::disk('public')->files('products');
+        $files = Storage::disk(config('filesystems.default', 'public'))->files('products');
         $converted = 0;
         $savedBytes = 0;
 
@@ -31,7 +31,7 @@ class ConvertImagesToWebp extends Command
                 continue;
             }
 
-            $fullPath = Storage::disk('public')->path($file);
+            $fullPath = Storage::disk(config('filesystems.default', 'public'))->path($file);
             $fileSize = filesize($fullPath);
 
             // Solo convertir imágenes mayores a 100KB
@@ -41,10 +41,10 @@ class ConvertImagesToWebp extends Command
 
             $fileSizeKb = round($fileSize / 1024);
             $webpPath = preg_replace('/\.(png|jpg|jpeg)$/i', '.webp', $file);
-            $webpFullPath = Storage::disk('public')->path($webpPath);
+            $webpFullPath = Storage::disk(config('filesystems.default', 'public'))->path($webpPath);
 
             // Si ya existe el WebP, saltar
-            if (Storage::disk('public')->exists($webpPath)) {
+            if (Storage::disk(config('filesystems.default', 'public'))->exists($webpPath)) {
                 $this->line("  [SKIP] {$file} - WebP ya existe");
                 continue;
             }

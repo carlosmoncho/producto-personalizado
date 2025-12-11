@@ -40,16 +40,16 @@ class Subcategory extends Model
 
     public function getImageUrl()
     {
-        if ($this->image && Storage::disk('public')->exists($this->image)) {
-            return Storage::disk('public')->url($this->image);
+        if ($this->image && Storage::disk(config('filesystems.default', 'public'))->exists($this->image)) {
+            return Storage::disk(config('filesystems.default', 'public'))->url($this->image);
         }
         return null;
     }
 
     public function deleteImage()
     {
-        if ($this->image && Storage::disk('public')->exists($this->image)) {
-            Storage::disk('public')->delete($this->image);
+        if ($this->image && Storage::disk(config('filesystems.default', 'public'))->exists($this->image)) {
+            Storage::disk(config('filesystems.default', 'public'))->delete($this->image);
         }
     }
 }

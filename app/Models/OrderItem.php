@@ -56,13 +56,13 @@ class OrderItem extends Model
         }
 
         // Si es una ruta de archivo, devolver la URL del storage
-        return Storage::disk('public')->url($this->design_image);
+        return Storage::disk(config('filesystems.default', 'public'))->url($this->design_image);
     }
 
     public function deleteDesignImage()
     {
-        if ($this->design_image && Storage::disk('public')->exists($this->design_image)) {
-            Storage::disk('public')->delete($this->design_image);
+        if ($this->design_image && Storage::disk(config('filesystems.default', 'public'))->exists($this->design_image)) {
+            Storage::disk(config('filesystems.default', 'public'))->delete($this->design_image);
         }
     }
 
