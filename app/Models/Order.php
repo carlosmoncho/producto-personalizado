@@ -9,6 +9,37 @@ class Order extends Model
 {
     use HasFactory;
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Actualizar estadísticas del cliente cuando se crea un pedido
+        static::created(function ($order) {
+            $order->updateCustomerStats();
+        });
+
+        // Actualizar estadísticas del cliente cuando se actualiza un pedido
+        static::updated(function ($order) {
+            $order->updateCustomerStats();
+        });
+
+        // Actualizar estadísticas del cliente cuando se elimina un pedido
+        static::deleted(function ($order) {
+            $order->updateCustomerStats();
+        });
+    }
+
+    /**
+     * Actualizar estadísticas del cliente asociado
+     */
+    protected function updateCustomerStats()
+    {
+        $customer = Customer::where('email', $this->customer_email)->first();
+        if ($customer) {
+            $customer->updateOrderStats();
+        }
+    }
+
     protected $fillable = [
         'order_number',
         'customer_id',

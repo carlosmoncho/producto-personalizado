@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Customer;
-use App\Models\Order;
 
 class RecalculateCustomerStats extends Command
 {
@@ -33,21 +32,8 @@ class RecalculateCustomerStats extends Command
         $bar = $this->output->createProgressBar($customers->count());
 
         foreach ($customers as $customer) {
-            // Obtener pedidos del cliente
-            $orders = Order::where('customer_id', $customer->id)->get();
-
-            // Calcular estadísticas
-            $totalOrders = $orders->count();
-            $totalAmount = $orders->sum('total_amount');
-            $lastOrder = $orders->sortByDesc('created_at')->first();
-
-            // Actualizar customer
-            $customer->update([
-                'total_orders_count' => $totalOrders,
-                'total_orders_amount' => $totalAmount,
-                'last_order_at' => $lastOrder ? $lastOrder->created_at : null,
-            ]);
-
+            // Usar el método del modelo que busca por email
+            $customer->updateOrderStats();
             $bar->advance();
         }
 

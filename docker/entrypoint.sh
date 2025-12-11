@@ -25,6 +25,9 @@ if [ -d "database/seeders/data" ] && [ "$(ls -A database/seeders/data 2>/dev/nul
     fi
 fi
 
+echo "Recalculating customer stats..."
+php artisan customers:recalculate-stats || true
+
 echo "Caching config for production..."
 php artisan config:cache
 php artisan route:cache
