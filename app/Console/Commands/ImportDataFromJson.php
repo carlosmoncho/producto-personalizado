@@ -55,24 +55,35 @@ class ImportDataFromJson extends Command
 
         $this->info("Importing database from JSON files in {$path}...\n");
 
-        // Disable foreign key checks
         $driver = Schema::getConnection()->getDriverName();
-        if ($driver === 'pgsql') {
-            DB::statement('SET session_replication_role = replica;');
-        } else {
-            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        }
 
         if ($fresh) {
             $this->warn("Clearing tables first...\n");
-            foreach (array_reverse($this->tablesToImport) as $table) {
-                try {
-                    if (Schema::hasTable($table)) {
-                        DB::table($table)->truncate();
-                        $this->line("  Truncated {$table}");
+
+            if ($driver === 'pgsql') {
+                // PostgreSQL: delete in reverse order to respect FK constraints
+                foreach (array_reverse($this->tablesToImport) as $table) {
+                    try {
+                        if (Schema::hasTable($table)) {
+                            DB::table($table)->delete();
+                            $this->line("  Deleted {$table}");
+                        }
+                    } catch (\Exception $e) {
+                        $this->warn("  Could not delete {$table}: " . $e->getMessage());
                     }
-                } catch (\Exception $e) {
-                    $this->warn("  Could not truncate {$table}: " . $e->getMessage());
+                }
+            } else {
+                // MySQL: disable FK checks and truncate
+                DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+                foreach (array_reverse($this->tablesToImport) as $table) {
+                    try {
+                        if (Schema::hasTable($table)) {
+                            DB::table($table)->truncate();
+                            $this->line("  Truncated {$table}");
+                        }
+                    } catch (\Exception $e) {
+                        $this->warn("  Could not truncate {$table}: " . $e->getMessage());
+                    }
                 }
             }
             $this->line("");
@@ -124,19 +135,19 @@ class ImportDataFromJson extends Command
             }
         }
 
-        // Re-enable foreign key checks
+        // Re-enable foreign key checks (MySQL) and reset sequences (PostgreSQL)
         if ($driver === 'pgsql') {
-            DB::statement('SET session_replication_role = DEFAULT;');
-
             // Reset sequences for PostgreSQL
             $this->info("\nResetting PostgreSQL sequences...");
             foreach ($this->tablesToImport as $table) {
                 try {
                     if (Schema::hasTable($table) && Schema::hasColumn($table, 'id')) {
                         $maxId = DB::table($table)->max('id') ?? 0;
-                        $sequence = "{$table}_id_seq";
-                        DB::statement("SELECT setval('{$sequence}', ?, true)", [$maxId]);
-                        $this->line("  Reset {$sequence} to {$maxId}");
+                        if ($maxId > 0) {
+                            $sequence = "{$table}_id_seq";
+                            DB::statement("SELECT setval('{$sequence}', ?, true)", [$maxId]);
+                            $this->line("  Reset {$sequence} to {$maxId}");
+                        }
                     }
                 } catch (\Exception $e) {
                     // Sequence might not exist, that's OK

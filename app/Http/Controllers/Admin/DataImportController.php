@@ -107,14 +107,35 @@ class DataImportController extends Controller
             $results = [];
             $driver = Schema::getConnection()->getDriverName();
 
-            // Disable foreign key checks
+            // For PostgreSQL: delete in reverse order to respect foreign keys
+            // For MySQL: disable foreign key checks
             if ($driver === 'pgsql') {
-                DB::statement('SET session_replication_role = replica;');
+                // Delete tables in reverse order (respecting FK constraints)
+                $reverseTables = array_reverse($this->tablesToImport);
+                foreach ($reverseTables as $table) {
+                    try {
+                        if (Schema::hasTable($table)) {
+                            DB::table($table)->delete();
+                        }
+                    } catch (\Exception $e) {
+                        // Some tables might not exist or have issues, continue
+                    }
+                }
             } else {
                 DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+                // Truncate tables
+                foreach ($this->tablesToImport as $table) {
+                    try {
+                        if (Schema::hasTable($table)) {
+                            DB::table($table)->truncate();
+                        }
+                    } catch (\Exception $e) {
+                        // Continue on error
+                    }
+                }
             }
 
-            // Process tables in order
+            // Process tables in order (respecting FK when inserting)
             foreach ($this->tablesToImport as $table) {
                 if (!isset($allData[$table]) || empty($allData[$table])) {
                     continue;
@@ -125,9 +146,6 @@ class DataImportController extends Controller
                         $results[$table] = ['status' => 'error', 'message' => 'Tabla no existe'];
                         continue;
                     }
-
-                    // Truncate table first
-                    DB::table($table)->truncate();
 
                     // Get existing columns
                     $columns = Schema::getColumnListing($table);
@@ -153,10 +171,8 @@ class DataImportController extends Controller
                 }
             }
 
-            // Re-enable foreign key checks and reset sequences
+            // Re-enable foreign key checks (MySQL) and reset sequences (PostgreSQL)
             if ($driver === 'pgsql') {
-                DB::statement('SET session_replication_role = DEFAULT;');
-
                 // Reset sequences for PostgreSQL
                 foreach ($this->tablesToImport as $table) {
                     try {
