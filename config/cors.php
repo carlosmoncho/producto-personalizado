@@ -23,7 +23,8 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => array_filter([
-        // Producción (desde variable de entorno)
+        // Producción
+        'https://personalizados-hostelking-front.vercel.app',
         env('FRONTEND_URL'),
 
         // Desarrollo local
