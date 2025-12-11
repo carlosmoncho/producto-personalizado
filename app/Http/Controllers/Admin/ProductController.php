@@ -687,11 +687,12 @@ class ProductController extends Controller
             $existingImages = $attributeValue->images ?? [];
 
             // Subir nuevas imágenes
+            $disk = config('filesystems.default', 'public');
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $file) {
-                    $path = $file->store('products/attributes/' . $product->id, 'public');
+                    $path = $file->store('products/attributes/' . $product->id, $disk);
                     $existingImages[] = $path;
-                    \Log::info('Imagen guardada', ['path' => $path]);
+                    \Log::info('Imagen guardada', ['path' => $path, 'disk' => $disk]);
                 }
             }
 
@@ -701,9 +702,14 @@ class ProductController extends Controller
 
             \Log::info('Attribute saved', ['saved' => $saved, 'new_images' => $attributeValue->images]);
 
+            // Convertir paths a URLs completas para el frontend
+            $imageUrls = array_map(function($path) use ($disk) {
+                return \Storage::disk($disk)->url($path);
+            }, $existingImages);
+
             return response()->json([
                 'success' => true,
-                'images' => $existingImages,
+                'images' => $imageUrls,
                 'message' => 'Imágenes guardadas correctamente'
             ]);
         } catch (\Exception $e) {
@@ -744,9 +750,15 @@ class ProductController extends Controller
             // Actualizar el registro
             $attributeValue->update(['images' => $images]);
 
+            // Convertir paths a URLs completas para el frontend
+            $disk = config('filesystems.default', 'public');
+            $imageUrls = array_map(function($path) use ($disk) {
+                return \Storage::disk($disk)->url($path);
+            }, $images);
+
             return response()->json([
                 'success' => true,
-                'images' => $images,
+                'images' => $imageUrls,
                 'message' => 'Imagen eliminada correctamente'
             ]);
         } catch (\Exception $e) {

@@ -387,9 +387,9 @@
                                                                          border: 1px solid #ddd; display: inline-block;"></span>
                                                         @endif
                                                         @if($attribute->image_path)
-                                                            <img src="{{ Storage::url($attribute->image_path) }}" 
-                                                                 alt="{{ $attribute->name }}" 
-                                                                 class="me-2" 
+                                                            <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($attribute->image_path) }}"
+                                                                 alt="{{ $attribute->name }}"
+                                                                 class="me-2"
                                                                  style="width: 24px; height: 24px; object-fit: cover; border-radius: 3px;">
                                                         @endif
                                                         <div>
@@ -769,11 +769,11 @@ function renderAttrImagesGallery(images, pivotId) {
     }
 
     let html = '<div class="row g-3">';
-    images.forEach((image, index) => {
+    images.forEach((imageUrl, index) => {
         html += `
             <div class="col-6 col-md-4">
                 <div class="position-relative border rounded overflow-hidden shadow-sm">
-                    <img src="/storage/${image}" alt="Imagen ${index + 1}"
+                    <img src="${imageUrl}" alt="Imagen ${index + 1}"
                          class="img-fluid" style="aspect-ratio: 1; object-fit: cover; width: 100%;">
                     <button type="button" class="btn btn-danger position-absolute top-0 end-0 m-1 delete-attr-img-btn"
                             data-pivot-id="${pivotId}" data-image-index="${index}"

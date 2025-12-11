@@ -143,9 +143,9 @@
                                                         @endif
                                                     </div>
                                                 @elseif($attribute->image_path)
-                                                    <img src="{{ Storage::url($attribute->image_path) }}" 
-                                                         alt="{{ $attribute->name }}" 
-                                                         class="img-thumbnail" 
+                                                    <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($attribute->image_path) }}"
+                                                         alt="{{ $attribute->name }}"
+                                                         class="img-thumbnail"
                                                          style="max-width: 50px;">
                                                 @else
                                                     <span class="text-muted">-</span>

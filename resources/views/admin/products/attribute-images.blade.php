@@ -53,7 +53,7 @@
                                                 @foreach($attributeValue->images as $index => $image)
                                                     <div class="col-4 image-item" data-index="{{ $index }}">
                                                         <div class="position-relative">
-                                                            <img src="{{ Storage::disk('public')->url($image) }}"
+                                                            <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($image) }}"
                                                                  alt="Imagen {{ $index + 1 }}"
                                                                  class="img-fluid rounded border"
                                                                  style="aspect-ratio: 1; object-fit: cover; width: 100%;">
@@ -211,11 +211,11 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         } else {
             let html = '<div class="row g-2">';
-            images.forEach((image, index) => {
+            images.forEach((imageUrl, index) => {
                 html += `
                     <div class="col-4 image-item" data-index="${index}">
                         <div class="position-relative">
-                            <img src="/storage/${image}"
+                            <img src="${imageUrl}"
                                  alt="Imagen ${index + 1}"
                                  class="img-fluid rounded border"
                                  style="aspect-ratio: 1; object-fit: cover; width: 100%;">
