@@ -110,12 +110,9 @@ class Product extends Model
                 'custom_price_modifier',
                 'custom_price_percentage',
                 'additional_production_days',
-                'sort_order',
-                'metadata',
-                'images'
+                'sort_order'
             ])
-            ->withTimestamps()
-            ->distinct();
+            ->withTimestamps();
     }
 
     public function productAttributes()
