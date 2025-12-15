@@ -690,7 +690,12 @@ class ProductController extends Controller
             $disk = config('filesystems.default', 'public');
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $file) {
-                    $path = $file->store('products/attributes/' . $product->id, $disk);
+                    // Usar storePublicly para S3, store normal para local
+                    if ($disk === 's3') {
+                        $path = $file->storePublicly('products/attributes/' . $product->id, $disk);
+                    } else {
+                        $path = $file->store('products/attributes/' . $product->id, $disk);
+                    }
                     $existingImages[] = $path;
                     \Log::info('Imagen guardada', ['path' => $path, 'disk' => $disk]);
                 }
