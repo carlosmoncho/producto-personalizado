@@ -59,9 +59,36 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // Storage files endpoint (for CORS-enabled access to 3D models and images)
 // Sirve automáticamente WebP si existe y el navegador lo soporta
+// Soporta tanto almacenamiento local como S3
 Route::get('/storage/{path}', function ($path, Request $request) {
-    $filePath = storage_path('app/public/' . $path);
+    $disk = config('filesystems.default', 'public');
     $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+    // Cache largo para assets estáticos
+    $cacheableExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'glb', 'gltf'];
+    $cacheHeaders = in_array($extension, $cacheableExtensions)
+        ? ['Cache-Control' => 'public, max-age=31536000, immutable']
+        : [];
+
+    // Si usamos S3, servir desde S3
+    if ($disk === 's3') {
+        $storage = \Illuminate\Support\Facades\Storage::disk('s3');
+
+        if (!$storage->exists($path)) {
+            abort(404);
+        }
+
+        // Obtener el contenido y mime type desde S3
+        $mimeType = $storage->mimeType($path) ?: 'application/octet-stream';
+        $content = $storage->get($path);
+
+        return response($content, 200, array_merge([
+            'Content-Type' => $mimeType,
+        ], $cacheHeaders));
+    }
+
+    // Almacenamiento local
+    $filePath = storage_path('app/public/' . $path);
 
     // Para imágenes PNG/JPG, intentar servir WebP si existe y es soportado
     if (in_array($extension, ['png', 'jpg', 'jpeg'])) {
@@ -73,10 +100,9 @@ Route::get('/storage/{path}', function ($path, Request $request) {
             $webpFilePath = storage_path('app/public/' . $webpPath);
 
             if (file_exists($webpFilePath)) {
-                return response()->file($webpFilePath, [
+                return response()->file($webpFilePath, array_merge([
                     'Content-Type' => 'image/webp',
-                    'Cache-Control' => 'public, max-age=31536000, immutable',
-                ]);
+                ], $cacheHeaders));
             }
         }
     }
@@ -85,13 +111,7 @@ Route::get('/storage/{path}', function ($path, Request $request) {
         abort(404);
     }
 
-    // Cache largo para assets estáticos
-    $cacheableExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'glb', 'gltf'];
-    $headers = in_array($extension, $cacheableExtensions)
-        ? ['Cache-Control' => 'public, max-age=31536000, immutable']
-        : [];
-
-    return response()->file($filePath, $headers);
+    return response()->file($filePath, $cacheHeaders);
 })->where('path', '.*');
 
 // Rutas públicas (para el frontend) con rate limiting
