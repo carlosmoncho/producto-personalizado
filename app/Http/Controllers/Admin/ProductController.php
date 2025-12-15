@@ -708,7 +708,17 @@ class ProductController extends Controller
             \Log::info('Attribute saved', ['saved' => $saved, 'new_images' => $attributeValue->images]);
 
             // Convertir paths a URLs completas para el frontend
-            $imageUrls = \App\Helpers\StorageHelper::urls($existingImages);
+            $imageUrls = array_map(function($path) use ($disk) {
+                if (!$path) return null;
+                if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                    return $path;
+                }
+                try {
+                    return \Storage::disk($disk)->url($path);
+                } catch (\Exception $e) {
+                    return url('/api/storage/' . $path);
+                }
+            }, $existingImages);
 
             return response()->json([
                 'success' => true,
@@ -754,7 +764,18 @@ class ProductController extends Controller
             $attributeValue->update(['images' => $images]);
 
             // Convertir paths a URLs completas para el frontend
-            $imageUrls = \App\Helpers\StorageHelper::urls($images);
+            $disk = config('filesystems.default', 'public');
+            $imageUrls = array_map(function($path) use ($disk) {
+                if (!$path) return null;
+                if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                    return $path;
+                }
+                try {
+                    return \Storage::disk($disk)->url($path);
+                } catch (\Exception $e) {
+                    return url('/api/storage/' . $path);
+                }
+            }, $images);
 
             return response()->json([
                 'success' => true,

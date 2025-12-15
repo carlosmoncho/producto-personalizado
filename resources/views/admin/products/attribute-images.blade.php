@@ -53,10 +53,11 @@
                                                 @foreach($attributeValue->images as $index => $image)
                                                     <div class="col-4 image-item" data-index="{{ $index }}">
                                                         <div class="position-relative">
-                                                            <img src="{{ \App\Helpers\StorageHelper::url($image) }}"
+                                                            <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($image) }}"
                                                                  alt="Imagen {{ $index + 1 }}"
                                                                  class="img-fluid rounded border"
-                                                                 style="aspect-ratio: 1; object-fit: cover; width: 100%;">
+                                                                 style="aspect-ratio: 1; object-fit: cover; width: 100%;"
+                                                                 onerror="this.src='/api/storage/{{ $image }}'">
                                                             <button type="button"
                                                                     class="btn btn-danger btn-sm position-absolute top-0 end-0 delete-image-btn"
                                                                     data-product-slug="{{ $product->slug }}"
