@@ -296,11 +296,14 @@ class ProductController extends Controller
         }
 
         // Crear array de imágenes por atributo (attribute_id => images array)
+        // Convertir rutas a URLs completas usando StorageHelper
         $attributeImages = [];
         foreach ($product->productAttributeValues as $pav) {
+            $images = $pav->images ?? [];
+            $imageUrls = \App\Helpers\StorageHelper::urls($images);
             $attributeImages[$pav->product_attribute_id] = [
                 'pivot_id' => $pav->id,
-                'images' => $pav->images ?? []
+                'images' => $imageUrls
             ];
         }
 
