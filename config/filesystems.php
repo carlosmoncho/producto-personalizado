@@ -58,6 +58,9 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => true,
             'report' => true,
+            // Deshabilitar ACLs - el bucket usa "Bucket owner enforced" (Object Ownership)
+            // Los permisos se controlan mediante políticas de bucket, no ACLs
+            'visibility' => 'private',
         ],
 
     ],
