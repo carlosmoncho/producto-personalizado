@@ -61,8 +61,39 @@ class OrderItem extends Model
 
     public function deleteDesignImage()
     {
-        if ($this->design_image && Storage::disk(config('filesystems.default', 'public'))->exists($this->design_image)) {
-            Storage::disk(config('filesystems.default', 'public'))->delete($this->design_image);
+        // Si no hay imagen de diseño, no hacer nada
+        if (!$this->design_image) {
+            return;
+        }
+
+        // Si la imagen es base64, no hay archivo que eliminar
+        if (str_starts_with($this->design_image, 'data:image')) {
+            return;
+        }
+
+        // Si es una URL completa de S3, extraer solo el path relativo
+        $path = $this->design_image;
+        if (str_contains($path, 's3.') && str_contains($path, 'amazonaws.com')) {
+            // Extraer el path después del bucket
+            $parsed = parse_url($path);
+            $path = ltrim($parsed['path'] ?? '', '/');
+        }
+
+        // Intentar eliminar del disco configurado (S3 o local)
+        $disk = config('filesystems.default', 'public');
+        $storage = Storage::disk($disk);
+
+        try {
+            if ($storage->exists($path)) {
+                $storage->delete($path);
+            }
+        } catch (\Exception $e) {
+            // Log del error pero no fallar la operación
+            \Log::warning("Error eliminando imagen de diseño del pedido: {$path}", [
+                'error' => $e->getMessage(),
+                'disk' => $disk,
+                'order_item_id' => $this->id
+            ]);
         }
     }
 

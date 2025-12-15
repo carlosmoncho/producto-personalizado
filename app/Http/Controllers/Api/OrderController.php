@@ -178,4 +178,72 @@ class OrderController extends Controller
 
         return new OrderResource($order);
     }
+
+    /**
+     * Delete the specified order
+     *
+     * Solo se pueden eliminar pedidos en estados 'pending', 'processing',
+     * 'approved', 'in_production' o 'cancelled'
+     *
+     * @urlParam order integer required ID de la orden. Example: 1
+     *
+     * @response 200 {
+     *   "message": "Pedido eliminado exitosamente"
+     * }
+     * @response 403 {
+     *   "message": "No se puede eliminar el pedido",
+     *   "reason": "..."
+     * }
+     * @response 404 {
+     *   "message": "Orden no encontrada"
+     * }
+     */
+    public function destroy($id)
+    {
+        $order = Order::with('items')->findOrFail($id);
+
+        $orderService = new OrderService();
+
+        // Validar si el pedido puede eliminarse
+        $validation = $orderService->canDelete($order);
+
+        if (!$validation['can_delete']) {
+            return response()->json([
+                'message' => "No se puede eliminar el pedido '{$order->order_number}'",
+                'reason' => $validation['reason'],
+                'details' => $validation['details']
+            ], 403);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            // Eliminar imágenes de diseño de los items
+            foreach ($order->items as $item) {
+                $item->deleteDesignImage();
+            }
+
+            $orderNumber = $order->order_number;
+            $order->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => "Pedido '{$orderNumber}' eliminado exitosamente"
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            \Log::error('Error eliminando pedido via API', [
+                'order_id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'message' => 'Error al eliminar el pedido',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
