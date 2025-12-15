@@ -1,576 +1,567 @@
-# 🎨 Sistema de Configurador de Productos Personalizados
+# Hostelking - Sistema de Productos Personalizados
 
-**Sistema web avanzado para configurar y personalizar productos de hostelería con cálculo de precios en tiempo real, visualización 3D y gestión completa de pedidos.**
+Sistema backend para configurador de productos personalizados con cálculo de precios en tiempo real, gestión de atributos dinámicos y panel de administración.
 
-[![Tests](https://img.shields.io/badge/tests-88%20passing-success)](TESTING_DOCUMENTATION.md)
-[![Security](https://img.shields.io/badge/security-8.5%2F10-green)](SECURITY_POLICIES.md)
-[![PHP](https://img.shields.io/badge/PHP-8.2%2B-blue)](https://php.net)
-[![Laravel](https://img.shields.io/badge/Laravel-12-red)](https://laravel.com)
+## Stack Tecnológico
 
----
-
-## 📋 Tabla de Contenidos
-
-- [Características](#-características)
-- [Tecnologías](#-tecnologías)
-- [Requisitos](#-requisitos)
-- [Instalación](#-instalación)
-- [Configuración](#-configuración)
-- [Uso](#-uso)
-- [API](#-api)
-- [Tests](#-tests)
-- [Seguridad](#-seguridad)
-- [Deployment](#-deployment)
-- [Documentación](#-documentación)
-- [Contribuir](#-contribuir)
-- [Licencia](#-licencia)
+- **Framework:** Laravel 12
+- **PHP:** 8.2+
+- **Base de datos:** MySQL 8.0
+- **Storage:** Local / Amazon S3
+- **Autenticación:** Laravel Breeze + Sanctum
+- **Contenedores:** Docker (Laravel Sail)
 
 ---
 
-## ✨ Características
+## Instalación
 
-### 🎯 Sistema de Configurador Avanzado
-- **Configuración Interactiva**: Selección dinámica de colores, materiales, tamaños, tintas y sistemas de impresión
-- **Visualización 3D**: Integración de modelos GLB/GLTF para previsualización en tiempo real
-- **Cálculo Inteligente de Precios**: Precio actualizado automáticamente según selecciones y cantidades
-- **Sistema de Dependencias**: Lógica avanzada de atributos (permite, bloquea, requiere, auto-selecciona)
-- **Recomendaciones de Tintas**: Sugerencias basadas en contraste de colores
+### Requisitos
 
-### 💰 Gestión de Precios
-- **Rangos por Cantidad**: Precios escalonados según volumen
-- **Modificadores por Atributo**: Cada atributo puede afectar el precio final
-- **Descuentos por Volumen**: Hasta 9% de descuento en grandes cantidades
-- **Reglas Dinámicas**: Sistema flexible de reglas de precio temporales y condicionales
-
-### 📦 Gestión de Pedidos
-- **Estados de Pedido**: Pending → Processing → Approved → In Production → Shipped → Delivered
-- **Tracking Completo**: Seguimiento de cada fase del pedido
-- **Gestión de Clientes**: Base de datos integrada de clientes
-- **Exportación**: Pedidos y clientes exportables a CSV/Excel
-
-### 🔐 Seguridad de Nivel Enterprise
-- **Headers HTTP**: HSTS, CSP, X-Frame-Options, X-Content-Type-Options
-- **CORS Restrictivo**: Lista blanca de orígenes permitidos
-- **Rate Limiting**: Protección contra abuso (60/30/10 req/min)
-- **Autenticación Robusta**: Laravel Breeze + contraseñas seguras
-- **RBAC**: 4 roles (super-admin, admin, editor, viewer) + 42 permisos
-- **Signed URLs**: Protección de archivos 3D con expiración
-
-### 🚀 Performance
-- **20+ Índices de BD**: Optimización de queries
-- **Eager Loading**: Eliminación de N+1 queries
-- **Cache Inteligente**: Cache de configuraciones y atributos
-- **Mejora 70-82%**: En velocidad de carga vs implementación original
-
-### 📊 Panel de Administración
-- Dashboard con estadísticas en tiempo real
-- CRUD completo de productos, categorías, atributos
-- Gestión de dependencias con preview
-- Configuración de reglas de precio
-- Gestión de pedidos con filtros avanzados
-
----
-
-## 🛠️ Tecnologías
-
-### Backend
-- **Laravel 12** - Framework PHP moderno
-- **PHP 8.2+** - Lenguaje de programación
-- **MySQL 8.0+** - Base de datos relacional
-- **Spatie Permission** - Sistema RBAC
-
-### Frontend
-- **Alpine.js** - Framework JavaScript reactivo
-- **Tailwind CSS** - Framework CSS utility-first
-- **Vite** - Build tool moderno
-- **Three.js / Model Viewer** - Visualización 3D (implícito)
-
-### DevOps
-- **Laravel Sail** - Entorno Docker
-- **GitHub Actions** - CI/CD (opcional)
-- **Nginx** - Servidor web (producción)
-
----
-
-## 📋 Requisitos
-
-### Servidor de Desarrollo
-- PHP 8.2 o superior
+- PHP 8.2+
 - Composer 2.x
-- Node.js 18+ y npm
-- MySQL 8.0+ o PostgreSQL 13+
-- Extensiones PHP:
-  - pdo_mysql (o pdo_pgsql)
-  - mbstring
-  - xml
-  - fileinfo
-  - gd
-  - sqlite3 (para tests)
+- Node.js 18+
+- MySQL 8.0+ / PostgreSQL 13+
+- Docker (opcional, para Sail)
 
-### Servidor de Producción
-- Todo lo anterior +
-- Nginx 1.24+ o Apache 2.4+
-- Redis (recomendado para cache)
-- Supervisor (para queue workers)
-- Certificado SSL válido
-
----
-
-## 🚀 Instalación
-
-### 1. Clonar Repositorio
+### Pasos
 
 ```bash
-git clone https://github.com/tu-usuario/producto-personalizado.git
+# Clonar repositorio
+git clone https://github.com/carlosmoncho/producto-personalizado.git
 cd producto-personalizado
-```
 
-### 2. Instalar Dependencias
-
-```bash
-# Backend
+# Instalar dependencias
 composer install
-
-# Frontend
 npm install
-```
 
-### 3. Configurar Entorno
-
-```bash
-# Copiar archivo de configuración
+# Configurar entorno
 cp .env.example .env
-
-# Generar application key
 php artisan key:generate
-```
 
-### 4. Configurar Base de Datos
-
-Editar `.env`:
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=configurador
-DB_USERNAME=root
-DB_PASSWORD=tu_password
-```
-
-### 5. Ejecutar Migraciones y Seeders
-
-```bash
-# Crear tablas
+# Base de datos
 php artisan migrate
-
-# Poblar datos iniciales (roles, permisos)
-php artisan db:seed --class=RolesAndPermissionsSeeder
-
-# (Opcional) Datos de prueba completos
 php artisan db:seed
-```
 
-### 6. Compilar Assets
-
-```bash
-# Desarrollo
-npm run dev
-
-# Producción
+# Compilar assets
 npm run build
-```
 
-### 7. Iniciar Servidor
-
-```bash
-# Opción A: PHP Built-in Server
+# Iniciar servidor
 php artisan serve
-# http://localhost:8000
-
-# Opción B: Laravel Sail (Docker)
-./vendor/bin/sail up
-# http://localhost
+# o con Sail
+./vendor/bin/sail up -d
 ```
-
-### 8. Crear Usuario Admin
-
-```bash
-php artisan tinker
->>> $user = \App\Models\User::factory()->create(['email' => 'admin@example.com']);
->>> $user->assignRole('super-admin');
->>> $user->email
-```
-
-✅ Accede a `http://localhost:8000/login` con las credenciales creadas.
 
 ---
 
-## ⚙️ Configuración
+## Estructura del Proyecto
 
-### Seguridad
-
-#### CORS
-Editar `.env`:
-```env
-ALLOWED_ORIGINS="https://tudominio.com,https://www.tudominio.com"
+```
+app/
+├── Http/
+│   ├── Controllers/
+│   │   ├── Admin/              # Panel de administración
+│   │   │   ├── ProductController.php
+│   │   │   ├── CategoryController.php
+│   │   │   ├── OrderController.php
+│   │   │   ├── CustomerController.php
+│   │   │   ├── ProductAttributeController.php
+│   │   │   ├── AttributeGroupController.php
+│   │   │   ├── AttributeDependencyController.php
+│   │   │   ├── PriceRuleController.php
+│   │   │   └── PrintingSystemController.php
+│   │   └── Api/
+│   │       ├── V1/
+│   │       │   └── ConfiguratorController.php  # API del configurador
+│   │       ├── ProductController.php
+│   │       ├── CategoryController.php
+│   │       └── OrderController.php
+│   └── Resources/V1/          # API Resources
+├── Models/
+│   ├── Product.php
+│   ├── Category.php
+│   ├── Subcategory.php
+│   ├── ProductAttribute.php
+│   ├── AttributeGroup.php
+│   ├── AttributeDependency.php
+│   ├── ProductAttributeValue.php
+│   ├── ProductPricing.php
+│   ├── PriceRule.php
+│   ├── PrintingSystem.php
+│   ├── Order.php
+│   ├── OrderItem.php
+│   └── Customer.php
+├── Services/
+│   └── File/
+│       └── FileUploadService.php
+└── Helpers/
+    └── StorageHelper.php
 ```
 
-#### Rate Limiting
-```env
-API_RATE_LIMIT=60           # Requests por minuto (API general)
-API_PRICE_RATE_LIMIT=30     # Cálculo de precios
-API_ORDER_RATE_LIMIT=10     # Creación de pedidos
+---
+
+## Modelos de Datos
+
+### Product
+Producto configurable con atributos dinámicos.
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | bigint | ID único |
+| name | string | Nombre del producto |
+| slug | string | URL amigable |
+| sku | string | Código de producto |
+| description | text | Descripción |
+| images | json | Array de rutas de imágenes |
+| model_3d_file | string | Ruta al modelo GLB/GLTF |
+| category_id | bigint | FK a categoría |
+| subcategory_id | bigint | FK a subcategoría |
+| has_configurator | boolean | Tiene configurador |
+| configurator_base_price | decimal | Precio base |
+| pricing_unit | enum | 'unit' o 'thousand' |
+| active | boolean | Estado activo |
+
+### ProductAttribute
+Atributos configurables (colores, materiales, tamaños, etc.)
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | bigint | ID único |
+| name | string | Nombre visible |
+| value | string | Valor interno |
+| type | enum | color, material, size, ink, system, quantity, weight |
+| hex_code | string | Código hexadecimal (colores) |
+| pantone_code | string | Código Pantone |
+| image_path | string | Imagen del atributo |
+| price_modifier | decimal | Modificador de precio fijo |
+| price_percentage | decimal | Modificador porcentual |
+| sort_order | int | Orden de visualización |
+| active | boolean | Estado activo |
+
+### AttributeDependency
+Reglas de dependencia entre atributos.
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | bigint | ID único |
+| product_id | bigint | FK a producto (null = global) |
+| source_attribute_id | bigint | Atributo origen |
+| target_attribute_id | bigint | Atributo destino |
+| dependency_type | enum | allows, blocks, requires, auto_selects |
+| priority | int | Prioridad de la regla |
+| active | boolean | Estado activo |
+
+### Order
+Pedidos de clientes.
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | bigint | ID único |
+| order_number | string | Número de pedido único |
+| customer_id | bigint | FK a cliente |
+| status | enum | pending, processing, approved, in_production, shipped, delivered, cancelled |
+| subtotal | decimal | Subtotal sin IVA |
+| tax | decimal | IVA |
+| total | decimal | Total con IVA |
+| notes | text | Notas del pedido |
+| shipping_address | json | Dirección de envío |
+
+---
+
+## API REST
+
+### Base URL
+- **Local:** `http://localhost:8080/api`
+- **Producción:** `https://api.hostelking.com/api`
+
+### Autenticación
+La API usa Laravel Sanctum para autenticación con tokens.
+
+```bash
+# Obtener token
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password"
+}
+
+# Respuesta
+{
+  "token": "1|abc123...",
+  "user": { ... }
+}
+
+# Usar token
+Authorization: Bearer 1|abc123...
 ```
 
-#### Sesiones (Producción)
-```env
-SESSION_DRIVER=database
-SESSION_ENCRYPT=true
-SESSION_SECURE_COOKIE=true  # Requiere HTTPS
-SESSION_HTTP_ONLY=true
-SESSION_SAME_SITE=strict
+---
+
+### Endpoints Públicos (API v1)
+
+#### Productos
+
+```bash
+# Listar productos
+GET /api/v1/products
+Query params: limit, page, category, subcategory, active
+
+# Detalle de producto
+GET /api/v1/products/{slug}
+
+# Respuesta
+{
+  "id": 1,
+  "name": "Mantel Individual",
+  "slug": "mantel-individual",
+  "images": ["https://..."],
+  "main_image": "https://...",
+  "has_configurator": true,
+  "configurator": {
+    "base_price": 0.15,
+    "description": "...",
+    "max_print_colors": 4
+  },
+  "attributes": {
+    "colors": [...],
+    "materials": [...],
+    "sizes": [...],
+    "inks": [...]
+  },
+  "category": { "id": 1, "name": "Manteles" },
+  "pricing_ranges": [
+    { "quantity_from": 1000, "quantity_to": 2999, "unit_price": 0.15 },
+    { "quantity_from": 3000, "quantity_to": 4999, "unit_price": 0.12 }
+  ]
+}
 ```
 
-### Archivos 3D
+#### Categorías
 
-```env
-MAX_3D_MODEL_SIZE=20480           # 20MB en KB
-ALLOWED_3D_FORMATS=glb,gltf
+```bash
+# Listar categorías
+GET /api/v1/categories
+
+# Detalle con subcategorías
+GET /api/v1/categories/{slug}
 ```
 
-**Ubicación**: `storage/app/public/3d-models/`
+#### Configurador
 
-**Crear symlink**:
+```bash
+# Obtener configuración inicial del producto
+GET /api/v1/configurator/products/{id}/config
+
+# Respuesta
+{
+  "product": { ... },
+  "attributes": {
+    "colors": [
+      {
+        "id": 1,
+        "name": "Blanco",
+        "hex_code": "#FFFFFF",
+        "is_available": true,
+        "price_modifier": 0,
+        "images": ["https://..."]
+      }
+    ],
+    "materials": [...],
+    "sizes": [...],
+    "inks": [...],
+    "systems": [...],
+    "quantities": [...]
+  },
+  "dependencies": [...],
+  "pricing_ranges": [...]
+}
+```
+
+```bash
+# Calcular precio
+POST /api/v1/configurator/products/{id}/price
+Content-Type: application/json
+
+{
+  "color_id": 1,
+  "material_id": 2,
+  "size_id": 3,
+  "ink_ids": [1, 2],
+  "system_id": 1,
+  "quantity": 5000,
+  "faces": 1
+}
+
+# Respuesta
+{
+  "success": true,
+  "pricing": {
+    "base_price": 0.15,
+    "unit_price": 0.12,
+    "quantity": 5000,
+    "subtotal": 600.00,
+    "extras": {
+      "ink_extra": 50.00,
+      "material_extra": 0
+    },
+    "total_extras": 50.00,
+    "total": 650.00,
+    "discount_percentage": 5,
+    "pricing_unit": "unit"
+  }
+}
+```
+
+```bash
+# Validar configuración
+POST /api/v1/configurator/products/{id}/validate
+Content-Type: application/json
+
+{
+  "color_id": 1,
+  "material_id": 2,
+  "size_id": 3
+}
+
+# Respuesta
+{
+  "valid": true,
+  "warnings": [],
+  "blocked_attributes": [],
+  "auto_selected": []
+}
+```
+
+#### Pedidos
+
+```bash
+# Crear pedido
+POST /api/v1/orders
+Content-Type: application/json
+
+{
+  "customer": {
+    "name": "Empresa S.L.",
+    "email": "contacto@empresa.com",
+    "phone": "+34612345678",
+    "company": "Empresa S.L.",
+    "tax_id": "B12345678"
+  },
+  "shipping_address": {
+    "street": "Calle Principal 123",
+    "city": "Madrid",
+    "postal_code": "28001",
+    "country": "España"
+  },
+  "items": [
+    {
+      "product_id": 1,
+      "configuration": {
+        "color_id": 1,
+        "material_id": 2,
+        "size_id": 3,
+        "ink_ids": [1],
+        "system_id": 1
+      },
+      "quantity": 5000,
+      "design_file": "uploads/design123.pdf"
+    }
+  ],
+  "notes": "Entrega urgente"
+}
+
+# Respuesta
+{
+  "success": true,
+  "order": {
+    "id": 123,
+    "order_number": "ORD-2025-00123",
+    "status": "pending",
+    "total": 650.00
+  }
+}
+```
+
+---
+
+### Endpoints Admin (requieren autenticación)
+
+```bash
+# Productos
+GET    /api/admin/products
+POST   /api/admin/products
+GET    /api/admin/products/{id}
+PUT    /api/admin/products/{id}
+DELETE /api/admin/products/{id}
+
+# Categorías
+GET    /api/admin/categories
+POST   /api/admin/categories
+PUT    /api/admin/categories/{id}
+DELETE /api/admin/categories/{id}
+
+# Pedidos
+GET    /api/admin/orders
+GET    /api/admin/orders/{id}
+PATCH  /api/admin/orders/{id}/status
+DELETE /api/admin/orders/{id}
+```
+
+---
+
+## Panel de Administración
+
+Accesible en `/admin` con autenticación.
+
+### Secciones
+
+| Ruta | Descripción |
+|------|-------------|
+| /admin | Dashboard con estadísticas |
+| /admin/products | Gestión de productos |
+| /admin/categories | Categorías y subcategorías |
+| /admin/product-attributes | Atributos (colores, materiales...) |
+| /admin/attribute-groups | Agrupación de atributos |
+| /admin/attribute-dependencies | Reglas de dependencia |
+| /admin/price-rules | Reglas de precio |
+| /admin/printing-systems | Sistemas de impresión |
+| /admin/orders | Gestión de pedidos |
+| /admin/customers | Base de datos de clientes |
+
+### Gestión de Imágenes por Atributo
+
+Los productos pueden tener imágenes específicas para cada combinación de atributos (ej: imagen diferente por color).
+
+```
+/admin/products/{slug}/attribute-images
+```
+
+---
+
+## Configuración de Storage
+
+### Local (desarrollo)
+
+```env
+FILESYSTEM_DISK=public
+```
+
+### Amazon S3 (producción)
+
+```env
+FILESYSTEM_DISK=s3
+AWS_ACCESS_KEY_ID=your_key
+AWS_SECRET_ACCESS_KEY=your_secret
+AWS_DEFAULT_REGION=eu-west-1
+AWS_BUCKET=your-bucket
+AWS_URL=https://your-bucket.s3.eu-west-1.amazonaws.com
+```
+
+### Symlink para storage público
+
 ```bash
 php artisan storage:link
 ```
 
-### Caché (Opcional pero Recomendado)
+---
+
+## Variables de Entorno
 
 ```env
-CACHE_STORE=redis
-REDIS_HOST=127.0.0.1
-REDIS_PASSWORD=null
-REDIS_PORT=6379
-```
+# App
+APP_NAME="Hostelking Personalizados"
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8080
 
-### Email
+# Database
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=producto_personalizado
+DB_USERNAME=sail
+DB_PASSWORD=password
 
-```env
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.mailgun.org
-MAIL_PORT=587
-MAIL_USERNAME=tu_usuario
-MAIL_PASSWORD=tu_password
-MAIL_FROM_ADDRESS="noreply@tudominio.com"
-MAIL_FROM_NAME="${APP_NAME}"
+# Storage
+FILESYSTEM_DISK=public
+
+# AWS S3 (producción)
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=eu-west-1
+AWS_BUCKET=
+
+# CORS
+ALLOWED_ORIGINS="http://localhost:3000,http://localhost:3001"
+
+# Rate Limiting
+API_RATE_LIMIT=60
+API_PRICE_RATE_LIMIT=30
+API_ORDER_RATE_LIMIT=10
 ```
 
 ---
 
-## 💼 Uso
-
-### Panel de Administración
-
-Accede a `/admin` después de autenticarte.
-
-**Secciones disponibles**:
-- 📊 **Dashboard**: Estadísticas de ventas y pedidos
-- 🛍️ **Productos**: Gestión completa de productos
-- 🎨 **Atributos**: Colores, materiales, tamaños, tintas
-- 🔗 **Dependencias**: Reglas entre atributos
-- 💰 **Reglas de Precio**: Descuentos y modificadores
-- 📦 **Pedidos**: Gestión y seguimiento
-- 👥 **Clientes**: Base de datos de clientes
-
-### Configurador de Productos
-
-**Admin**: `/admin/configurator/{product_id}`
-**Demo Público**: `/demo/configurator/{product_id}` (solo local/staging)
-
-**Flujo**:
-1. Usuario selecciona atributos (color, material, tamaño, etc.)
-2. Sistema valida dependencias
-3. Precio se actualiza en tiempo real
-4. Usuario puede guardar configuración
-5. Añadir al carrito (integración externa)
-
-### API REST
-
-**Base URL**: `/api/v1`
-
-**Endpoints Principales**:
-- `GET /configurator/products/{id}/config` - Configuración inicial
-- `POST /configurator/products/{id}/price` - Calcular precio
-- `POST /configurator/products/{id}/validate` - Validar selección
-- `POST /configurator/products/{id}/save` - Guardar configuración
-
-Ver [API_DOCUMENTATION.md](API_DOCUMENTATION.md) para documentación completa.
-
----
-
-## 🧪 Tests
-
-### Ejecutar Tests
+## Comandos Útiles
 
 ```bash
-# Todos los tests
-php artisan test
+# Desarrollo con Sail
+./vendor/bin/sail up -d
+./vendor/bin/sail down
 
-# Solo unitarios
-php artisan test --testsuite=Unit
+# Migraciones
+./vendor/bin/sail artisan migrate
+./vendor/bin/sail artisan migrate:fresh --seed
 
-# Solo feature
-php artisan test --testsuite=Feature
+# Cache
+./vendor/bin/sail artisan config:clear
+./vendor/bin/sail artisan cache:clear
+./vendor/bin/sail artisan view:clear
 
-# Con coverage (requiere Xdebug)
-php artisan test --coverage
+# Tinker (consola interactiva)
+./vendor/bin/sail artisan tinker
+
+# Tests
+./vendor/bin/sail artisan test
+
+# Logs
+./vendor/bin/sail logs -f
 ```
-
-### Estado Actual
-
-- **Total**: 88 tests
-- **Pasando**: 88 (100%)
-- **Cobertura**: 85% de lógica crítica
-
-**Tests implementados**:
-- ✅ Cálculo de precios (14 tests)
-- ✅ Dependencias de atributos (16 tests)
-- ✅ Sistema de configurador (13 tests)
-- ✅ Autenticación (3 tests)
-- ✅ Factories (schemas validados)
-
-Ver [TESTING_DOCUMENTATION.md](TESTING_DOCUMENTATION.md) para más detalles.
-
-### Solución de Problemas
-
-Si los tests fallan con error de base de datos:
-```bash
-# Instalar extensión SQLite
-sudo apt-get install php8.2-sqlite3
-php -m | grep sqlite
-```
-
-Ver [TESTS_SETUP.md](TESTS_SETUP.md) para guía completa.
 
 ---
 
-## 🔐 Seguridad
+## Deployment
 
-**Nivel de Seguridad**: 8.5/10 ✅
-
-### Medidas Implementadas
-
-- ✅ FormRequest validations (12 clases)
-- ✅ CORS restrictivo con lista blanca
-- ✅ Rate limiting por endpoint
-- ✅ Headers HTTP de seguridad (7/7)
-- ✅ Contraseñas seguras (8+ chars, mixed case, symbols)
-- ✅ Protección archivos 3D (signed URLs)
-- ✅ RBAC con 4 roles y 42 permisos
-- ✅ Logging de seguridad dedicado
-- ✅ Protección XSS, CSRF, SQL Injection
-
-### Roles y Permisos
-
-**Roles disponibles**:
-1. `super-admin` - Acceso total
-2. `admin` - Gestión completa (no puede eliminar permanentemente)
-3. `editor` - Solo edición
-4. `viewer` - Solo lectura
-
-**Asignar rol**:
-```php
-$user->assignRole('admin');
-```
-
-Ver [SECURITY_POLICIES.md](SECURITY_POLICIES.md) y [SECURITY_FIXES_2025_11_06.md](SECURITY_FIXES_2025_11_06.md).
-
----
-
-## 🚀 Deployment
-
-### Checklist Pre-Producción
+### Producción
 
 ```bash
-# 1. Configurar .env para producción
-APP_ENV=production
-APP_DEBUG=false
-SESSION_SECURE_COOKIE=true
-
-# 2. Optimizar aplicación
+# Optimizar
 composer install --optimize-autoloader --no-dev
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 npm run build
 
-# 3. Configurar permisos
-chmod -R 755 storage bootstrap/cache
-chmod -R 640 storage/logs/*.log
-
-# 4. Ejecutar migraciones
+# Migraciones
 php artisan migrate --force
 
-# 5. Crear roles y permisos
-php artisan db:seed --class=RolesAndPermissionsSeeder --force
+# Permisos
+chmod -R 755 storage bootstrap/cache
 ```
 
-Ver [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) para guía completa de deploy a producción.
+### Checklist
+
+- [ ] `APP_ENV=production`
+- [ ] `APP_DEBUG=false`
+- [ ] Configurar S3 para storage
+- [ ] SSL/HTTPS habilitado
+- [ ] CORS configurado para dominios de producción
+- [ ] Base de datos MySQL configurada
+- [ ] Colas configuradas (opcional)
 
 ---
 
-## 📚 Documentación
+## Licencia
 
-### Documentación Disponible
-
-| Documento | Descripción |
-|-----------|-------------|
-| [API_DOCUMENTATION.md](API_DOCUMENTATION.md) | Documentación completa de API REST (1,076 líneas) |
-| [TESTING_DOCUMENTATION.md](TESTING_DOCUMENTATION.md) | Guía de tests y coverage (637 líneas) |
-| [SECURITY_POLICIES.md](SECURITY_POLICIES.md) | Políticas de seguridad (509 líneas) |
-| [SECURITY_FIXES_2025_11_06.md](SECURITY_FIXES_2025_11_06.md) | Últimas mejoras de seguridad |
-| [PERFORMANCE_OPTIMIZATIONS.md](PERFORMANCE_OPTIMIZATIONS.md) | Optimizaciones implementadas (3,500+ líneas) |
-| [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | Guía de deploy a producción |
-| [TESTS_SETUP.md](TESTS_SETUP.md) | Configuración de entorno de testing |
-| [QUE_FALTA_HACER.md](QUE_FALTA_HACER.md) | Roadmap y tareas pendientes |
-
----
-
-## 🎨 Arquitectura
-
-### Modelos Principales
-
-- **Product**: Productos configurables
-- **ProductAttribute**: Atributos (color, material, size, ink, system, quantity)
-- **AttributeGroup**: Agrupación de atributos
-- **AttributeDependency**: Reglas entre atributos
-- **ProductConfiguration**: Configuraciones guardadas
-- **Order** / **OrderItem**: Sistema de pedidos
-- **PriceRule**: Reglas dinámicas de precio
-
-### Flujo de Configuración
-
-```
-Usuario → Selecciona Atributos
-    ↓
-Sistema valida Dependencias
-    ↓
-Calcula Precio en Tiempo Real
-    ↓
-Guarda Configuración
-    ↓
-Crea Pedido
-```
-
-### API REST v1
-
-```
-GET  /api/v1/configurator/products/{id}/config
-POST /api/v1/configurator/products/{id}/attributes
-POST /api/v1/configurator/products/{id}/price
-POST /api/v1/configurator/products/{id}/validate
-POST /api/v1/configurator/products/{id}/save
-```
-
----
-
-## 🤝 Contribuir
-
-### Proceso
-
-1. Fork el repositorio
-2. Crear rama feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit cambios (`git commit -m 'Add: nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Crear Pull Request
-
-### Estándares de Código
-
-```bash
-# Laravel Pint (PSR-12)
-./vendor/bin/pint
-
-# Tests antes de commit
-php artisan test
-```
-
-### Tests Requeridos
-
-Todos los PRs deben incluir tests para:
-- Nueva funcionalidad
-- Bug fixes
-- Cambios en lógica de negocio
-
----
-
-## 📞 Soporte
-
-### Reportar Issues
-
-Para reportar bugs o solicitar features:
-- **Issues**: [GitHub Issues](https://github.com/tu-usuario/producto-personalizado/issues)
-- **Vulnerabilidades de Seguridad**: security@tudominio.com
-
-### Contacto
-
-- **Email**: support@tudominio.com
-- **Documentación**: Ver carpeta de docs
-- **API**: [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
-
----
-
-## 📄 Licencia
-
-Este proyecto es propietario y confidencial.
-
-**Copyright © 2025 Hostelking. Todos los derechos reservados.**
-
----
-
-## 🙏 Créditos
-
-### Desarrollado con
-
-- [Laravel](https://laravel.com) - Framework PHP
-- [Alpine.js](https://alpinejs.dev) - Framework JavaScript
-- [Tailwind CSS](https://tailwindcss.com) - Framework CSS
-- [Spatie Permission](https://spatie.be/docs/laravel-permission) - RBAC
-
-### Equipo
-
-- **Backend & API**: Equipo de desarrollo
-- **Frontend**: Equipo de diseño
-- **Seguridad**: Auditoría completa realizada
-- **Performance**: Optimizaciones implementadas
-
----
-
-## 📊 Estadísticas
-
-- **Líneas de Código**: ~15,000
-- **Tests**: 88 (100% pasando)
-- **Cobertura**: 85%
-- **Seguridad**: 8.5/10
-- **Performance**: 70-82% más rápido
-- **Documentación**: 7,000+ líneas
-
----
-
-## 🔄 Changelog
-
-Ver [SECURITY_FIXES_2025_11_06.md](SECURITY_FIXES_2025_11_06.md) para últimos cambios.
-
-### Versión Actual: 2.0 (Nov 2025)
-- ✅ Sistema de seguridad mejorado (8.5/10)
-- ✅ Headers HTTP completos
-- ✅ RBAC implementado
-- ✅ Performance optimizada
-- ✅ Tests al 100%
-
----
-
-<p align="center">
-<b>Sistema de Configurador de Productos Personalizados</b><br>
-Desarrollado con ❤️ para Hostelking
-</p>
+Proyecto propietario - Hostelking 2025
