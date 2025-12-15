@@ -61,8 +61,45 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // Sirve automáticamente WebP si existe y el navegador lo soporta
 // Soporta tanto almacenamiento local como S3
 Route::get('/storage/{path}', function ($path, Request $request) {
-    $disk = config('filesystems.default', 'public');
+    // ============ SEGURIDAD: Prevenir Path Traversal ============
+    // Rechazar paths que intenten escapar del directorio de storage
+    if (str_contains($path, '..') || str_contains($path, '//') || str_starts_with($path, '/')) {
+        \Log::warning('Intento de path traversal bloqueado', [
+            'path' => $path,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent()
+        ]);
+        abort(403, 'Acceso denegado');
+    }
+
+    // Solo permitir extensiones de archivo seguras
+    $allowedExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'glb', 'gltf', 'pdf'];
     $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+    if (!in_array($extension, $allowedExtensions)) {
+        \Log::warning('Extensión de archivo no permitida', [
+            'path' => $path,
+            'extension' => $extension,
+            'ip' => $request->ip()
+        ]);
+        abort(403, 'Tipo de archivo no permitido');
+    }
+
+    // Solo permitir directorios conocidos
+    $allowedDirectories = ['products', 'categories', 'subcategories', '3d-models'];
+    $pathParts = explode('/', $path);
+    $firstDir = $pathParts[0] ?? '';
+
+    if (!in_array($firstDir, $allowedDirectories)) {
+        \Log::warning('Directorio no permitido', [
+            'path' => $path,
+            'directory' => $firstDir,
+            'ip' => $request->ip()
+        ]);
+        abort(403, 'Directorio no permitido');
+    }
+
+    $disk = config('filesystems.default', 'public');
 
     // Cache largo para assets estáticos
     $cacheableExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'glb', 'gltf'];
@@ -89,6 +126,19 @@ Route::get('/storage/{path}', function ($path, Request $request) {
 
     // Almacenamiento local
     $filePath = storage_path('app/public/' . $path);
+
+    // Verificar que el path resuelto está dentro del directorio permitido (doble verificación)
+    $realPath = realpath($filePath);
+    $basePath = realpath(storage_path('app/public'));
+
+    if ($realPath === false || $basePath === false || !str_starts_with($realPath, $basePath)) {
+        \Log::warning('Intento de acceso fuera del directorio de storage', [
+            'path' => $path,
+            'resolved' => $realPath,
+            'ip' => $request->ip()
+        ]);
+        abort(403, 'Acceso denegado');
+    }
 
     // Para imágenes PNG/JPG, intentar servir WebP si existe y es soportado
     if (in_array($extension, ['png', 'jpg', 'jpeg'])) {
