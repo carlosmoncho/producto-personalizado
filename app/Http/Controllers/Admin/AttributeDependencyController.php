@@ -775,18 +775,19 @@ class AttributeDependencyController extends Controller
     public function getProductAttributes(\App\Models\Product $product)
     {
         // Cargar atributos del producto
-        $product->load(['productAttributes.attributeGroup']);
+        $product->load(['productAttributes']);
 
-        // Agrupar los atributos del producto por tipo
+        // Agrupar los atributos del producto por tipo (usando el campo type del atributo)
         $attributesByType = $product->productAttributes
             ->filter(fn($attr) => $attr->active)
-            ->groupBy(fn($attr) => $attr->attributeGroup->type ?? $attr->type)
+            ->groupBy('type')
             ->map(fn($attrs) => $attrs->map(fn($attr) => [
                 'id' => $attr->id,
                 'name' => $attr->name,
                 'value' => $attr->value,
-                'type' => $attr->attributeGroup->type ?? $attr->type
-            ])->values());
+                'type' => $attr->type
+            ])->values())
+            ->toArray();
 
         // Obtener los tipos disponibles con sus labels
         $typeLabels = [
@@ -805,7 +806,7 @@ class AttributeDependencyController extends Controller
             'success' => true,
             'attributesByType' => $attributesByType,
             'typeLabels' => $typeLabels,
-            'availableTypes' => $attributesByType->keys()
+            'availableTypes' => array_keys($attributesByType)
         ]);
     }
 
