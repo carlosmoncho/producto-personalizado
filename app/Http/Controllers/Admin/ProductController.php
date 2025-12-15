@@ -242,12 +242,21 @@ class ProductController extends Controller
             'productAttributeValues'
         ]);
 
-        // Cargar dependencias de atributos para este producto
-        $dependencies = AttributeDependency::whereHas('parentAttribute.products', function($query) use ($product) {
-            $query->where('products.id', $product->id);
-        })->orWhereHas('dependentAttribute.products', function($query) use ($product) {
-            $query->where('products.id', $product->id);
-        })->with(['parentAttribute.attributeGroup', 'dependentAttribute.attributeGroup'])
+        // Cargar dependencias de atributos SOLO para los atributos asignados a este producto
+        $productAttributeIds = $product->productAttributes->pluck('id')->toArray();
+
+        $dependencies = AttributeDependency::where(function($query) use ($productAttributeIds) {
+            // Dependencias donde el parent attribute está en el producto
+            $query->whereIn('parent_attribute_id', $productAttributeIds);
+        })->where(function($query) use ($productAttributeIds) {
+            // Y el dependent attribute también está en el producto (o es null)
+            $query->whereIn('dependent_attribute_id', $productAttributeIds)
+                  ->orWhereNull('dependent_attribute_id');
+        })->where(function($query) use ($productAttributeIds) {
+            // Y el third attribute también está en el producto (o es null)
+            $query->whereIn('third_attribute_id', $productAttributeIds)
+                  ->orWhereNull('third_attribute_id');
+        })->with(['parentAttribute.attributeGroup', 'dependentAttribute.attributeGroup', 'thirdAttribute.attributeGroup'])
         ->active()
         ->get();
 

@@ -303,10 +303,16 @@
                                         @foreach($deps as $dependency)
                                             <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
                                                 <div class="small">
-                                                    <strong>{{ $dependency->parentAttribute->name }}</strong>
+                                                    <strong>{{ $dependency->parentAttribute->name ?? 'N/A' }}</strong>
                                                     @if($dependency->dependentAttribute)
-                                                        <i class="bi bi-arrow-right mx-2 text-muted"></i>
-                                                        {{ $dependency->dependentAttribute->name }}
+                                                        <i class="bi bi-plus mx-1 text-muted"></i>
+                                                        <span>{{ $dependency->dependentAttribute->name }}</span>
+                                                    @endif
+                                                    @if($dependency->thirdAttribute)
+                                                        <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                                                        <span class="text-primary">{{ $dependency->thirdAttribute->name }}</span>
+                                                    @elseif($dependency->dependentAttribute)
+                                                        {{-- Solo 2 atributos, sin tercero --}}
                                                     @elseif($dependency->condition_type === 'price_modifier')
                                                         <span class="text-muted ms-2">(Modificador de precio)</span>
                                                     @else
