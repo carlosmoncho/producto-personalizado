@@ -182,13 +182,19 @@
                     @if($product->model_3d_file)
                         <div class="mb-3">
                             <h6 class="mb-2">Modelo 3D Actual</h6>
-                            <div class="alert alert-info d-flex align-items-center">
+                            <div class="alert alert-info d-flex align-items-center flex-wrap gap-2">
                                 <i class="bi bi-file-earmark-3d me-2"></i>
                                 <span>Archivo 3D disponible</span>
-                                <a href="{{ $product->getModel3dUrl() }}" class="btn btn-sm btn-primary ms-auto" download>
-                                    <i class="bi bi-download"></i> Descargar
-                                </a>
+                                <div class="ms-auto d-flex gap-2">
+                                    <a href="{{ $product->getModel3dUrl() }}" class="btn btn-sm btn-primary" download>
+                                        <i class="bi bi-download"></i> Descargar
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="confirmDeleteModel3d()">
+                                        <i class="bi bi-trash"></i> Eliminar
+                                    </button>
+                                </div>
                             </div>
+                            <input type="hidden" name="remove_model_3d" id="remove_model_3d" value="0">
                         </div>
                     @endif
 
@@ -667,9 +673,23 @@ function removeImage(imagePath) {
         const currentValue = removeImagesInput.value;
         const newValue = currentValue ? currentValue + ',' + imagePath : imagePath;
         removeImagesInput.value = newValue;
-        
+
         // Ocultar la imagen visualmente
         event.target.closest('.col-md-3').style.display = 'none';
+    }
+}
+
+// Función para confirmar eliminación del modelo 3D
+function confirmDeleteModel3d() {
+    if (confirm('¿Está seguro de eliminar el modelo 3D? Esta acción no se puede deshacer.')) {
+        document.getElementById('remove_model_3d').value = '1';
+        // Ocultar la sección del modelo 3D visualmente
+        event.target.closest('.mb-3').style.display = 'none';
+        // Mostrar mensaje de confirmación
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-warning';
+        alertDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>El modelo 3D se eliminará al guardar los cambios.';
+        event.target.closest('.col-md-6').prepend(alertDiv);
     }
 }
 

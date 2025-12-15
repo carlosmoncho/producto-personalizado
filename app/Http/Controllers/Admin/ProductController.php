@@ -408,8 +408,13 @@ class ProductController extends Controller
 
             $productData['images'] = $imagePaths;
 
+            // Manejar eliminación de modelo 3D
+            if ($request->input('remove_model_3d') === '1' && $product->model_3d_file) {
+                $fileService->deleteFile($product->model_3d_file);
+                $productData['model_3d_file'] = null;
+            }
             // Manejar modelo 3D usando FileUploadService
-            if ($request->hasFile('model_3d')) {
+            elseif ($request->hasFile('model_3d')) {
                 // Eliminar modelo anterior si existe
                 if ($product->model_3d_file) {
                     $fileService->deleteFile($product->model_3d_file);
