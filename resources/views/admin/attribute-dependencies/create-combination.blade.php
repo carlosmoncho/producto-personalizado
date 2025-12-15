@@ -391,12 +391,13 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Datos de atributos agrupados por tipo
-    const attributesByType = @json($attributesByType);
-    const typeLabels = @json($typeLabels);
+    // Datos de atributos agrupados por tipo (todos los atributos globales)
+    let attributesByType = @json($attributesByType);
+    let typeLabels = @json($typeLabels);
     const conditionLabels = @json($conditionTypes);
 
     // Elements
+    const productSelect = document.getElementById('product_id');
     const parentTypeSelect = document.getElementById('parent_type');
     const parentAttributeSelect = document.getElementById('parent_attribute_ids');
     const dependentTypeSelect = document.getElementById('dependent_type');
@@ -407,6 +408,72 @@ document.addEventListener('DOMContentLoaded', function() {
     const priceModifierInput = document.getElementById('price_modifier');
     const previewContent = document.getElementById('preview-content');
     const combinationsCount = document.getElementById('combinations-count');
+
+    // Datos originales para cuando no hay producto seleccionado
+    const originalAttributesByType = @json($attributesByType);
+    const originalTypeLabels = @json($typeLabels);
+
+    // Listener para cambio de producto
+    productSelect.addEventListener('change', async function() {
+        const productId = this.value;
+
+        if (productId) {
+            // Cargar atributos del producto específico
+            try {
+                const response = await fetch(`{{ url('admin/api/attribute-dependencies/product') }}/${productId}/attributes`);
+                const data = await response.json();
+
+                if (data.success) {
+                    attributesByType = data.attributesByType;
+                    typeLabels = data.typeLabels;
+                    updateTypeSelects(data.availableTypes);
+                }
+            } catch (error) {
+                console.error('Error cargando atributos del producto:', error);
+            }
+        } else {
+            // Restaurar todos los atributos (dependencia global)
+            attributesByType = originalAttributesByType;
+            typeLabels = originalTypeLabels;
+            updateTypeSelects(Object.keys(originalAttributesByType));
+        }
+
+        // Limpiar selecciones actuales
+        resetAllSelects();
+    });
+
+    function updateTypeSelects(availableTypes) {
+        [parentTypeSelect, dependentTypeSelect, thirdTypeSelect].forEach((select, index) => {
+            const currentValue = select.value;
+            const isThird = index === 2;
+
+            select.innerHTML = isThird
+                ? '<option value="">Sin tercer atributo</option>'
+                : '<option value="">Seleccionar tipo</option>';
+
+            availableTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = typeLabels[type] || type;
+                if (type === currentValue) option.selected = true;
+                select.appendChild(option);
+            });
+        });
+    }
+
+    function resetAllSelects() {
+        parentTypeSelect.value = '';
+        dependentTypeSelect.value = '';
+        thirdTypeSelect.value = '';
+        parentAttributeSelect.innerHTML = '';
+        parentAttributeSelect.disabled = true;
+        dependentAttributeSelect.innerHTML = '';
+        dependentAttributeSelect.disabled = true;
+        thirdAttributeSelect.innerHTML = '';
+        thirdAttributeSelect.disabled = true;
+        updatePreview();
+        updateCombinationsCount();
+    }
 
     // Event listeners
     parentTypeSelect.addEventListener('change', function() {

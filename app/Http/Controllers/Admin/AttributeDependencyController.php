@@ -769,4 +769,44 @@ class AttributeDependencyController extends Controller
         ]);
     }
 
+    /**
+     * Obtener atributos de un producto específico agrupados por tipo
+     */
+    public function getProductAttributes(\App\Models\Product $product)
+    {
+        // Cargar atributos del producto
+        $product->load(['productAttributes.attributeGroup']);
+
+        // Agrupar los atributos del producto por tipo
+        $attributesByType = $product->productAttributes
+            ->filter(fn($attr) => $attr->active)
+            ->groupBy(fn($attr) => $attr->attributeGroup->type ?? $attr->type)
+            ->map(fn($attrs) => $attrs->map(fn($attr) => [
+                'id' => $attr->id,
+                'name' => $attr->name,
+                'value' => $attr->value,
+                'type' => $attr->attributeGroup->type ?? $attr->type
+            ])->values());
+
+        // Obtener los tipos disponibles con sus labels
+        $typeLabels = [
+            ProductAttribute::TYPE_COLOR => 'Color',
+            ProductAttribute::TYPE_MATERIAL => 'Material',
+            ProductAttribute::TYPE_SIZE => 'Tamaño',
+            ProductAttribute::TYPE_INK => 'Tinta',
+            ProductAttribute::TYPE_QUANTITY => 'Cantidad',
+            ProductAttribute::TYPE_SYSTEM => 'Sistema',
+            ProductAttribute::TYPE_WEIGHT => 'Gramaje',
+            ProductAttribute::TYPE_INK_COLOR => 'Color Tinta',
+            ProductAttribute::TYPE_CLICHE => 'Cliché',
+        ];
+
+        return response()->json([
+            'success' => true,
+            'attributesByType' => $attributesByType,
+            'typeLabels' => $typeLabels,
+            'availableTypes' => $attributesByType->keys()
+        ]);
+    }
+
 }
