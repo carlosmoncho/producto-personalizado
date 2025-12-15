@@ -79,12 +79,7 @@ class FileUploadService
                 ]);
 
                 try {
-                    // Usar storePublicly para S3 para que los archivos sean accesibles públicamente
-                    if ($disk === 's3') {
-                        $path = $image->storePublicly($directory, $disk);
-                    } else {
-                        $path = $image->store($directory, $disk);
-                    }
+                    $path = $image->store($directory, $disk);
                 } catch (\Exception $storeException) {
                     \Log::error('Error específico al guardar en storage', [
                         'disk' => $disk,
@@ -169,12 +164,8 @@ class FileUploadService
             $fileName = Str::random(40) . '.' . $extension;
             $disk = $this->getDisk();
 
-            // Guardar archivo (usar visibilidad pública para S3)
-            if ($disk === 's3') {
-                $path = $file->storePubliclyAs($directory, $fileName, $disk);
-            } else {
-                $path = $file->storeAs($directory, $fileName, $disk);
-            }
+            // Guardar archivo
+            $path = $file->storeAs($directory, $fileName, $disk);
 
             if (!$path) {
                 throw new \Exception('Error al guardar el archivo 3D');
