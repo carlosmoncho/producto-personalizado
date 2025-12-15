@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -23,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Usar Bootstrap 5 para la paginación
+        Paginator::useBootstrapFive();
+
         // Configurar reglas de contraseñas seguras
         Password::defaults(function () {
             $rule = Password::min(8)
