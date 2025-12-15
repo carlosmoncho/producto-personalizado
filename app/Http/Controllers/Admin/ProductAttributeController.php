@@ -56,6 +56,7 @@ class ProductAttributeController extends Controller
             ProductAttribute::TYPE_CLICHE => 'Cliché',
             ProductAttribute::TYPE_QUANTITY => 'Cantidades',
             ProductAttribute::TYPE_SYSTEM => 'Sistemas',
+            ProductAttribute::TYPE_WEIGHT => 'Gramajes',
             'finish' => 'Acabados'
         ];
 
@@ -72,7 +73,8 @@ class ProductAttributeController extends Controller
             ProductAttribute::TYPE_INK_COLOR => 'Color de Tinta',
             ProductAttribute::TYPE_CLICHE => 'Cliché',
             ProductAttribute::TYPE_QUANTITY => 'Cantidad',
-            ProductAttribute::TYPE_SYSTEM => 'Sistema de Impresión'
+            ProductAttribute::TYPE_SYSTEM => 'Sistema de Impresión',
+            ProductAttribute::TYPE_WEIGHT => 'Gramaje'
         ];
 
         // Obtener grupos de atributos activos
@@ -95,7 +97,8 @@ class ProductAttributeController extends Controller
                 ProductAttribute::TYPE_INK_COLOR,
                 ProductAttribute::TYPE_CLICHE,
                 ProductAttribute::TYPE_QUANTITY,
-                ProductAttribute::TYPE_SYSTEM
+                ProductAttribute::TYPE_SYSTEM,
+                ProductAttribute::TYPE_WEIGHT
             ]),
             'name' => 'required|string|max:255',
             'value' => [
@@ -187,7 +190,8 @@ class ProductAttributeController extends Controller
             ProductAttribute::TYPE_INK_COLOR => 'Color de Tinta',
             ProductAttribute::TYPE_CLICHE => 'Cliché',
             ProductAttribute::TYPE_QUANTITY => 'Cantidad',
-            ProductAttribute::TYPE_SYSTEM => 'Sistema de Impresión'
+            ProductAttribute::TYPE_SYSTEM => 'Sistema de Impresión',
+            ProductAttribute::TYPE_WEIGHT => 'Gramaje'
         ];
 
         return view('admin.product-attributes.edit', compact('productAttribute', 'types'));
