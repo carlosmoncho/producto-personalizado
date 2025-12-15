@@ -4,7 +4,6 @@ namespace App\Http\Resources\V1;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Product API Resource
@@ -15,24 +14,10 @@ class ProductResource extends JsonResource
 {
     /**
      * Get the storage URL for a file path
-     * Returns full S3 URL in production, /api/storage/ proxy in local
      */
     protected function getStorageUrl(?string $path): ?string
     {
-        if (!$path) return null;
-
-        // Si ya es una URL absoluta, devolverla tal cual
-        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
-            return $path;
-        }
-
-        // En producción, usar S3 directamente
-        if (app()->environment('production') || config('filesystems.default') === 's3') {
-            return Storage::disk('s3')->url($path);
-        }
-
-        // En local, usar el proxy /api/storage/
-        return '/api/storage/' . $path;
+        return \App\Helpers\StorageHelper::url($path);
     }
 
     /**

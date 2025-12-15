@@ -326,9 +326,9 @@
                                                                          border: 1px solid #ddd; display: inline-block;"></span>
                                                         @endif
                                                         @if($attribute->image_path)
-                                                            <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($attribute->image_path) }}" 
-                                                                 alt="{{ $attribute->name }}" 
-                                                                 class="me-2" 
+                                                            <img src="{{ \App\Helpers\StorageHelper::url($attribute->image_path) }}"
+                                                                 alt="{{ $attribute->name }}"
+                                                                 class="me-2"
                                                                  style="width: 24px; height: 24px; object-fit: cover; border-radius: 3px;">
                                                         @endif
                                                         <div>

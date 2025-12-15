@@ -708,9 +708,7 @@ class ProductController extends Controller
             \Log::info('Attribute saved', ['saved' => $saved, 'new_images' => $attributeValue->images]);
 
             // Convertir paths a URLs completas para el frontend
-            $imageUrls = array_map(function($path) use ($disk) {
-                return \Storage::disk($disk)->url($path);
-            }, $existingImages);
+            $imageUrls = \App\Helpers\StorageHelper::urls($existingImages);
 
             return response()->json([
                 'success' => true,
@@ -756,10 +754,7 @@ class ProductController extends Controller
             $attributeValue->update(['images' => $images]);
 
             // Convertir paths a URLs completas para el frontend
-            $disk = config('filesystems.default', 'public');
-            $imageUrls = array_map(function($path) use ($disk) {
-                return \Storage::disk($disk)->url($path);
-            }, $images);
+            $imageUrls = \App\Helpers\StorageHelper::urls($images);
 
             return response()->json([
                 'success' => true,

@@ -53,7 +53,7 @@
                                                 @foreach($attributeValue->images as $index => $image)
                                                     <div class="col-4 image-item" data-index="{{ $index }}">
                                                         <div class="position-relative">
-                                                            <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($image) }}"
+                                                            <img src="{{ \App\Helpers\StorageHelper::url($image) }}"
                                                                  alt="Imagen {{ $index + 1 }}"
                                                                  class="img-fluid rounded border"
                                                                  style="aspect-ratio: 1; object-fit: cover; width: 100%;">
