@@ -59,6 +59,7 @@ class ProductResource extends JsonResource
 
             // Pricing info
             'pricing_unit' => $this->pricing_unit ?? 'unit', // 'unit' o 'thousand'
+            'pricing_unit_label' => $this->pricing_unit === 'thousand' ? 'por millar' : 'por unidad',
 
             // Opciones básicas (legacy - mantener por compatibilidad)
             'colors' => $this->colors ?? [],
