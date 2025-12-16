@@ -57,6 +57,9 @@ class ProductResource extends JsonResource
                 'file_upload_types' => $this->file_upload_types,
             ]),
 
+            // Pricing info
+            'pricing_unit' => $this->pricing_unit ?? 'unit', // 'unit' o 'thousand'
+
             // Opciones básicas (legacy - mantener por compatibilidad)
             'colors' => $this->colors ?? [],
             'materials' => $this->materials ?? [],
