@@ -772,10 +772,20 @@ class AttributeDependencyController extends Controller
     /**
      * Obtener atributos de un producto específico agrupados por tipo
      */
-    public function getProductAttributes(\App\Models\Product $product)
+    public function getProductAttributes($productId)
     {
-        // Cargar atributos del producto
-        $product->load(['productAttributes']);
+        // Buscar el producto
+        $product = \App\Models\Product::with('productAttributes')->find($productId);
+
+        if (!$product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Producto no encontrado',
+                'attributesByType' => [],
+                'typeLabels' => [],
+                'availableTypes' => []
+            ], 404);
+        }
 
         // Agrupar los atributos del producto por tipo (usando el campo type del atributo)
         $attributesByType = $product->productAttributes

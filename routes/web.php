@@ -146,7 +146,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('api/attribute-dependencies/by-type', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'getAttributesByType'])->name('api.attribute-dependencies.by-type');
     Route::get('api/attribute-dependencies/preview', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'previewDependencies'])->name('api.attribute-dependencies.preview');
     Route::get('api/attribute-dependencies/validate', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'validateConfiguration'])->name('api.attribute-dependencies.validate');
-    Route::get('api/attribute-dependencies/product/{product}/attributes', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'getProductAttributes'])->name('api.attribute-dependencies.product-attributes');
+    Route::get('api/attribute-dependencies/product/{productId}/attributes', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'getProductAttributes'])->name('api.attribute-dependencies.product-attributes');
 
     // Reglas de precio (compatibilidad temporal)
     Route::resource('price-rules', PriceRuleController::class);

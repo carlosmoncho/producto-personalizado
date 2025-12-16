@@ -420,16 +420,37 @@ document.addEventListener('DOMContentLoaded', function() {
         if (productId) {
             // Cargar atributos del producto específico
             try {
-                const response = await fetch(`{{ url('admin/api/attribute-dependencies/product') }}/${productId}/attributes`);
+                const url = `{{ url('admin/api/attribute-dependencies/product') }}/${productId}/attributes`;
+                console.log('Cargando atributos desde:', url);
+
+                const response = await fetch(url, {
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
+                console.log('Datos recibidos:', data);
 
                 if (data.success) {
                     attributesByType = data.attributesByType;
                     typeLabels = data.typeLabels;
                     updateTypeSelects(data.availableTypes);
+                } else {
+                    console.error('Error en respuesta:', data.message);
+                    alert('Error cargando atributos: ' + (data.message || 'Error desconocido'));
                 }
             } catch (error) {
                 console.error('Error cargando atributos del producto:', error);
+                alert('Error cargando atributos del producto. Verifica la consola para más detalles.');
             }
         } else {
             // Restaurar todos los atributos (dependencia global)
