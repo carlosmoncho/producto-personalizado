@@ -172,7 +172,7 @@
                         <label for="images" class="form-label">{{ $product->images && count($product->images) > 0 ? 'Agregar Más Imágenes' : 'Subir Imágenes' }}</label>
                         <input type="file" class="form-control @error('images.*') is-invalid @enderror" 
                                id="images" name="images[]" multiple accept="image/*">
-                        <small class="text-muted">Formatos permitidos: JPG, PNG, GIF. Máximo 2MB por imagen.</small>
+                        <small class="text-muted">Formatos permitidos: JPG, PNG, GIF, WebP. Máximo 2MB por imagen.</small>
                         @error('images.*')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror

@@ -141,7 +141,7 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'subcategory_id' => 'required|exists:subcategories,id',
             'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'model_3d' => 'nullable|file|mimetypes:model/gltf-binary,model/gltf+json,application/octet-stream|max:51200', // 50MB max
             'pricing' => 'nullable|array',
             'pricing.*.quantity_from' => 'nullable|integer|min:1',
@@ -359,7 +359,7 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'subcategory_id' => 'required|exists:subcategories,id',
             'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'model_3d' => 'nullable|file|mimetypes:model/gltf-binary,model/gltf+json,application/octet-stream|max:51200', // 50MB max
             'pricing' => 'nullable|array',
             'pricing.*.quantity_from' => 'nullable|integer|min:1',
