@@ -65,6 +65,15 @@ class ProductResource extends JsonResource
             'face_count' => $this->face_count,
             'print_colors_count' => $this->print_colors_count,
 
+            // Atributos para filtros (simplificado - nombres por tipo)
+            'filter_attributes' => $this->when($this->relationLoaded('productAttributes'), function() {
+                return $this->productAttributes
+                    ->filter(fn($attr) => $attr->active)
+                    ->groupBy('type')
+                    ->map(fn($attrs) => $attrs->pluck('name')->unique()->values()->toArray())
+                    ->toArray();
+            }),
+
             // Atributos configurables (nuevo sistema)
             'attributes' => $this->when($this->relationLoaded('productAttributes') && $this->has_configurator, function() {
                 $attributesByType = $this->productAttributes->groupBy('type');

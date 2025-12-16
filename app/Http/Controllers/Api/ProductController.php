@@ -48,7 +48,7 @@ class ProductController extends Controller
         ]);
 
         $query = Product::query()
-            ->with(['category', 'subcategory', 'printingSystems', 'pricing'])
+            ->with(['category', 'subcategory', 'printingSystems', 'pricing', 'productAttributes'])
             ->withCount('orderItems');
 
         // Filtro por estado activo (por defecto solo activos)
