@@ -21,6 +21,7 @@ Route::prefix('health')->middleware('throttle:health-check')->name('health.')->g
     Route::get('/metrics', [HealthCheckController::class, 'metrics'])->name('metrics');
     Route::get('/ready', [HealthCheckController::class, 'ready'])->name('ready');
     Route::get('/alive', [HealthCheckController::class, 'alive'])->name('alive');
+    Route::get('/upload-diagnostics', [HealthCheckController::class, 'uploadDiagnostics'])->name('upload-diagnostics');
 });
 
 // ============ AUTHENTICATION ENDPOINTS ============

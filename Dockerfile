@@ -21,6 +21,13 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_pgsql pdo_mysql mbstring exif pcntl bcmath gd
 
+# Copy PHP configuration for uploads
+COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+COPY docker/php/opcache-prod.ini /usr/local/etc/php/conf.d/opcache.ini
+
+# Create PHP error log directory
+RUN mkdir -p /var/log/php && chown www-data:www-data /var/log/php
+
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 

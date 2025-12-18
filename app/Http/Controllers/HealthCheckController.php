@@ -335,4 +335,122 @@ class HealthCheckController extends Controller
         $days = floor($hours / 24);
         return $days . 'd ' . ($hours % 24) . 'h';
     }
+
+    /**
+     * Upload diagnostics
+     *
+     * Diagnostica problemas de subida de archivos mostrando límites de PHP
+     *
+     * @return JsonResponse
+     */
+    public function uploadDiagnostics(): JsonResponse
+    {
+        return response()->json([
+            'status' => 'ok',
+            'timestamp' => now()->toIso8601String(),
+            'php_version' => PHP_VERSION,
+            'upload_limits' => [
+                'upload_max_filesize' => ini_get('upload_max_filesize'),
+                'upload_max_filesize_bytes' => $this->convertToBytes(ini_get('upload_max_filesize')),
+                'post_max_size' => ini_get('post_max_size'),
+                'post_max_size_bytes' => $this->convertToBytes(ini_get('post_max_size')),
+                'max_file_uploads' => ini_get('max_file_uploads'),
+                'max_execution_time' => ini_get('max_execution_time'),
+                'max_input_time' => ini_get('max_input_time'),
+                'memory_limit' => ini_get('memory_limit'),
+            ],
+            'temp_directory' => [
+                'path' => sys_get_temp_dir(),
+                'writable' => is_writable(sys_get_temp_dir()),
+                'free_space' => $this->formatBytes(disk_free_space(sys_get_temp_dir()) ?: 0),
+            ],
+            'storage' => [
+                'default_disk' => config('filesystems.default'),
+                's3_configured' => !empty(config('filesystems.disks.s3.key')),
+            ],
+            'recommendations' => $this->getUploadRecommendations(),
+        ]);
+    }
+
+    /**
+     * Convert PHP size string to bytes
+     *
+     * @param string $size
+     * @return int
+     */
+    private function convertToBytes(string $size): int
+    {
+        $size = trim($size);
+        $last = strtolower($size[strlen($size) - 1]);
+        $value = (int) $size;
+
+        switch ($last) {
+            case 'g':
+                $value *= 1024;
+                // fall through
+            case 'm':
+                $value *= 1024;
+                // fall through
+            case 'k':
+                $value *= 1024;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Get upload configuration recommendations
+     *
+     * @return array
+     */
+    private function getUploadRecommendations(): array
+    {
+        $recommendations = [];
+        $uploadMaxFilesize = $this->convertToBytes(ini_get('upload_max_filesize'));
+        $postMaxSize = $this->convertToBytes(ini_get('post_max_size'));
+
+        // Verificar límites para archivos GLB (recomendado 25MB)
+        $recommendedSize = 25 * 1024 * 1024; // 25MB
+
+        if ($uploadMaxFilesize < $recommendedSize) {
+            $recommendations[] = [
+                'level' => 'warning',
+                'message' => "upload_max_filesize ({$this->formatBytes($uploadMaxFilesize)}) es menor que los 25MB recomendados para archivos GLB",
+                'fix' => 'Añadir a .user.ini: upload_max_filesize = 25M',
+            ];
+        }
+
+        if ($postMaxSize < $recommendedSize) {
+            $recommendations[] = [
+                'level' => 'warning',
+                'message' => "post_max_size ({$this->formatBytes($postMaxSize)}) es menor que los 25MB recomendados",
+                'fix' => 'Añadir a .user.ini: post_max_size = 30M',
+            ];
+        }
+
+        if ($postMaxSize <= $uploadMaxFilesize) {
+            $recommendations[] = [
+                'level' => 'warning',
+                'message' => 'post_max_size debe ser mayor que upload_max_filesize',
+                'fix' => 'post_max_size debe ser al menos 5M mayor que upload_max_filesize',
+            ];
+        }
+
+        if (!is_writable(sys_get_temp_dir())) {
+            $recommendations[] = [
+                'level' => 'error',
+                'message' => 'El directorio temporal no es escribible',
+                'fix' => 'Verificar permisos de ' . sys_get_temp_dir(),
+            ];
+        }
+
+        if (empty($recommendations)) {
+            $recommendations[] = [
+                'level' => 'ok',
+                'message' => 'La configuración de upload parece correcta',
+            ];
+        }
+
+        return $recommendations;
+    }
 }
