@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\Api\PerformanceController;
+use App\Http\Controllers\Api\SiteSettingsController;
 
 // ============ HEALTH CHECK ENDPOINTS ============
 // Con rate limiting alto para permitir monitoreo pero proteger contra abuso
@@ -73,7 +74,7 @@ Route::get('/storage/{path}', function ($path, Request $request) {
     }
 
     // Solo permitir extensiones de archivo seguras
-    $allowedExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'glb', 'gltf', 'pdf'];
+    $allowedExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'glb', 'gltf', 'pdf', 'hdr', 'exr'];
     $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
     if (!in_array($extension, $allowedExtensions)) {
@@ -86,7 +87,7 @@ Route::get('/storage/{path}', function ($path, Request $request) {
     }
 
     // Solo permitir directorios conocidos
-    $allowedDirectories = ['products', 'categories', 'subcategories', '3d-models'];
+    $allowedDirectories = ['products', 'categories', 'subcategories', '3d-models', 'hdri'];
     $pathParts = explode('/', $path);
     $firstDir = $pathParts[0] ?? '';
 
@@ -102,7 +103,7 @@ Route::get('/storage/{path}', function ($path, Request $request) {
     $disk = config('filesystems.default', 'public');
 
     // Cache largo para assets estáticos
-    $cacheableExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'glb', 'gltf'];
+    $cacheableExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'glb', 'gltf', 'hdr', 'exr'];
     $cacheHeaders = in_array($extension, $cacheableExtensions)
         ? ['Cache-Control' => 'public, max-age=31536000, immutable']
         : [];
@@ -225,6 +226,25 @@ Route::prefix('v1')->group(function () {
             ->name('configuration');
     });
 
+});
+
+// ============ SITE SETTINGS / HDRI ============
+Route::prefix('v1/settings')->name('settings.')->group(function () {
+    // Obtener HDRI actual (público - para el frontend)
+    Route::get('/hdri', [SiteSettingsController::class, 'getHdri'])
+        ->middleware('throttle:public-read')
+        ->name('hdri');
+
+    // Obtener configuraciones 3D (público)
+    Route::get('/3d', [SiteSettingsController::class, 'get3dSettings'])
+        ->middleware('throttle:public-read')
+        ->name('3d');
+
+    // Subir/eliminar HDRI (requiere autenticación admin)
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::post('/hdri', [SiteSettingsController::class, 'uploadHdri'])->name('hdri.upload');
+        Route::delete('/hdri', [SiteSettingsController::class, 'deleteHdri'])->name('hdri.delete');
+    });
 });
 
 // Rutas protegidas (para el panel de administración API)

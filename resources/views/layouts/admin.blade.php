@@ -111,8 +111,15 @@
                             </a>
                         </li>
 
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"
+                               href="{{ route('admin.settings.3d') }}">
+                                <i class="bi bi-badge-3d"></i> Config. 3D
+                            </a>
+                        </li>
+
                         <hr>
-                        
+
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('profile.edit') }}">
                                 <i class="bi bi-person"></i> Mi Perfil

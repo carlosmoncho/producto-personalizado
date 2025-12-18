@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\AttributeDependencyController;
 use App\Http\Controllers\Admin\PriceRuleController;
 use App\Http\Controllers\ProductConfiguratorController;
 use App\Http\Controllers\Admin\DataImportController;
+use App\Http\Controllers\Admin\SettingsController;
 
 Route::get('/', function () {
     return Auth::check()
@@ -156,6 +157,13 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('data-import', [DataImportController::class, 'index'])->name('data-import.index');
     Route::get('data-import/export', [DataImportController::class, 'export'])->name('data-import.export');
     Route::post('data-import/import', [DataImportController::class, 'import'])->name('data-import.import');
+
+    // Configuración 3D / HDRI
+    Route::get('settings/3d', [SettingsController::class, 'index3d'])->name('settings.3d');
+    Route::post('settings/hdri', [SettingsController::class, 'uploadHdri'])->name('settings.hdri.upload');
+    Route::post('settings/hdri/{hdri}/activate', [SettingsController::class, 'activateHdri'])->name('settings.hdri.activate');
+    Route::post('settings/hdri/deactivate', [SettingsController::class, 'deactivateHdri'])->name('settings.hdri.deactivate');
+    Route::delete('settings/hdri/{hdri}', [SettingsController::class, 'deleteHdri'])->name('settings.hdri.delete');
 });
 
 require __DIR__.'/auth.php';
