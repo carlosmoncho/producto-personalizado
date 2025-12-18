@@ -340,7 +340,15 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        $request->validate([
+        \Log::info('=== UPDATE PRODUCT REQUEST ===', [
+            'product_id' => $product->id,
+            'files' => array_keys($request->allFiles()),
+            'has_images' => $request->hasFile('images'),
+            'images_count' => $request->hasFile('images') ? count($request->file('images')) : 0,
+        ]);
+
+        try {
+            $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'sku' => 'required|string|unique:products,sku,' . $product->id,
@@ -378,6 +386,19 @@ class ProductController extends Controller
             'configurator_base_price' => 'nullable|numeric|min:0',
             'configurator_description' => 'nullable|string|max:1000',
             'pricing_unit' => 'nullable|in:unit,thousand'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('=== UPDATE PRODUCT VALIDATION ERROR ===', [
+                'errors' => $e->errors(),
+            ]);
+            throw $e;
+        }
+
+        \Log::info('=== UPDATE PRODUCT START ===', [
+            'product_id' => $product->id,
+            'has_images' => $request->hasFile('images'),
+            'has_model_3d' => $request->hasFile('model_3d'),
+            'all_files' => array_keys($request->allFiles()),
         ]);
 
         DB::beginTransaction();
@@ -468,7 +489,14 @@ class ProductController extends Controller
                             ->with('success', 'Producto actualizado exitosamente.');
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
+            \Log::error('=== UPDATE PRODUCT ERROR ===', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return redirect()->back()
                             ->withInput()
                             ->with('error', 'Error al actualizar el producto: ' . $e->getMessage());
