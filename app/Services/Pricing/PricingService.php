@@ -52,11 +52,15 @@ class PricingService
         $pricingUnit = $product->pricing_unit ?? 'unit';
         $pricingUnitQuantity = $product->getPricingUnitQuantity();
 
+        // 1.5 Auto-inyectar atributo de cantidad del tramo correspondiente
+        //     para que las dependencias de precio apliquen correctamente
+        $selectionWithTier = $this->injectQuantityTierAttribute($product, $selection, $quantity);
+
         // 2. Aplicar modificadores de atributos
-        $attributeModifiers = $this->calculateAttributeModifiers($product, $selection, $unitPrice);
+        $attributeModifiers = $this->calculateAttributeModifiers($product, $selectionWithTier, $unitPrice);
 
         // 3. Aplicar impacto de dependencias (separado por unit/total)
-        $dependencyImpact = $this->calculateDependencyPriceImpact($selection, $product->id);
+        $dependencyImpact = $this->calculateDependencyPriceImpact($selectionWithTier, $product->id);
         $unitDependencyImpact = $dependencyImpact['unit'];
         $totalDependencyImpact = $dependencyImpact['total'];
         $percentages = $dependencyImpact['percentages'] ?? [];
@@ -130,7 +134,7 @@ class PricingService
      */
     public function getBasePrice(Product $product, int $quantity): array
     {
-        // Buscar rango de precio que corresponda a la cantidad
+        // 1. Buscar rango de precio exacto que corresponda a la cantidad
         $priceRange = $product->pricing()
             ->where('quantity_from', '<=', $quantity)
             ->where('quantity_to', '>=', $quantity)
@@ -144,12 +148,156 @@ class PricingService
             ];
         }
 
-        // Si no hay rango, usar precio base del configurador
+        // 2. Si no hay rango exacto, buscar el tramo de cantidad apropiado
+        //    basándose en los atributos de cantidad del producto
+        $tierQuantity = $this->findQuantityTier($product, $quantity);
+
+        if ($tierQuantity) {
+            // Buscar precio para el tramo encontrado
+            $tierPriceRange = $product->pricing()
+                ->where('quantity_from', '<=', $tierQuantity)
+                ->where('quantity_to', '>=', $tierQuantity)
+                ->first();
+
+            if ($tierPriceRange) {
+                return [
+                    'unit_price' => (float) $tierPriceRange->unit_price,
+                    'source' => 'pricing_tier',
+                    'range_id' => $tierPriceRange->id,
+                    'tier_quantity' => $tierQuantity
+                ];
+            }
+        }
+
+        // 3. Fallback: usar precio base del configurador
         return [
             'unit_price' => (float) ($product->configurator_base_price ?? 0),
             'source' => 'configurator_base',
             'range_id' => null
         ];
+    }
+
+    /**
+     * Encontrar el tramo de cantidad apropiado para una cantidad dada
+     * Lógica: usa el tramo inferior (floor), mínimo si < min, máximo si > max
+     *
+     * @param Product $product
+     * @param int $quantity
+     * @return int|null La cantidad del tramo correspondiente, o null si no hay atributos
+     */
+    private function findQuantityTier(Product $product, int $quantity): ?int
+    {
+        // Obtener atributos de cantidad del producto
+        $quantityAttributes = $product->productAttributeValues()
+            ->with('productAttribute.attributeGroup')
+            ->whereHas('productAttribute.attributeGroup', function($query) {
+                $query->where('type', 'quantity');
+            })
+            ->get()
+            ->map(function($pav) {
+                return [
+                    'id' => $pav->productAttribute->id,
+                    'value' => (int) $pav->productAttribute->value
+                ];
+            })
+            ->sortBy('value')
+            ->values();
+
+        if ($quantityAttributes->isEmpty()) {
+            return null;
+        }
+
+        $minTier = $quantityAttributes->first()['value'];
+        $maxTier = $quantityAttributes->last()['value'];
+
+        // Si es menor que el mínimo, usar el mínimo
+        if ($quantity < $minTier) {
+            return $minTier;
+        }
+
+        // Si es mayor o igual que el máximo, usar el máximo
+        if ($quantity >= $maxTier) {
+            return $maxTier;
+        }
+
+        // Buscar el tramo inferior (floor)
+        $tierValue = $minTier;
+        foreach ($quantityAttributes as $attr) {
+            if ($attr['value'] <= $quantity) {
+                $tierValue = $attr['value'];
+            } else {
+                break;
+            }
+        }
+
+        return $tierValue;
+    }
+
+    /**
+     * Auto-inyectar el atributo de cantidad del tramo correspondiente
+     * Si la selección no incluye un atributo de cantidad, añade el del tramo correcto
+     *
+     * @param Product $product
+     * @param array $selection
+     * @param int $quantity
+     * @return array Selection con el atributo de cantidad inyectado si corresponde
+     */
+    private function injectQuantityTierAttribute(Product $product, array $selection, int $quantity): array
+    {
+        // Obtener todos los atributos de cantidad del producto
+        $quantityAttributes = $product->productAttributeValues()
+            ->with('productAttribute.attributeGroup')
+            ->whereHas('productAttribute.attributeGroup', function($query) {
+                $query->where('type', 'quantity');
+            })
+            ->get()
+            ->map(function($pav) {
+                return [
+                    'id' => $pav->productAttribute->id,
+                    'value' => (int) $pav->productAttribute->value
+                ];
+            })
+            ->sortBy('value')
+            ->values();
+
+        if ($quantityAttributes->isEmpty()) {
+            return $selection;
+        }
+
+        // Verificar si ya hay un atributo de cantidad en la selección
+        $quantityAttrIds = $quantityAttributes->pluck('id')->toArray();
+        $hasQuantityAttr = !empty(array_intersect($selection, $quantityAttrIds));
+
+        if ($hasQuantityAttr) {
+            // Ya tiene atributo de cantidad, no modificar
+            return $selection;
+        }
+
+        // Encontrar el tramo correcto y añadir su ID
+        $minTier = $quantityAttributes->first();
+        $maxTier = $quantityAttributes->last();
+
+        // Si es menor que el mínimo, usar el mínimo
+        if ($quantity < $minTier['value']) {
+            return array_merge($selection, [$minTier['id']]);
+        }
+
+        // Si es mayor o igual que el máximo, usar el máximo
+        if ($quantity >= $maxTier['value']) {
+            return array_merge($selection, [$maxTier['id']]);
+        }
+
+        // Buscar el tramo inferior (floor)
+        $tierAttr = $minTier;
+        foreach ($quantityAttributes as $attr) {
+            if ($attr['value'] <= $quantity) {
+                $tierAttr = $attr;
+            } else {
+                break;
+            }
+        }
+
+        return array_merge($selection, [$tierAttr['id']]);
     }
 
     /**

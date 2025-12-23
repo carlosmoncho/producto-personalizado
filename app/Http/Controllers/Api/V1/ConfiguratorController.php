@@ -152,6 +152,7 @@ class ConfiguratorController extends Controller
                     'configurator_base_price' => (float) $product->configurator_base_price,
                     'max_print_colors' => $product->max_print_colors,
                     'allow_file_upload' => (bool) $product->allow_file_upload,
+                    'allow_custom_quantity' => (bool) $product->allow_custom_quantity,
                     // Información de unidad de precio
                     'pricing_unit' => $product->pricing_unit ?? 'unit',
                     'pricing_unit_quantity' => $product->getPricingUnitQuantity(),

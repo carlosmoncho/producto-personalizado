@@ -513,6 +513,22 @@
                     </div>
                 </div>
 
+                <!-- Cantidad personalizada -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input type="hidden" name="allow_custom_quantity" value="0">
+                            <input class="form-check-input" type="checkbox"
+                                   id="allow_custom_quantity" name="allow_custom_quantity" value="1"
+                                   {{ old('allow_custom_quantity', $product->allow_custom_quantity ?? false) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="allow_custom_quantity">
+                                <strong>Permitir cantidad personalizada</strong>
+                                <div class="form-text">Los clientes pueden escribir una cantidad específica además de las opciones predefinidas</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Descripción del configurador -->
                 <div class="mb-3">
                     <label for="configurator_description" class="form-label">Descripción del Configurador</label>

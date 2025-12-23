@@ -198,6 +198,7 @@ class ProductService
             'has_configurator' => $request->boolean('has_configurator', false),
             'max_print_colors' => $request->max_print_colors ?? 1,
             'allow_file_upload' => $request->boolean('allow_file_upload', false),
+            'allow_custom_quantity' => $request->boolean('allow_custom_quantity', false),
             'file_upload_types' => $request->file_upload_types,
             'configurator_base_price' => $request->configurator_base_price,
             'configurator_description' => $request->configurator_description,
