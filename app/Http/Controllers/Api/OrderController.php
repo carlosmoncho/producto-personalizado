@@ -99,6 +99,7 @@ class OrderController extends Controller
             'products.*.id' => 'required|exists:products,id',
             'products.*.quantity' => 'required|integer|min:1',
             'products.*.price' => 'required|numeric|min:0',
+            'products.*.extras' => 'nullable|numeric|min:0', // Extras fijos (cliché, etc.)
             'products.*.configuration' => 'nullable|array',
             'products.*.design_logo' => 'nullable|string', // Logo/diseño en base64
             'products.*.preview_3d' => 'nullable|string', // Preview del modelo 3D personalizado en base64

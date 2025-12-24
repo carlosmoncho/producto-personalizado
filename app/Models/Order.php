@@ -52,7 +52,10 @@ class Order extends Model
         'company_name',     // Nombre de empresa para factura
         'nif_cif',          // NIF/CIF para factura
         'status',
-        'total_amount',
+        'subtotal',         // Subtotal sin IVA
+        'tax_rate',         // Porcentaje de IVA (21%)
+        'tax_amount',       // Importe del IVA
+        'total_amount',     // Total con IVA
         'notes',
         'approved_at',
         'shipped_at',
@@ -60,6 +63,9 @@ class Order extends Model
     ];
 
     protected $casts = [
+        'subtotal' => 'decimal:2',
+        'tax_rate' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'approved_at' => 'datetime',
         'shipped_at' => 'datetime',

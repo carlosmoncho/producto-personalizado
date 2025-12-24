@@ -26,6 +26,9 @@ class OrderResource extends JsonResource
             'status_label' => $this->status_label,
 
             // Precios
+            'subtotal' => (float) $this->subtotal,
+            'tax_rate' => (float) $this->tax_rate,
+            'tax_amount' => (float) $this->tax_amount,
             'total_amount' => (float) $this->total_amount,
 
             // Items

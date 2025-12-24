@@ -16,6 +16,7 @@ class OrderItem extends Model
         'quantity',
         'unit_price',
         'total_price',
+        'extras', // Extras fijos (cliché, etc.) - no dependen de la cantidad
         'selected_size',
         'selected_color',
         'selected_print_colors',
@@ -32,6 +33,7 @@ class OrderItem extends Model
         'model_3d_config' => 'array', // JSON con configuración del modelo 3D
         'unit_price' => 'decimal:2',
         'total_price' => 'decimal:2',
+        'extras' => 'decimal:2',
     ];
 
     public function order()

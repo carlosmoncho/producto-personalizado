@@ -28,6 +28,16 @@
                     <span class="badge bg-{{ $color }} fs-6">{{ $order->status_label }}</span>
                 </div>
 
+                <div class="row mb-2">
+                    <div class="col-sm-5"><strong>Subtotal:</strong></div>
+                    <div class="col-sm-7">€{{ number_format($order->subtotal ?? $order->total_amount, 2) }}</div>
+                </div>
+                @if($order->tax_amount)
+                <div class="row mb-2">
+                    <div class="col-sm-5"><strong>IVA ({{ number_format($order->tax_rate ?? 21, 0) }}%):</strong></div>
+                    <div class="col-sm-7">€{{ number_format($order->tax_amount, 2) }}</div>
+                </div>
+                @endif
                 <div class="row mb-3">
                     <div class="col-sm-5"><strong>Total:</strong></div>
                     <div class="col-sm-7">
@@ -450,6 +460,11 @@
                                 <div class="col-md-2 text-end">
                                     <h6>€{{ number_format($item->unit_price, 2) }}</h6>
                                     <small class="text-muted">por unidad</small>
+                                    @if($item->extras && $item->extras > 0)
+                                    <div class="mt-1">
+                                        <small class="text-info">+€{{ number_format($item->extras, 2) }} extras</small>
+                                    </div>
+                                    @endif
                                     <hr>
                                     <h5>€{{ number_format($item->total_price, 2) }}</h5>
                                     <small class="text-muted">total</small>
@@ -477,9 +492,20 @@
                         <div class="col-md-4">
                             <div class="card bg-light">
                                 <div class="card-body">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Subtotal:</span>
+                                        <span>€{{ number_format($order->subtotal ?? $order->total_amount, 2) }}</span>
+                                    </div>
+                                    @if($order->tax_amount)
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>IVA ({{ number_format($order->tax_rate ?? 21, 0) }}%):</span>
+                                        <span>€{{ number_format($order->tax_amount, 2) }}</span>
+                                    </div>
+                                    @endif
+                                    <hr class="my-2">
                                     <div class="d-flex justify-content-between">
-                                        <strong>Total del Pedido:</strong>
-                                        <strong class="text-success">€{{ number_format($order->total_amount, 2) }}</strong>
+                                        <strong>Total:</strong>
+                                        <strong class="text-success fs-5">€{{ number_format($order->total_amount, 2) }}</strong>
                                     </div>
                                 </div>
                             </div>

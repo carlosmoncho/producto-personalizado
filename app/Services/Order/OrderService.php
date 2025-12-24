@@ -29,6 +29,11 @@ class OrderService
     private const NON_DELETABLE_STATUSES = ['completed', 'shipped'];
 
     /**
+     * Porcentaje de IVA por defecto (España)
+     */
+    private const DEFAULT_TAX_RATE = 21.00;
+
+    /**
      * Preparar datos de cliente para una orden
      *
      * Si se proporciona un customer_id existente, usa sus datos.
@@ -96,10 +101,25 @@ class OrderService
     {
         $total = 0;
 
-        foreach ($products as $productData) {
-            $subtotal = $productData['quantity'] * $productData['price'];
+        foreach ($products as $index => $productData) {
+            // Calcular subtotal: (cantidad × precio unitario) + extras fijos (cliché, etc.)
+            $itemSubtotal = $productData['quantity'] * $productData['price'];
+            $extras = $productData['extras'] ?? 0;
+            $subtotal = $itemSubtotal + $extras;
             $total += $subtotal;
+
+            // Log para debug de precios
+            \Log::info("Order item #{$index} pricing", [
+                'product_id' => $productData['id'] ?? 'unknown',
+                'quantity' => $productData['quantity'],
+                'unit_price' => $productData['price'],
+                'extras' => $extras,
+                'item_subtotal' => $itemSubtotal,
+                'subtotal_with_extras' => $subtotal,
+            ]);
         }
+
+        \Log::info("Order total calculated", ['total' => round($total, 2)]);
 
         return round($total, 2);
     }
@@ -115,13 +135,28 @@ class OrderService
      */
     public function createOrder(array $customerData, array $products, ?string $notes = null): Order
     {
-        // Calcular total
-        $totalAmount = $this->calculateOrderTotal($products);
+        // Calcular subtotal (sin IVA)
+        $subtotal = $this->calculateOrderTotal($products);
+
+        // Calcular IVA
+        $taxRate = self::DEFAULT_TAX_RATE;
+        $taxAmount = round($subtotal * ($taxRate / 100), 2);
+        $totalAmount = round($subtotal + $taxAmount, 2);
+
+        \Log::info("Order tax calculation", [
+            'subtotal' => $subtotal,
+            'tax_rate' => $taxRate,
+            'tax_amount' => $taxAmount,
+            'total_with_tax' => $totalAmount,
+        ]);
 
         // Preparar datos de la orden
         $orderData = array_merge($customerData, [
             'order_number' => Order::generateOrderNumber(),
             'status' => 'pending',
+            'subtotal' => $subtotal,
+            'tax_rate' => $taxRate,
+            'tax_amount' => $taxAmount,
             'total_amount' => $totalAmount,
             'notes' => $notes
         ]);
@@ -166,13 +201,16 @@ class OrderService
     {
         $quantity = $itemData['quantity'];
         $unitPrice = $itemData['price'];
+        $extras = $itemData['extras'] ?? 0;
 
         // Preparar datos base del item
+        // total_price = (cantidad × precio unitario) + extras fijos
         $data = [
             'product_id' => $product->id,
             'quantity' => $quantity,
             'unit_price' => $unitPrice,
-            'total_price' => $quantity * $unitPrice,
+            'total_price' => ($quantity * $unitPrice) + $extras,
+            'extras' => $extras,
         ];
 
         // Si tiene configuración del nuevo sistema de atributos, guardarla
