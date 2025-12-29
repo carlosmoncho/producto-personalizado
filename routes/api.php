@@ -295,3 +295,21 @@ Route::prefix('v1')->middleware(['throttle:public-read'])->group(function () {
     });
 
 });
+
+// ============ WEBHOOKS PARA EMAILS ENTRANTES ============
+// Sin CSRF ni rate limiting estricto (los proveedores verifican de otra forma)
+Route::prefix('webhooks/email')->name('webhooks.email.')->group(function () {
+    // Amazon SES via SNS
+    Route::post('/ses', [\App\Http\Controllers\Api\IncomingEmailController::class, 'handleSns'])
+        ->name('ses');
+
+    // Mailgun Inbound
+    Route::post('/mailgun', [\App\Http\Controllers\Api\IncomingEmailController::class, 'handleMailgun'])
+        ->name('mailgun');
+
+    // Endpoint de prueba (solo en local)
+    if (app()->environment('local')) {
+        Route::post('/test', [\App\Http\Controllers\Api\IncomingEmailController::class, 'handleTest'])
+            ->name('test');
+    }
+});

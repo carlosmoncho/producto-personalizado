@@ -82,6 +82,23 @@ class Order extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    public function messages()
+    {
+        return $this->hasMany(OrderMessage::class)->orderBy('created_at', 'asc');
+    }
+
+    public function latestMessage()
+    {
+        return $this->hasOne(OrderMessage::class)->latestOfMany();
+    }
+
+    public function unreadMessages()
+    {
+        return $this->hasMany(OrderMessage::class)
+            ->where('direction', 'incoming')
+            ->whereNull('read_at');
+    }
+
     public function getRouteKeyName()
     {
         return 'order_number';

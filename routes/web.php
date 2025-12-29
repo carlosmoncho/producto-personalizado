@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\PriceRuleController;
 use App\Http\Controllers\ProductConfiguratorController;
 use App\Http\Controllers\Admin\DataImportController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\OrderMessageController;
 
 Route::get('/', function () {
     return Auth::check()
@@ -92,6 +93,17 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
     // Ruta AJAX para verificar dependencias
     Route::get('orders/{order}/dependencies', [OrderController::class, 'dependencies'])->name('orders.dependencies');
+
+    // Mensajes de pedidos (comunicación con cliente)
+    Route::prefix('orders/{order}/messages')->name('orders.messages.')->group(function () {
+        Route::get('/', [OrderMessageController::class, 'index'])->name('index');
+        Route::post('/', [OrderMessageController::class, 'store'])->name('store');
+        Route::post('/incoming', [OrderMessageController::class, 'storeIncoming'])->name('store-incoming');
+        Route::get('/template', [OrderMessageController::class, 'getTemplate'])->name('template');
+        Route::post('/{message}/retry', [OrderMessageController::class, 'retry'])->name('retry');
+        Route::get('/{message}', [OrderMessageController::class, 'show'])->name('show');
+        Route::delete('/{message}', [OrderMessageController::class, 'destroy'])->name('destroy');
+    });
 
     // Clientes - ruta export debe ir ANTES del resource para evitar conflictos
     Route::get('customers/export', [CustomerController::class, 'export'])->name('customers.export');

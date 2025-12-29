@@ -151,6 +151,9 @@
                 </div>
             </div>
         </div>
+
+        <!-- Widget de Mensajes -->
+        @include('admin.orders.messages._widget')
     </div>
 
     <div class="col-md-8">
