@@ -296,7 +296,7 @@
 
                                             // Separar configuración en grupos
                                             $generalConfig = [];
-                                            $inkColorAttrs = [];
+                                            $inkColorAttrs = collect([]);
                                             $customInks = $item->custom_inks ?? [];
 
                                             foreach($item->configuration as $key => $attributeId) {
