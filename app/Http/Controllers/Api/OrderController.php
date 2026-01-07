@@ -107,6 +107,10 @@ class OrderController extends Controller
             'products.*.model_3d_config.model_url' => 'nullable|string',
             'products.*.model_3d_config.color_hex' => 'nullable|string',
             'products.*.model_3d_config.logo_transform' => 'nullable|array',
+            'products.*.custom_inks' => 'nullable|array', // Tintas personalizadas [{hex, name?, pantone?}]
+            'products.*.custom_inks.*.hex' => 'required_with:products.*.custom_inks|string|max:7',
+            'products.*.custom_inks.*.name' => 'nullable|string|max:100',
+            'products.*.custom_inks.*.pantone' => 'nullable|string|max:20',
         ]);
 
         DB::beginTransaction();

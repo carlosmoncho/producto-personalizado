@@ -280,42 +280,147 @@
                                     <p class="mb-2"><strong><i class="bi bi-box-seam me-1"></i>Cantidad:</strong> {{ number_format($item->quantity) }} uds</p>
 
                                     @if($item->configuration && is_array($item->configuration))
-                                        <div class="mb-2">
-                                            <strong><i class="bi bi-sliders me-1"></i>Configuración Personalizada:</strong>
-                                            <div class="mt-1 p-2 bg-light rounded border">
-                                                @php
-                                                    $attributeNames = [
-                                                        'material' => 'Material',
-                                                        'color' => 'Color',
-                                                        'size' => 'Tamaño',
-                                                        'system' => 'Sistema de Impresión',
-                                                        'quantity' => 'Cantidad de Impresión'
-                                                    ];
-                                                @endphp
-                                                @foreach($item->configuration as $key => $attributeId)
-                                                    @php
-                                                        $displayName = $attributeNames[$key] ?? ucfirst($key);
-                                                        if (is_array($attributeId)) {
-                                                            $attributes = \App\Models\ProductAttribute::whereIn('id', $attributeId)->get();
-                                                            $attributeValue = $attributes->pluck('name')->implode(', ');
+                                        @php
+                                            // Nombres legibles para atributos
+                                            $attributeNames = [
+                                                'material' => 'Material',
+                                                'color' => 'Color del Producto',
+                                                'size' => 'Tamaño',
+                                                'system' => 'Sistema de Impresión',
+                                                'quantity' => 'Cantidad',
+                                                'ink' => 'Tintas',
+                                                'ink_color' => 'Color de Tinta',
+                                                'cliche' => 'Cliché',
+                                                'weight' => 'Gramaje',
+                                            ];
+
+                                            // Separar configuración en grupos
+                                            $generalConfig = [];
+                                            $inkColorAttrs = [];
+                                            $customInks = $item->custom_inks ?? [];
+
+                                            foreach($item->configuration as $key => $attributeId) {
+                                                if (is_array($attributeId)) {
+                                                    $attributes = \App\Models\ProductAttribute::whereIn('id', $attributeId)->get();
+                                                    if ($key === 'ink_color') {
+                                                        $inkColorAttrs = $attributes;
+                                                    } else {
+                                                        $generalConfig[$key] = $attributes->pluck('name')->implode(', ');
+                                                    }
+                                                } else {
+                                                    $attribute = \App\Models\ProductAttribute::find($attributeId);
+                                                    if ($attribute) {
+                                                        if ($key === 'ink_color') {
+                                                            $inkColorAttrs = collect([$attribute]);
+                                                        } elseif ($key === 'color') {
+                                                            $generalConfig[$key] = [
+                                                                'name' => $attribute->name,
+                                                                'hex' => $attribute->hex_code
+                                                            ];
                                                         } else {
-                                                            $attribute = \App\Models\ProductAttribute::find($attributeId);
-                                                            $attributeValue = $attribute ? $attribute->name : $attributeId;
+                                                            $generalConfig[$key] = $attribute->name;
                                                         }
-                                                    @endphp
-                                                    <small class="d-block">
-                                                        <strong>{{ $displayName }}:</strong>
-                                                        {{ $attributeValue }}
-                                                    </small>
-                                                @endforeach
+                                                    }
+                                                }
+                                            }
+
+                                            $hasInkColors = $inkColorAttrs->count() > 0 || count($customInks) > 0;
+                                        @endphp
+
+                                        {{-- Configuración General --}}
+                                        <div class="mb-2">
+                                            <strong><i class="bi bi-sliders me-1"></i>Configuración:</strong>
+                                            <div class="mt-1 p-2 bg-light rounded border">
+                                                <div class="row row-cols-2 g-2">
+                                                    @foreach($generalConfig as $key => $value)
+                                                        @if($key !== 'quantity' || !isset($generalConfig['ink']))
+                                                            <div class="col">
+                                                                <small class="text-muted d-block">{{ $attributeNames[$key] ?? ucfirst(str_replace('_', ' ', $key)) }}</small>
+                                                                @if(is_array($value) && isset($value['hex']))
+                                                                    <div class="d-flex align-items-center gap-1">
+                                                                        <span class="d-inline-block rounded-circle border" style="width: 14px; height: 14px; background-color: {{ $value['hex'] }};"></span>
+                                                                        <span class="fw-medium">{{ $value['name'] }}</span>
+                                                                    </div>
+                                                                @else
+                                                                    <span class="fw-medium">{{ $value }}</span>
+                                                                @endif
+                                                            </div>
+                                                        @endif
+                                                    @endforeach
+                                                </div>
                                             </div>
                                         </div>
+
+                                        {{-- Colores de Tinta (predefinidos + personalizados) --}}
+                                        @if($hasInkColors)
+                                            <div class="mb-2">
+                                                <strong><i class="bi bi-palette-fill me-1"></i>Colores de Tinta:</strong>
+                                                <div class="mt-1 p-2 bg-light rounded border">
+                                                    <div class="d-flex flex-wrap gap-2">
+                                                        {{-- Colores predefinidos --}}
+                                                        @foreach($inkColorAttrs as $inkAttr)
+                                                            <div class="d-flex align-items-center gap-1 px-2 py-1 bg-white rounded border">
+                                                                @if($inkAttr->hex_code)
+                                                                    <span class="d-inline-block rounded-circle border border-secondary" style="width: 20px; height: 20px; background-color: {{ $inkAttr->hex_code }};"></span>
+                                                                @endif
+                                                                <span class="fw-medium">{{ $inkAttr->name }}</span>
+                                                                <span class="badge bg-secondary" style="font-size: 0.65rem;">Catálogo</span>
+                                                            </div>
+                                                        @endforeach
+
+                                                        {{-- Colores personalizados --}}
+                                                        @foreach($customInks as $ink)
+                                                            <div class="d-flex align-items-center gap-1 px-2 py-1 bg-white rounded border border-warning">
+                                                                <span class="d-inline-block rounded-circle border border-dark" style="width: 20px; height: 20px; background-color: {{ $ink['hex'] }};"></span>
+                                                                <span class="fw-medium font-monospace" style="font-size: 0.8rem;">{{ strtoupper($ink['hex']) }}</span>
+                                                                @if(!empty($ink['name']))
+                                                                    <span class="text-muted">({{ $ink['name'] }})</span>
+                                                                @endif
+                                                                @if(!empty($ink['pantone']))
+                                                                    <span class="badge bg-info" style="font-size: 0.65rem;">{{ $ink['pantone'] }}</span>
+                                                                @endif
+                                                                <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">Personalizado</span>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
                                     @else
                                         @if($item->selected_size)
                                             <p class="mb-1"><strong>Tamaño:</strong> {{ $item->selected_size }}</p>
                                         @endif
                                         @if($item->selected_color)
                                             <p class="mb-1"><strong>Color:</strong> {{ $item->selected_color }}</p>
+                                        @endif
+
+                                        {{-- Tintas personalizadas (fallback para items sin configuración nueva) --}}
+                                        @if($item->custom_inks && count($item->custom_inks) > 0)
+                                            <div class="mb-2">
+                                                <strong><i class="bi bi-palette me-1"></i>Tintas Personalizadas:</strong>
+                                                <div class="mt-1 d-flex flex-wrap gap-2">
+                                                    @foreach($item->custom_inks as $ink)
+                                                        <div class="d-flex align-items-center gap-1 px-2 py-1 bg-light rounded border">
+                                                            <span class="d-inline-block rounded-circle border" style="width: 18px; height: 18px; background-color: {{ $ink['hex'] }};"></span>
+                                                            <small class="fw-medium">{{ strtoupper($ink['hex']) }}</small>
+                                                            @if(!empty($ink['name']))
+                                                                <small class="text-muted">({{ $ink['name'] }})</small>
+                                                            @endif
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @elseif($item->has_custom_ink && $item->custom_ink_hex)
+                                            <div class="mb-2">
+                                                <strong><i class="bi bi-palette me-1"></i>Tinta Personalizada:</strong>
+                                                <div class="mt-1 d-flex align-items-center gap-2">
+                                                    <span class="d-inline-block rounded-circle border" style="width: 18px; height: 18px; background-color: {{ $item->custom_ink_hex }};"></span>
+                                                    <small class="fw-medium">{{ strtoupper($item->custom_ink_hex) }}</small>
+                                                    @if($item->custom_ink_name)
+                                                        <small class="text-muted">({{ $item->custom_ink_name }})</small>
+                                                    @endif
+                                                </div>
+                                            </div>
                                         @endif
                                     @endif
 

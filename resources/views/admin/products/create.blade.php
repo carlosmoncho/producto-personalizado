@@ -441,6 +441,18 @@
                                 <div class="form-text">Los clientes pueden escribir una cantidad específica además de las opciones predefinidas</div>
                             </label>
                         </div>
+
+                        <!-- Permitir tinta personalizada -->
+                        <div class="form-check form-switch mt-3">
+                            <input type="hidden" name="allows_custom_ink" value="0">
+                            <input class="form-check-input" type="checkbox"
+                                   id="allows_custom_ink" name="allows_custom_ink" value="1"
+                                   {{ old('allows_custom_ink', false) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="allows_custom_ink">
+                                <strong>Permitir tinta personalizada</strong>
+                                <div class="form-text">Los clientes pueden elegir un color de tinta personalizado usando un selector de color</div>
+                            </label>
+                        </div>
                     </div>
                 </div>
 

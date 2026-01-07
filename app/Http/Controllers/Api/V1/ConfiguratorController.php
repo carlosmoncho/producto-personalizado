@@ -153,6 +153,12 @@ class ConfiguratorController extends Controller
                     'max_print_colors' => $product->max_print_colors,
                     'allow_file_upload' => (bool) $product->allow_file_upload,
                     'allow_custom_quantity' => (bool) $product->allow_custom_quantity,
+                    // Información de tinta personalizada
+                    'allows_custom_ink' => (bool) $product->allows_custom_ink,
+                    'custom_ink_price_modifier' => (float) $product->custom_ink_price_modifier,
+                    'custom_ink_price_percentage' => (float) $product->custom_ink_price_percentage,
+                    'custom_ink_extra_days' => (int) $product->custom_ink_extra_days,
+                    'custom_ink_note' => $product->custom_ink_note,
                     // Información de unidad de precio
                     'pricing_unit' => $product->pricing_unit ?? 'unit',
                     'pricing_unit_quantity' => $product->getPricingUnitQuantity(),
@@ -304,6 +310,11 @@ class ConfiguratorController extends Controller
             'product_id' => 'required|exists:products,id',
             'selection' => 'required|array',
             'quantity' => 'integer|min:1',
+            // Campos de tinta personalizada
+            'custom_ink' => 'nullable|array',
+            'custom_ink.hex' => 'required_with:custom_ink|regex:/^#[0-9A-Fa-f]{6}$/',
+            'custom_ink.name' => 'nullable|string|max:100',
+            'custom_ink.pantone' => 'nullable|string|max:50',
         ]);
 
         if ($validator->fails()) {
@@ -316,15 +327,24 @@ class ConfiguratorController extends Controller
         $productId = $request->input('product_id');
         $selection = $request->input('selection', []);
         $quantity = $request->input('quantity', 1);
+        $customInk = $request->input('custom_ink');
 
         $product = Product::findOrFail($productId);
+
+        // Validar que el producto permite tinta personalizada si se envía
+        if ($customInk && !$product->allowsCustomInk()) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['custom_ink' => ['Este producto no permite tinta personalizada.']]
+            ], 422);
+        }
 
         // Obtener IDs de atributos seleccionados
         $selectedAttributeIds = is_array($selection) ? array_values($selection) : [];
 
         // Usar PricingService para calcular precio
         $pricingService = new \App\Services\Pricing\PricingService();
-        $data = $pricingService->calculateProductPrice($product, $selectedAttributeIds, $quantity);
+        $data = $pricingService->calculateProductPrice($product, $selectedAttributeIds, $quantity, $customInk);
 
         return response()->json([
             'success' => true,

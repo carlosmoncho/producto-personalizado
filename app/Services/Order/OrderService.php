@@ -233,6 +233,17 @@ class OrderService
             $data['model_3d_config'] = $itemData['model_3d_config'];
         }
 
+        // Si tiene tintas personalizadas, guardarlas
+        if (isset($itemData['custom_inks']) && !empty($itemData['custom_inks'])) {
+            $data['custom_inks'] = $itemData['custom_inks'];
+            $data['has_custom_ink'] = true;
+            // También guardar el primer color en el campo antiguo para compatibilidad
+            $firstInk = $itemData['custom_inks'][0];
+            $data['custom_ink_hex'] = $firstInk['hex'] ?? null;
+            $data['custom_ink_name'] = $firstInk['name'] ?? null;
+            $data['custom_ink_pantone'] = $firstInk['pantone'] ?? null;
+        }
+
         // Campos del sistema antiguo (por compatibilidad)
         $data['selected_size'] = $product->sizes ? $product->sizes[0] : null;
         $data['selected_color'] = $product->colors ? $product->colors[0] : null;

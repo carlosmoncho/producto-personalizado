@@ -40,9 +40,10 @@ class PricingService
      * @param Product $product Producto a calcular
      * @param array $selection Array de attribute IDs seleccionados
      * @param int $quantity Cantidad de productos
+     * @param array|null $customInk Datos de tinta personalizada [hex, name, pantone]
      * @return array Array con información de pricing
      */
-    public function calculateProductPrice(Product $product, array $selection, int $quantity = 1): array
+    public function calculateProductPrice(Product $product, array $selection, int $quantity = 1, ?array $customInk = null): array
     {
         // 1. Obtener precio base según cantidad
         $basePrice = $this->getBasePrice($product, $quantity);
@@ -51,6 +52,14 @@ class PricingService
         // Información de unidad de precio (por unidad o por millar)
         $pricingUnit = $product->pricing_unit ?? 'unit';
         $pricingUnitQuantity = $product->getPricingUnitQuantity();
+
+        // Calcular precio adicional por tinta personalizada
+        $customInkPrice = 0;
+        $hasCustomInk = false;
+        if ($customInk && $product->allowsCustomInk() && !empty($customInk['hex'])) {
+            $hasCustomInk = true;
+            $customInkPrice = $product->calculateCustomInkPrice($unitPrice);
+        }
 
         // 1.5 Auto-inyectar atributo de cantidad del tramo correspondiente
         //     para que las dependencias de precio apliquen correctamente
@@ -65,8 +74,8 @@ class PricingService
         $totalDependencyImpact = $dependencyImpact['total'];
         $percentages = $dependencyImpact['percentages'] ?? [];
 
-        // 4. Precio después de modificadores (solo impacto unitario)
-        $priceAfterModifiers = $unitPrice + $attributeModifiers + $unitDependencyImpact;
+        // 4. Precio después de modificadores (solo impacto unitario + tinta personalizada)
+        $priceAfterModifiers = $unitPrice + $attributeModifiers + $unitDependencyImpact + $customInkPrice;
 
         // 4.5 Aplicar modificadores porcentuales al precio unitario
         foreach ($percentages as $pct) {
@@ -105,6 +114,11 @@ class PricingService
         $certifications = $this->getApplicableCertifications($selection);
         $productionTime = $this->estimateProductionTime($selection, $quantity);
 
+        // Añadir días extra por tinta personalizada
+        if ($hasCustomInk) {
+            $productionTime += $product->getCustomInkExtraDays();
+        }
+
         return [
             'pricing' => [
                 'unit_price' => round($finalUnitPrice, 4),
@@ -119,9 +133,20 @@ class PricingService
                 'pricing_unit' => $pricingUnit,                    // 'unit' o 'thousand'
                 'pricing_unit_quantity' => $pricingUnitQuantity,   // 1 o 1000
                 'pricing_unit_label' => $product->getPricingUnitLabel(), // 'unidad' o 'millar'
+                // Información de tinta personalizada
+                'has_custom_ink' => $hasCustomInk,
+                'custom_ink_price' => round($customInkPrice, 2),
             ],
             'certifications' => $certifications,
             'production_time_days' => $productionTime,
+            // Datos de tinta personalizada si aplica
+            'custom_ink' => $hasCustomInk ? [
+                'hex' => $customInk['hex'] ?? null,
+                'name' => $customInk['name'] ?? null,
+                'pantone' => $customInk['pantone'] ?? null,
+                'price' => round($customInkPrice, 2),
+                'extra_days' => $product->getCustomInkExtraDays(),
+            ] : null,
         ];
     }
 

@@ -48,6 +48,12 @@ class Product extends Model
         // Campos de unidad de precio
         'pricing_unit',           // 'unit' o 'thousand'
         'pricing_unit_quantity',  // Cantidad por unidad de venta (1 o 1000)
+        // Campos de tinta personalizada
+        'allows_custom_ink',
+        'custom_ink_price_modifier',
+        'custom_ink_price_percentage',
+        'custom_ink_extra_days',
+        'custom_ink_note',
     ];
 
     /**
@@ -82,6 +88,11 @@ class Product extends Model
         'configurator_base_price' => 'decimal:4',
         'price_modifiers' => 'array',
         'configurator_settings' => 'array',
+        // Casts de tinta personalizada
+        'allows_custom_ink' => 'boolean',
+        'custom_ink_price_modifier' => 'decimal:4',
+        'custom_ink_price_percentage' => 'decimal:2',
+        'custom_ink_extra_days' => 'integer',
     ];
 
     public function category()
@@ -540,6 +551,65 @@ class Product extends Model
         }
 
         return $errors;
+    }
+
+    // ==================== MÉTODOS DE TINTA PERSONALIZADA ====================
+
+    /**
+     * Verificar si el producto permite tinta personalizada
+     */
+    public function allowsCustomInk(): bool
+    {
+        return $this->allows_custom_ink ?? false;
+    }
+
+    /**
+     * Obtener el modificador de precio para tinta personalizada
+     */
+    public function getCustomInkPriceModifier(): float
+    {
+        return (float) ($this->custom_ink_price_modifier ?? 0);
+    }
+
+    /**
+     * Obtener el porcentaje adicional para tinta personalizada
+     */
+    public function getCustomInkPricePercentage(): float
+    {
+        return (float) ($this->custom_ink_price_percentage ?? 0);
+    }
+
+    /**
+     * Obtener días adicionales de producción por tinta personalizada
+     */
+    public function getCustomInkExtraDays(): int
+    {
+        return (int) ($this->custom_ink_extra_days ?? 0);
+    }
+
+    /**
+     * Calcular el precio adicional por tinta personalizada
+     */
+    public function calculateCustomInkPrice(float $basePrice): float
+    {
+        $modifier = $this->getCustomInkPriceModifier();
+        $percentage = $this->getCustomInkPricePercentage();
+
+        $additionalPrice = $modifier;
+
+        if ($percentage > 0) {
+            $additionalPrice += $basePrice * ($percentage / 100);
+        }
+
+        return $additionalPrice;
+    }
+
+    /**
+     * Obtener la nota informativa de tinta personalizada
+     */
+    public function getCustomInkNote(): ?string
+    {
+        return $this->custom_ink_note;
     }
 
     // ==================== MÉTODOS DE UNIDAD DE PRECIO ====================
