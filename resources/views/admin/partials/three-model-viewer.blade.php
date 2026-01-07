@@ -61,10 +61,10 @@
 
 @push('scripts')
 <script type="module">
-import * as THREE from 'https://esm.sh/three@0.181.0';
-import { GLTFLoader } from 'https://esm.sh/three@0.181.0/examples/jsm/loaders/GLTFLoader.js';
-import { OrbitControls } from 'https://esm.sh/three@0.181.0/examples/jsm/controls/OrbitControls.js';
-import { RGBELoader } from 'https://esm.sh/three@0.181.0/examples/jsm/loaders/RGBELoader.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.181.0/build/three.module.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.181.0/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.181.0/examples/jsm/controls/OrbitControls.js';
+import { RGBELoader } from 'https://cdn.jsdelivr.net/npm/three@0.181.0/examples/jsm/loaders/RGBELoader.js';
 
 (function() {
     const containerId = '{{ $viewerId }}';
