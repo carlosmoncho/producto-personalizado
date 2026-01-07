@@ -93,6 +93,44 @@
                     </form>
                 </div>
 
+                {{-- Shopify Payment Link --}}
+                <div class="mt-4">
+                    <h6><i class="bi bi-credit-card me-1"></i>Pago Shopify:</h6>
+                    @if($order->shopify_invoice_url)
+                        <div class="p-2 bg-success bg-opacity-10 border border-success rounded mb-2">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <small class="text-success fw-bold"><i class="bi bi-check-circle me-1"></i>Enlace creado</small>
+                                @if($order->shopify_invoice_sent_at)
+                                    <small class="text-muted">Enviado: {{ $order->shopify_invoice_sent_at->format('d/m/Y H:i') }}</small>
+                                @endif
+                            </div>
+                            <div class="input-group input-group-sm mb-2">
+                                <input type="text" class="form-control form-control-sm" value="{{ $order->shopify_invoice_url }}" id="shopifyUrl{{ $order->id }}" readonly>
+                                <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('shopifyUrl{{ $order->id }}')" title="Copiar enlace">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                                <a href="{{ $order->shopify_invoice_url }}" target="_blank" class="btn btn-outline-primary" title="Abrir enlace">
+                                    <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                            </div>
+                            <form method="POST" action="{{ route('admin.orders.resend-shopify-email', $order) }}" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-info btn-sm w-100">
+                                    <i class="bi bi-envelope me-1"></i>Reenviar email al cliente
+                                </button>
+                            </form>
+                        </div>
+                    @else
+                        <form method="POST" action="{{ route('admin.orders.shopify-payment', $order) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-success btn-sm w-100">
+                                <i class="bi bi-credit-card me-1"></i>Crear enlace de pago
+                            </button>
+                        </form>
+                        <small class="text-muted d-block mt-1">Crea un pedido en Shopify y envía el enlace de pago al cliente.</small>
+                    @endif
+                </div>
+
                 <div class="mt-3">
                     <a href="{{ route('admin.orders.edit', $order) }}" class="btn btn-primary btn-sm">
                         <i class="bi bi-pencil me-2"></i>Editar
@@ -675,4 +713,21 @@
     margin-bottom: 0;
 }
 </style>
+
+<script>
+function copyToClipboard(inputId) {
+    const input = document.getElementById(inputId);
+    input.select();
+    input.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(input.value).then(function() {
+        // Show temporary feedback
+        const btn = input.nextElementSibling;
+        const originalIcon = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check text-success"></i>';
+        setTimeout(() => {
+            btn.innerHTML = originalIcon;
+        }, 1500);
+    });
+}
+</script>
 @endsection

@@ -2,8 +2,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ShopifyPaymentLinkMail;
 use App\Models\Order;
+use App\Services\Shopify\ShopifyService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Response;
 
 class OrderController extends Controller
@@ -259,5 +262,75 @@ class OrderController extends Controller
             }),
             'restriction_reason' => $validation['can_delete'] ? null : $validation['reason']
         ]);
+    }
+
+    /**
+     * Create a Shopify Draft Order and get payment link
+     */
+    public function createShopifyPaymentLink(Order $order)
+    {
+        $shopifyService = new ShopifyService();
+
+        if (!$shopifyService->isConfigured()) {
+            return redirect()->back()
+                ->with('error', 'Shopify no está configurado. Por favor, configure las variables de entorno SHOPIFY_ACCESS_TOKEN y SHOPIFY_DOMAIN.');
+        }
+
+        // Check if already has a draft order
+        if ($order->shopify_draft_order_id) {
+            return redirect()->back()
+                ->with('warning', 'Este pedido ya tiene un enlace de pago de Shopify.');
+        }
+
+        try {
+            // Create draft order in Shopify
+            $result = $shopifyService->createDraftOrder($order);
+
+            // Send email to customer
+            Mail::to($order->customer_email)->send(
+                new ShopifyPaymentLinkMail($order, $result['invoice_url'])
+            );
+
+            // Update sent timestamp
+            $order->update(['shopify_invoice_sent_at' => now()]);
+
+            return redirect()->back()
+                ->with('success', 'Enlace de pago creado y enviado al cliente por email.');
+
+        } catch (\Exception $e) {
+            \Log::error('Shopify payment link creation failed', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Error al crear el enlace de pago: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Resend Shopify payment link email
+     */
+    public function resendShopifyEmail(Order $order)
+    {
+        if (!$order->shopify_invoice_url) {
+            return redirect()->back()
+                ->with('error', 'Este pedido no tiene un enlace de pago de Shopify.');
+        }
+
+        try {
+            Mail::to($order->customer_email)->send(
+                new ShopifyPaymentLinkMail($order, $order->shopify_invoice_url)
+            );
+
+            $order->update(['shopify_invoice_sent_at' => now()]);
+
+            return redirect()->back()
+                ->with('success', 'Email con enlace de pago reenviado correctamente.');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Error al reenviar el email: ' . $e->getMessage());
+        }
     }
 }

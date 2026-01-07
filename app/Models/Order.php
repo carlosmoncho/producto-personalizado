@@ -59,7 +59,10 @@ class Order extends Model
         'notes',
         'approved_at',
         'shipped_at',
-        'delivered_at'
+        'delivered_at',
+        'shopify_draft_order_id',
+        'shopify_invoice_url',
+        'shopify_invoice_sent_at',
     ];
 
     protected $casts = [
@@ -70,6 +73,7 @@ class Order extends Model
         'approved_at' => 'datetime',
         'shipped_at' => 'datetime',
         'delivered_at' => 'datetime',
+        'shopify_invoice_sent_at' => 'datetime',
     ];
 
     public function items()

@@ -94,6 +94,10 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     // Ruta AJAX para verificar dependencias
     Route::get('orders/{order}/dependencies', [OrderController::class, 'dependencies'])->name('orders.dependencies');
 
+    // Shopify payment integration
+    Route::post('orders/{order}/shopify-payment', [OrderController::class, 'createShopifyPaymentLink'])->name('orders.shopify-payment');
+    Route::post('orders/{order}/resend-shopify-email', [OrderController::class, 'resendShopifyEmail'])->name('orders.resend-shopify-email');
+
     // Mensajes de pedidos (comunicación con cliente)
     Route::prefix('orders/{order}/messages')->name('orders.messages.')->group(function () {
         Route::get('/', [OrderMessageController::class, 'index'])->name('index');
