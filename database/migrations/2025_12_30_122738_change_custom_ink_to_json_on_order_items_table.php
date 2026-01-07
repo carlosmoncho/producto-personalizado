@@ -18,12 +18,25 @@ return new class extends Migration
             $table->json('custom_inks')->nullable()->after('custom_ink_price');
         });
 
-        // Migrar datos existentes del campo antiguo al nuevo
-        DB::statement("
-            UPDATE order_items
-            SET custom_inks = JSON_ARRAY(JSON_OBJECT('hex', custom_ink_hex, 'name', custom_ink_name, 'pantone', custom_ink_pantone))
-            WHERE has_custom_ink = true AND custom_ink_hex IS NOT NULL
-        ");
+        // Migrar datos existentes del campo antiguo al nuevo (compatible con MySQL y PostgreSQL)
+        $items = DB::table('order_items')
+            ->where('has_custom_ink', true)
+            ->whereNotNull('custom_ink_hex')
+            ->get(['id', 'custom_ink_hex', 'custom_ink_name', 'custom_ink_pantone']);
+
+        foreach ($items as $item) {
+            $customInks = [
+                [
+                    'hex' => $item->custom_ink_hex,
+                    'name' => $item->custom_ink_name,
+                    'pantone' => $item->custom_ink_pantone,
+                ]
+            ];
+
+            DB::table('order_items')
+                ->where('id', $item->id)
+                ->update(['custom_inks' => json_encode($customInks)]);
+        }
     }
 
     /**
