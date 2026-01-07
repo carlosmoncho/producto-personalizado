@@ -23,6 +23,7 @@
     @vite('resources/css/admin.css')
     
     @stack('styles')
+    @stack('importmaps')
 </head>
 <body>
     <div class="container-fluid">
