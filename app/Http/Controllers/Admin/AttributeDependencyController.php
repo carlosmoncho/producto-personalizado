@@ -440,6 +440,45 @@ class AttributeDependencyController extends Controller
     }
 
     /**
+     * Eliminar múltiples dependencias en bloque
+     */
+    public function destroyBulk(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:attribute_dependencies,id'
+        ]);
+
+        $ids = $validated['ids'];
+        $count = count($ids);
+
+        try {
+            AttributeDependency::whereIn('id', $ids)->delete();
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Se eliminaron {$count} dependencias exitosamente.",
+                    'deleted_count' => $count
+                ]);
+            }
+
+            return redirect()->route('admin.attribute-dependencies.index')
+                ->with('success', "Se eliminaron {$count} dependencias exitosamente.");
+        } catch (\Exception $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al eliminar las dependencias: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->route('admin.attribute-dependencies.index')
+                ->with('error', 'Error al eliminar las dependencias: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Mostrar formulario para crear modificador individual
      */
     public function createIndividual()

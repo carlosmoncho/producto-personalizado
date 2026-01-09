@@ -156,6 +156,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::post('attribute-dependencies/store-individual', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'storeIndividual'])->name('attribute-dependencies.store-individual');
     Route::get('attribute-dependencies/create-combination', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'createCombination'])->name('attribute-dependencies.create-combination');
     Route::post('attribute-dependencies/store-combination', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'storeCombination'])->name('attribute-dependencies.store-combination');
+    Route::post('attribute-dependencies/destroy-bulk', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'destroyBulk'])->name('attribute-dependencies.destroy-bulk');
 
     // Dependencias de atributos - Resource route DESPUÉS de rutas específicas
     Route::resource('attribute-dependencies', \App\Http\Controllers\Admin\AttributeDependencyController::class);
@@ -166,7 +167,10 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('api/attribute-dependencies/product/{productId}/attributes', [\App\Http\Controllers\Admin\AttributeDependencyController::class, 'getProductAttributes'])->name('api.attribute-dependencies.product-attributes');
 
     // Reglas de precio (compatibilidad temporal)
+    Route::post('price-rules/destroy-bulk', [PriceRuleController::class, 'destroyBulk'])->name('price-rules.destroy-bulk');
     Route::resource('price-rules', PriceRuleController::class);
+    Route::post('price-rules/{priceRule}/duplicate', [PriceRuleController::class, 'duplicate'])->name('price-rules.duplicate');
+    Route::post('price-rules/{priceRule}/toggle-status', [PriceRuleController::class, 'toggleStatus'])->name('price-rules.toggle-status');
     Route::get('api/price-rules/by-type', [PriceRuleController::class, 'getByType'])->name('api.price-rules.by-type');
 
     // Importar/Exportar datos

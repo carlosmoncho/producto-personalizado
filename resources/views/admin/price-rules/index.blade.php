@@ -112,34 +112,50 @@
 
 <div class="card shadow-sm border-0">
     <div class="card-header bg-golden border-bottom-0 py-3">
-        <div class="d-flex align-items-center">
-            <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
-                <i class="bi bi-list-ul"></i>
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
+                    <i class="bi bi-list-ul"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0">Lista de Reglas ({{ $rules->total() }})</h5>
+                    <small>Reglas ordenadas por prioridad y orden</small>
+                </div>
             </div>
-            <div>
-                <h5 class="mb-0">Lista de Reglas ({{ $rules->total() }})</h5>
-                <small>Reglas ordenadas por prioridad y orden</small>
+            <!-- Botón eliminar en bloque -->
+            <div id="bulkDeleteContainer" style="display: none;">
+                <button type="button" class="btn btn-danger btn-sm" id="bulkDeleteBtn">
+                    <i class="bi bi-trash me-1"></i>Eliminar seleccionadas (<span id="selectedCount">0</span>)
+                </button>
             </div>
         </div>
     </div>
     <div class="card-body">
         @if($rules->count() > 0)
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Regla</th>
-                            <th>Tipo</th>
-                            <th>Acción</th>
-                            <th>Alcance</th>
-                            <th>Prioridad</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
+            <form id="bulkDeleteForm" method="POST" action="{{ route('admin.price-rules.destroy-bulk') }}">
+                @csrf
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" class="form-check-input" id="selectAll" title="Seleccionar todas">
+                                </th>
+                                <th>Regla</th>
+                                <th>Tipo</th>
+                                <th>Acción</th>
+                                <th>Alcance</th>
+                                <th>Prioridad</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
                     <tbody>
                         @foreach($rules as $rule)
                             <tr>
+                                <td>
+                                    <input type="checkbox" class="form-check-input row-checkbox" name="ids[]" value="{{ $rule->id }}">
+                                </td>
                                 <td>
                                     <div>
                                         <strong>{{ $rule->name }}</strong>
@@ -243,6 +259,7 @@
                     </tbody>
                 </table>
             </div>
+            </form>
 
             <!-- Paginación -->
             <div class="pagination-wrapper">
@@ -275,39 +292,83 @@ document.addEventListener('DOMContentLoaded', function() {
     duplicateButtons.forEach(button => {
         button.addEventListener('click', function() {
             const ruleId = this.dataset.ruleId;
-            
+
             if (confirm('¿Desea duplicar esta regla de precio?')) {
-                // Crear formulario para duplicar
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = `/admin/price-rules/${ruleId}/duplicate`;
-                
-                // Agregar token CSRF
+
                 const csrfToken = document.createElement('input');
                 csrfToken.type = 'hidden';
                 csrfToken.name = '_token';
                 csrfToken.value = '{{ csrf_token() }}';
                 form.appendChild(csrfToken);
-                
+
                 document.body.appendChild(form);
                 form.submit();
             }
         });
     });
 
-    // Manejar botones de eliminar
+    // Manejar botones de eliminar individual
     const deleteButtons = document.querySelectorAll('.btn-delete');
     deleteButtons.forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
-            
+
             const ruleName = this.dataset.itemName;
             const form = this.closest('form');
-            
-            if (confirm(`¿Está seguro de eliminar la regla "${ruleName}"?\n\nEsta acción no se puede deshacer y puede afectar los cálculos de precios.`)) {
+
+            if (confirm(`¿Está seguro de eliminar la regla "${ruleName}"?\n\nEsta acción no se puede deshacer.`)) {
                 form.submit();
             }
         });
+    });
+
+    // === ELIMINACIÓN EN BLOQUE ===
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+    const bulkDeleteContainer = document.getElementById('bulkDeleteContainer');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    const selectedCountSpan = document.getElementById('selectedCount');
+    const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+
+    function updateBulkDeleteUI() {
+        const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+        const count = checkedBoxes.length;
+
+        selectedCountSpan.textContent = count;
+        bulkDeleteContainer.style.display = count > 0 ? 'block' : 'none';
+
+        if (rowCheckboxes.length > 0) {
+            selectAllCheckbox.checked = count === rowCheckboxes.length;
+            selectAllCheckbox.indeterminate = count > 0 && count < rowCheckboxes.length;
+        }
+    }
+
+    selectAllCheckbox?.addEventListener('change', function() {
+        rowCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateBulkDeleteUI();
+    });
+
+    rowCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateBulkDeleteUI);
+    });
+
+    bulkDeleteBtn?.addEventListener('click', function() {
+        const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+        const count = checkedBoxes.length;
+
+        if (count === 0) {
+            alert('Selecciona al menos una regla para eliminar.');
+            return;
+        }
+
+        if (confirm(`¿Estás seguro de que quieres eliminar ${count} regla(s) de precio?\n\nEsta acción no se puede deshacer.`)) {
+            bulkDeleteForm.submit();
+        }
     });
 });
 </script>

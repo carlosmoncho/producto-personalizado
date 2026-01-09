@@ -241,6 +241,51 @@ class PriceRuleController extends Controller
     }
 
     /**
+     * Eliminar múltiples reglas de precio en bloque
+     */
+    public function destroyBulk(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:price_rules,id'
+        ]);
+
+        $ids = $validated['ids'];
+        $count = count($ids);
+
+        try {
+            DB::beginTransaction();
+
+            PriceRule::whereIn('id', $ids)->delete();
+
+            DB::commit();
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Se eliminaron {$count} reglas de precio exitosamente.",
+                    'deleted_count' => $count
+                ]);
+            }
+
+            return redirect()->route('admin.price-rules.index')
+                           ->with('success', "Se eliminaron {$count} reglas de precio exitosamente.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al eliminar las reglas de precio: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->route('admin.price-rules.index')
+                           ->with('error', 'Error al eliminar las reglas de precio: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Cambiar estado activo/inactivo
      */
     public function toggleStatus(PriceRule $priceRule)

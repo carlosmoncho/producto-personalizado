@@ -126,31 +126,44 @@
 <!-- Lista -->
 <div class="card shadow-sm border-0">
     <div class="card-header bg-golden border-bottom-0 py-3">
-        <div class="d-flex align-items-center">
-            <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
-                <i class="bi bi-list-ul"></i>
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <div class="icon-square bg-white rounded me-3" style="color: var(--primary-color);">
+                    <i class="bi bi-list-ul"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0">Dependencias & Modificadores ({{ $dependencies->total() }})</h5>
+                    <small>Modificadores individuales y dependencias por combinación ordenados por prioridad</small>
+                </div>
             </div>
-            <div>
-                <h5 class="mb-0">Dependencias & Modificadores ({{ $dependencies->total() }})</h5>
-                <small>Modificadores individuales y dependencias por combinación ordenados por prioridad</small>
+            <!-- Botón eliminar en bloque -->
+            <div id="bulkDeleteContainer" style="display: none;">
+                <button type="button" class="btn btn-danger btn-sm" id="bulkDeleteBtn">
+                    <i class="bi bi-trash me-1"></i>Eliminar seleccionados (<span id="selectedCount">0</span>)
+                </button>
             </div>
         </div>
     </div>
     <div class="card-body">
         @if($dependencies->count() > 0)
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Tipo</th>
-                            <th>Atributo Padre</th>
-                            <th>Relación / Atributo Dependiente</th>
-                            <th>Modificador de Precio</th>
-                            <th>Producto</th>
-                            <th>Prioridad</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
+            <form id="bulkDeleteForm" method="POST" action="{{ route('admin.attribute-dependencies.destroy-bulk') }}">
+                @csrf
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" class="form-check-input" id="selectAll" title="Seleccionar todos">
+                                </th>
+                                <th>Tipo</th>
+                                <th>Atributo Padre</th>
+                                <th>Relación / Atributo Dependiente</th>
+                                <th>Modificador de Precio</th>
+                                <th>Producto</th>
+                                <th>Prioridad</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
                     <tbody>
                         @foreach($dependencies as $dependency)
                             @php
@@ -166,6 +179,10 @@
                                 $parentColor = $parentTypeColors[$dependency->parentAttribute->type] ?? 'text-muted';
                             @endphp
                             <tr>
+                                <!-- Checkbox -->
+                                <td>
+                                    <input type="checkbox" class="form-check-input row-checkbox" name="ids[]" value="{{ $dependency->id }}">
+                                </td>
                                 <!-- Tipo -->
                                 <td>
                                     @if($isIndividual)
@@ -357,6 +374,7 @@
                     </tbody>
                 </table>
             </div>
+            </form>
 
             <!-- Paginación -->
             <div class="d-flex justify-content-between align-items-center mt-3">
@@ -392,7 +410,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Confirmación de eliminación
+    // Confirmación de eliminación individual
     document.querySelectorAll('.btn-delete').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
@@ -406,8 +424,57 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Validar configuración
     document.getElementById('validateConfigBtn')?.addEventListener('click', function() {
-        // Implementar validación de configuración
         alert('Función de validación en desarrollo');
+    });
+
+    // === ELIMINACIÓN EN BLOQUE ===
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+    const bulkDeleteContainer = document.getElementById('bulkDeleteContainer');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    const selectedCountSpan = document.getElementById('selectedCount');
+    const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+
+    function updateBulkDeleteUI() {
+        const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+        const count = checkedBoxes.length;
+
+        selectedCountSpan.textContent = count;
+        bulkDeleteContainer.style.display = count > 0 ? 'block' : 'none';
+
+        // Actualizar estado del checkbox "seleccionar todos"
+        if (rowCheckboxes.length > 0) {
+            selectAllCheckbox.checked = count === rowCheckboxes.length;
+            selectAllCheckbox.indeterminate = count > 0 && count < rowCheckboxes.length;
+        }
+    }
+
+    // Seleccionar/deseleccionar todos
+    selectAllCheckbox?.addEventListener('change', function() {
+        rowCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateBulkDeleteUI();
+    });
+
+    // Actualizar al cambiar checkboxes individuales
+    rowCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateBulkDeleteUI);
+    });
+
+    // Eliminar en bloque
+    bulkDeleteBtn?.addEventListener('click', function() {
+        const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+        const count = checkedBoxes.length;
+
+        if (count === 0) {
+            alert('Selecciona al menos una dependencia para eliminar.');
+            return;
+        }
+
+        if (confirm(`¿Estás seguro de que quieres eliminar ${count} dependencia(s)?\n\nEsta acción no se puede deshacer.`)) {
+            bulkDeleteForm.submit();
+        }
     });
 });
 </script>
